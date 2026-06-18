@@ -1,65 +1,231 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState } from 'react';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Listings from '@/components/Listings';
+import ToursShowcase from '@/components/ToursShowcase';
+import SecurityStatement from '@/components/SecurityStatement';
+import CheckoutModal from '@/components/CheckoutModal';
+import BillingModal from '@/components/BillingModal';
+import BoardingPass from '@/components/BoardingPass';
+import Footer from '@/components/Footer';
+import Toast from '@/components/Toast';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState('flights');
+  
+  // Search state
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState({
+    origin: 'LOS',
+    destination: 'ABV',
+  });
+
+  // Modal / Checkout flow state
+  const [selectedProduct, setSelectedProduct] = useState<{ type: string; name: string; price: number } | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isBillingOpen, setIsBillingOpen] = useState(false);
+  const [passengerInfo, setPassengerInfo] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  });
+
+  // Boarding Pass state
+  const [confirmedTicket, setConfirmedTicket] = useState<{
+    passenger: string;
+    cabin: string;
+    hash: string;
+    pnr: string;
+    details: {
+      carrier?: string;
+      name?: string;
+      number?: string;
+    };
+    type: string;
+  } | null>(null);
+
+  // Toast state
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setToastVisible(true);
+    setTimeout(() => {
+      setToastVisible(false);
+    }, 5000);
+  };
+
+  const handleSwitchTab = (tabId: string) => {
+    setActiveTab(tabId);
+    setIsSearchVisible(false);
+    triggerToast(`Switched search module: ${tabId.toUpperCase()}`);
+  };
+
+  const handleSearch = (params: {
+    tab: string;
+    origin: string;
+    destination: string;
+    date: string;
+    cabin: string;
+  }) => {
+    setSearchParams({
+      origin: params.origin,
+      destination: params.destination,
+    });
+    setIsSearchVisible(true);
+    setIsSearchLoading(true);
+    triggerToast("Reaching Sabre & Amadeus API databases...");
+
+    // Smooth scroll to listings
+    setTimeout(() => {
+      const el = document.getElementById('listings-viewports');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+
+    setTimeout(() => {
+      setIsSearchLoading(false);
+      triggerToast("GDS response matching parameters successfully generated.");
+    }, 1000);
+  };
+
+  const handleResetSearch = () => {
+    setIsSearchVisible(false);
+    const el = document.getElementById('booking-engine');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScrollToWidget = () => {
+    const el = document.getElementById('booking-engine');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleResetNavigation = () => {
+    setConfirmedTicket(null);
+    setIsSearchVisible(false);
+    const el = document.getElementById('booking-engine');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    triggerToast("Booking portal navigation reset.");
+  };
+
+  const handleBookProduct = (product: { type: string; name: string; price: number }) => {
+    setSelectedProduct(product);
+    setIsCheckoutOpen(true);
+    triggerToast(`Checkout created for ${product.name}`);
+  };
+
+  const handleProceedToBilling = (info: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  }) => {
+    setPassengerInfo(info);
+    setIsCheckoutOpen(false);
+    setIsBillingOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsBillingOpen(false);
+
+    // Generate simulated PNR and Security Hash
+    const mockPnrCode = `PNR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const mockSecHash = `#TK-${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    // Default to business or standard class depending on choice
+    const chosenCabin = activeTab === 'flights' ? 'Economy Class' : 'Premium Cabin';
+
+    setConfirmedTicket({
+      passenger: `${passengerInfo.firstName} ${passengerInfo.lastName}`,
+      cabin: chosenCabin,
+      hash: mockSecHash,
+      pnr: mockPnrCode,
+      details: {
+        carrier: selectedProduct?.name,
+        name: selectedProduct?.name,
+        number: activeTab === 'flights' ? 'P4-LOS90' : undefined,
+      },
+      type: selectedProduct?.type || 'flight',
+    });
+
+    triggerToast("Automated E-Ticket successfully delivered!");
+
+    // Smooth scroll to Boarding Pass
+    setTimeout(() => {
+      const el = document.getElementById('boarding-pass-eticket-viewport');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
+      
+      <Navbar
+        onSwitchTab={handleSwitchTab}
+        onReset={handleResetNavigation}
+        onScrollToWidget={handleScrollToWidget}
+        activeTab={activeTab}
+      />
+
+      <main className="flex-grow">
+        
+        {/* Render Boarding Pass success page or Hero Booking portal */}
+        {confirmedTicket ? (
+          <BoardingPass
+            confirmedTicket={confirmedTicket}
+            onReset={handleResetNavigation}
+            origin={searchParams.origin}
+            destination={searchParams.destination}
+          />
+        ) : (
+          <>
+            <Hero
+              activeTab={activeTab}
+              onSwitchTab={handleSwitchTab}
+              onSearch={handleSearch}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+            <Listings
+              activeTab={activeTab}
+              isVisible={isSearchVisible}
+              isLoading={isSearchLoading}
+              onReset={handleResetSearch}
+              onBook={handleBookProduct}
+              origin={searchParams.origin}
+              destination={searchParams.destination}
+            />
+
+            <ToursShowcase onBook={handleBookProduct} />
+
+            <SecurityStatement />
+          </>
+        )}
+
       </main>
+
+      <Footer onSwitchTab={handleSwitchTab} triggerToast={triggerToast} />
+
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        selectedProduct={selectedProduct}
+        onDismiss={() => setIsCheckoutOpen(false)}
+        onProceed={handleProceedToBilling}
+      />
+
+      <BillingModal
+        isOpen={isBillingOpen}
+        passengerEmail={passengerInfo.email}
+        totalCost={selectedProduct?.price || 0}
+        onSuccess={handlePaymentSuccess}
+        triggerToast={triggerToast}
+      />
+
+      <Toast message={toastMessage} visible={toastVisible} />
+
     </div>
   );
 }

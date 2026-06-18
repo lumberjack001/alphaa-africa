@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alphaa.Africa - Premium Travel & Tours Solutions</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Montserrat Premium Geometric Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Brand Overrides & Custom Print Engine Stylesheet -->
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    /* Strict Brand Color Definitions */
+    :root {
+      --brand-purple: #4C1D5C;
+      --brand-orange: #FA6432;
+      --brand-background: #FDFBFD;
+    }
+
+    .text-brand-purple { color: var(--brand-purple); }
+    .bg-brand-purple { background-color: var(--brand-purple); }
+    .border-brand-purple { border-color: var(--brand-purple); }
+    
+    .text-brand-orange { color: var(--brand-orange); }
+    .bg-brand-orange { background-color: var(--brand-orange); }
+    .border-brand-orange { border-color: var(--brand-orange); }
+
+    /* Custom Input States */
+    .input-focus-effect:focus {
+      outline: none;
+      border-color: var(--brand-orange);
+      box-shadow: 0 0 0 4px rgba(250, 100, 50, 0.15);
+    }
+
+    /* Print Viewport Optimization */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-boarding-ticket, #printable-boarding-ticket * {
+        visibility: visible;
+      }
+      #printable-boarding-ticket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none !important;
+        box-shadow: none !important;
+        background: white !important;
+        color: black !important;
+      }
+    }
+
+    /* Soft scrollbar configurations */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F4EFF6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--brand-purple);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--brand-orange);
+    }
+  </style>
+</head>
+<body class="bg-[#FDFBFD] text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- ==========================================
+      REAL-TIME NOTIFICATION POPUP (MARKETING BANNER)
+      ========================================== -->
+  <div id="marketing-toast" class="fixed bottom-6 right-6 z-50 max-w-sm bg-gradient-to-r from-[#4C1D5C] to-[#361342] text-white p-4 rounded-2xl shadow-2xl border border-purple-500/20 transform translate-y-24 opacity-0 transition-all duration-500 ease-out flex items-start space-x-3 pointer-events-none">
+    <div class="bg-brand-orange text-white p-2.5 rounded-xl text-lg shadow-md shadow-[#FA6432]/30">⚡</div>
+    <div>
+      <h4 class="font-extrabold text-xs uppercase tracking-wider text-brand-orange">Alphaa Gateways Sync</h4>
+      <p id="toast-message" class="text-xs text-purple-100 font-medium leading-relaxed mt-1">GDS pipeline is online and secure.</p>
+    </div>
+  </div>
+
+  <!-- ==========================================
+      HIGH-FIDELITY NAVIGATION HEADER
+      ========================================== -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-purple-100 py-3.5 px-4 sm:px-8 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo - Scalable Vector Reconstructed directly from IMG-20260525-WA0010.jpg.jpeg -->
+      <a href="#" class="flex items-center space-x-3 group" onclick="resetNavigation(event)">
+        <svg class="w-12 h-12 transition-transform duration-300 group-hover:scale-105" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" fill="#F6EFF7" />
+          <!-- The Interlocking Brand 'C' (Deep Purple) -->
+          <path d="M52 25C37.5 25 26 36.5 26 51C26 65.5 37.5 77 52 77C58 77 64 74.5 67.5 70.5C68.5 69.5 68.5 67.5 67 66.5L62.5 62C61.5 61.2 60 61.5 59 62.5C57 64.5 54.5 65.5 52 65.5C44 65.5 38 59 38 51C38 43 44 36.5 52 36.5C55 36.5 57.5 37.5 59.5 39.5C60.5 40.5 62 40.5 63 39.5L67.5 35C68.5 34 68.5 32.5 67.5 31.5C63.5 27.5 58 25 52 25Z" fill="#4C1D5C" />
+          <!-- The Interlocking Brand 'A' (Vibrant Coral Orange) -->
+          <path d="M68.5 77C69.5 77 70.5 76 70 75L57 41C56.5 40 55 39 53.5 39C52 39 50.5 40 50 41L45.5 52.5C45 53.5 45.5 55 46.5 55.5C47.5 56 49 55.5 49.5 54.5L53.5 44.5L64.5 73.5C65 74.5 66 75 67 75H68.5Z" fill="#FA6432" />
+          <!-- The Intersecting Horizontal Bridge Block -->
+          <rect x="49" y="58" width="13" height="4.5" rx="2" fill="#FA6432" />
+        </svg>
+        <div>
+          <span class="text-lg font-black tracking-tight block text-brand-purple leading-none uppercase">ALPHAA<span class="text-brand-orange">.</span>AFRICA</span>
+          <span class="text-[9px] font-bold tracking-[0.25em] text-brand-orange block mt-0.5 uppercase">Travel & Tours</span>
+        </div>
+      </a>
+
+      <!-- Navigation Paths (Desktop viewport) -->
+      <nav class="hidden md:flex items-center space-x-8 text-xs font-bold uppercase tracking-wider">
+        <a href="#booking-engine" onclick="switchActiveTab('flights')" class="text-brand-purple hover:text-brand-orange transition-colors">Flights</a>
+        <a href="#booking-engine" onclick="switchActiveTab('hotels')" class="text-slate-500 hover:text-brand-purple transition-colors">Hotels</a>
+        <a href="#booking-engine" onclick="switchActiveTab('tours')" class="text-slate-500 hover:text-brand-purple transition-colors">Holiday Tours</a>
+        <a href="#booking-engine" onclick="switchActiveTab('cars')" class="text-slate-500 hover:text-brand-purple transition-colors">Car Rentals</a>
+        <a href="#marketing-value" class="text-slate-500 hover:text-brand-purple transition-colors">Why Alphaa</a>
+      </nav>
+
+      <!-- Location & Booking Action trigger -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden lg:flex items-center space-x-1.5 text-xs font-extrabold text-brand-purple bg-purple-50/80 px-3.5 py-2.5 rounded-xl border border-purple-100">
+          <span>NGN</span>
+          <strong class="text-brand-orange font-black">₦</strong>
+        </div>
+        <button onclick="scrollToWidget()" class="bg-brand-orange hover:bg-[#e05324] text-white text-xs font-black px-6 py-3.5 rounded-xl uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all hover:-translate-y-0.5">
+          Plan Escape
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==========================================
+      HERO HEADER SECTION & DYNAMIC WIDGET
+      ========================================== -->
+  <section class="relative bg-gradient-to-b from-[#F6EFF7]/70 via-[#FDFBFD] to-[#FDFBFD] py-16 lg:py-24 px-4 sm:px-8 overflow-hidden">
+    <!-- Visual background abstract grids -->
+    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-[#4C1D5C]/5 rounded-full blur-3xl -z-10"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#FA6432]/5 rounded-full blur-3xl -z-10"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto flex flex-col items-center text-center">
+      
+      <!-- Premium Target Tagline -->
+      <span class="bg-brand-purple/10 text-brand-purple text-xs font-black uppercase tracking-widest px-4.5 py-2 rounded-full border border-purple-300/20 mb-5 inline-block">
+        🌍 Africa's Modernized Booking Ecosystem
+      </span>
+      
+      <!-- Primary Core Headline -->
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-brand-purple max-w-4xl tracking-tight leading-tight uppercase">
+        Explore and Secure Destinations with <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FA6432] to-[#e05324]">Absolute Simplicity</span>
+      </h1>
+      
+      <p class="text-sm sm:text-lg text-slate-500 max-w-2xl mt-4 leading-relaxed font-semibold">
+        Real-time airline GDS routing, premium accommodation partnerships, and automated boarding delivery. Explore live quotes instantly.
+      </p>
+
+      <!-- ==========================================
+          DYNAMIC COMPREHENSIVE SEARCH ENGINE WIDGET
+          ========================================== -->
+      <div id="booking-engine" class="w-full max-w-5xl mt-12 bg-white rounded-3xl p-6 shadow-xl border border-purple-100">
+        
+        <!-- Module Tabs navigation -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-6 border-b border-purple-50 pb-5">
+          <button onclick="switchActiveTab('flights')" id="module-flights-btn" class="flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all bg-brand-purple text-white shadow-lg shadow-[#4C1D5C]/10">
+            <span>✈️</span> <span>Flight Routes</span>
+          </button>
+          <button onclick="switchActiveTab('hotels')" id="module-hotels-btn" class="flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all text-slate-500 hover:text-brand-purple hover:bg-purple-50">
+            <span>🏨</span> <span>Premium Lodging</span>
+          </button>
+          <button onclick="switchActiveTab('tours')" id="module-tours-btn" class="flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all text-slate-500 hover:text-brand-purple hover:bg-purple-50">
+            <span>🧳</span> <span>Curated Safaris</span>
+          </button>
+          <button onclick="switchActiveTab('cars')" id="module-cars-btn" class="flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all text-slate-500 hover:text-brand-purple hover:bg-purple-50">
+            <span>🚗</span> <span>Vehicle Hire</span>
+          </button>
+        </div>
+
+        <!-- Simulated Search Inputs form -->
+        <form onsubmit="handleAggregatorSearch(event)" class="space-y-4 text-left">
+          
+          <!-- Flight Category Parameters -->
+          <div id="category-flight-only" class="flex items-center space-x-6 text-xs text-slate-500 pb-2">
+            <label class="flex items-center space-x-2 cursor-pointer group">
+              <input type="radio" name="trip-direction" checked class="accent-brand-orange w-4 h-4" />
+              <span class="group-hover:text-brand-orange transition-colors font-extrabold text-brand-purple">One Way Flight</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer group">
+              <input type="radio" name="trip-direction" class="accent-brand-orange w-4 h-4" />
+              <span class="group-hover:text-brand-orange transition-colors font-semibold text-slate-500">Round Trip Flight</span>
+            </label>
+          </div>
+
+          <!-- Adaptive Form fields wrapper -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            <!-- INPUT UNIT 1: Source / Region -->
+            <div class="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange transition-all duration-300">
+              <label id="interactive-label-1" class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Departure City</label>
+              <select id="origin-selector" class="w-full bg-transparent border-none text-brand-purple font-extrabold text-sm focus:outline-none cursor-pointer">
+                <option value="LOS">Lagos, Nigeria (LOS)</option>
+                <option value="ABV">Abuja, Nigeria (ABV)</option>
+                <option value="PHC">Port Harcourt (PHC)</option>
+                <option value="LHR">London Heathrow, UK (LHR)</option>
+                <option value="DXB">Dubai Int'l Airport, UAE (DXB)</option>
+              </select>
+            </div>
+
+            <!-- INPUT UNIT 2: Destination -->
+            <div class="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange transition-all duration-300">
+              <label id="interactive-label-2" class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Arrival Destination</label>
+              <select id="destination-selector" class="w-full bg-transparent border-none text-brand-purple font-extrabold text-sm focus:outline-none cursor-pointer">
+                <option value="ABV" selected>Abuja, Nigeria (ABV)</option>
+                <option value="LOS">Lagos, Nigeria (LOS)</option>
+                <option value="LHR">London Heathrow, UK (LHR)</option>
+                <option value="DXB">Dubai Int'l Airport, UAE (DXB)</option>
+                <option value="ZNZ">Zanzibar Airport, Tanzania (ZNZ)</option>
+              </select>
+            </div>
+
+            <!-- INPUT UNIT 3: Calendars -->
+            <div class="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange transition-all duration-300">
+              <label id="interactive-label-3" class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Departure Date</label>
+              <input type="date" value="2026-07-20" class="w-full bg-transparent border-none text-brand-purple font-extrabold text-sm focus:outline-none cursor-pointer" />
+            </div>
+
+            <!-- INPUT UNIT 4: Selections classes -->
+            <div class="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange transition-all duration-300">
+              <label id="interactive-label-4" class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Cabin Selections</label>
+              <select id="cabin-or-grade" class="w-full bg-transparent border-none text-brand-purple font-extrabold text-sm focus:outline-none cursor-pointer">
+                <option value="Economy">Economy Cabin Class</option>
+                <option value="Premium">Premium Economy</option>
+                <option value="Business">Business Cabin Class</option>
+                <option value="First">First Cabin Class</option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Bottom Action controllers -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-5 border-t border-purple-50">
+            <div class="text-[10px] text-slate-400 font-semibold flex items-center space-x-2">
+              <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+              <span>GDS Connection Status: <strong class="text-slate-600 font-extrabold">Amadeus Integration Stable</strong></span>
+            </div>
+            <button type="submit" id="search-cta-text" class="w-full sm:w-auto bg-brand-orange hover:bg-[#e05324] text-white font-black px-12 py-4 rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all hover:scale-[1.02]">
+              Check Flight Offers
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+      REAL-TIME LIVE SEARCH RESULT INJECTION PANEL
+      ========================================== -->
+  <section id="listings-viewports" class="hidden max-w-7xl mx-auto py-12 px-4 sm:px-8">
+    
+    <!-- Top listings navigation metadata -->
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-purple-100">
+      <div>
+        <span class="text-xs text-brand-orange font-black uppercase tracking-wider block mb-1">Available Matches</span>
+        <h3 class="text-xl sm:text-2xl font-black text-brand-purple uppercase tracking-tight">Active Provider Quotes</h3>
+      </div>
+      <button onclick="clearSearchGrid()" class="text-xs font-bold text-slate-400 hover:text-brand-orange underline">
+        Reset Search Filters
+      </button>
+    </div>
+
+    <!-- Live simulated loader animation skeleton -->
+    <div id="loading-gds-skeleton" class="hidden space-y-4">
+      <div class="bg-white p-6 rounded-3xl border border-purple-50 animate-pulse flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-slate-100 rounded-2xl"></div>
+          <div class="space-y-2">
+            <div class="w-24 h-4 bg-slate-100 rounded"></div>
+            <div class="w-16 h-3 bg-slate-50 rounded"></div>
+          </div>
+        </div>
+        <div class="w-48 h-8 bg-slate-50 rounded"></div>
+        <div class="w-32 h-10 bg-slate-100 rounded-2xl"></div>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-purple-50 animate-pulse flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-slate-100 rounded-2xl"></div>
+          <div class="space-y-2">
+            <div class="w-24 h-4 bg-slate-100 rounded"></div>
+            <div class="w-16 h-3 bg-slate-50 rounded"></div>
+          </div>
+        </div>
+        <div class="w-48 h-8 bg-slate-50 rounded"></div>
+        <div class="w-32 h-10 bg-slate-100 rounded-2xl"></div>
+      </div>
+    </div>
+
+    <!-- Injection destination point for real-time matches -->
+    <div id="aggregator-matches-grid" class="space-y-4"></div>
+
+  </section>
+
+  <!-- ==========================================
+      CURATED HOLIDAY TOURS PROMOTIONS Showcase (Module 2.3)
+      ========================================== -->
+  <section class="bg-white py-20 px-4 sm:px-8 border-t border-purple-50/80">
+    <div class="max-w-7xl mx-auto">
+      
+      <!-- Copy Details -->
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="text-brand-orange text-xs font-black uppercase tracking-widest block mb-2">Alphaa Curated Holiday tours</span>
+        <h2 class="text-2xl sm:text-4xl font-black text-brand-purple tracking-tight uppercase">Breathtaking African Getaways</h2>
+        <p class="text-slate-500 text-sm mt-3 leading-relaxed font-semibold">
+          Secure hand-crafted safari packages and coastal retreats with vetted transport logistics, boutique resort lodging, and direct premium air connections.
+        </p>
+      </div>
+
+      <!-- Tours Cards layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Package Card 1 -->
+        <div class="bg-white rounded-3xl overflow-hidden border border-purple-100 flex flex-col group hover:border-brand-orange hover:shadow-2xl hover:shadow-[#4C1D5C]/5 transition-all duration-500">
+          <div class="h-64 overflow-hidden relative">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" alt="Zanzibar coast" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-700" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#4C1D5C] to-transparent opacity-60"></div>
+            <span class="absolute bottom-4 left-4 bg-white/95 text-brand-purple text-[10px] font-black px-4 py-2 rounded-xl uppercase tracking-wider">
+              🗓️ 6 Days, 5 Nights
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] text-brand-orange uppercase font-bold block mb-1">📍 Zanzibar, Tanzania</span>
+              <h3 class="text-lg font-extrabold text-brand-purple leading-snug">Zanzibar Exotic Beach Experience</h3>
+              <p class="text-xs text-slate-500 mt-2 leading-relaxed font-semibold">
+                Indulge in a private beachfront villa resort. Includes complete blue safari cruises, historic stone town tours, and flight connections.
+              </p>
+            </div>
+            <div class="border-t border-purple-50 mt-6 pt-4 flex items-center justify-between">
+              <div>
+                <span class="text-[9px] text-slate-400 block uppercase font-bold">Total price from</span>
+                <strong class="text-lg font-black text-brand-orange">₦850,000</strong>
+              </div>
+              <button onclick="handleDirectTourSelect('Zanzibar Exotic Beach Experience', 850000)" class="bg-brand-purple hover:bg-brand-orange text-white font-extrabold px-4.5 py-3 rounded-xl text-xs uppercase tracking-wider transition-all">
+                Book Safari
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Package Card 2 -->
+        <div class="bg-white rounded-3xl overflow-hidden border border-purple-100 flex flex-col group hover:border-brand-orange hover:shadow-2xl hover:shadow-[#4C1D5C]/5 transition-all duration-500">
+          <div class="h-64 overflow-hidden relative">
+            <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80" alt="Dubai skyline" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-700" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#4C1D5C] to-transparent opacity-60"></div>
+            <span class="absolute bottom-4 left-4 bg-white/95 text-brand-purple text-[10px] font-black px-4 py-2 rounded-xl uppercase tracking-wider">
+              🗓️ 5 Days, 4 Nights
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] text-brand-orange uppercase font-bold block mb-1">📍 Dubai, UAE</span>
+              <h3 class="text-lg font-extrabold text-brand-purple leading-snug">Luxury Dubai Classic Escapes</h3>
+              <p class="text-xs text-slate-500 mt-2 leading-relaxed font-semibold">
+                Premium reservations in dynamic downtown Dubai. Experience dune sunset safaris, Burj Khalifa entries, and personalized tour schedules.
+              </p>
+            </div>
+            <div class="border-t border-purple-50 mt-6 pt-4 flex items-center justify-between">
+              <div>
+                <span class="text-[9px] text-slate-400 block uppercase font-bold">Total price from</span>
+                <strong class="text-lg font-black text-brand-orange">₦920,000</strong>
+              </div>
+              <button onclick="handleDirectTourSelect('Luxury Dubai Classic Escapes', 920000)" class="bg-brand-purple hover:bg-brand-orange text-white font-extrabold px-4.5 py-3 rounded-xl text-xs uppercase tracking-wider transition-all">
+                Book Safari
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Package Card 3 -->
+        <div class="bg-white rounded-3xl overflow-hidden border border-purple-100 flex flex-col group hover:border-brand-orange hover:shadow-2xl hover:shadow-[#4C1D5C]/5 transition-all duration-500">
+          <div class="h-64 overflow-hidden relative">
+            <img src="https://images.unsplash.com/photo-1473116763269-255ea7604bb6?auto=format&fit=crop&w=600&q=80" alt="Seychelles beach" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-700" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#4C1D5C] to-transparent opacity-60"></div>
+            <span class="absolute bottom-4 left-4 bg-white/95 text-brand-purple text-[10px] font-black px-4 py-2 rounded-xl uppercase tracking-wider">
+              🗓️ 7 Days, 6 Nights
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] text-brand-orange uppercase font-bold block mb-1">📍 Praslin, Seychelles</span>
+              <h3 class="text-lg font-extrabold text-brand-purple leading-snug">Seychelles Romantic Luxury Escape</h3>
+              <p class="text-xs text-slate-500 mt-2 leading-relaxed font-semibold">
+                Pure paradise with tropical garden views and lagoon entries. Includes return flight options, daily premium buffet, and ocean safaris.
+              </p>
+            </div>
+            <div class="border-t border-purple-50 mt-6 pt-4 flex items-center justify-between">
+              <div>
+                <span class="text-[9px] text-slate-400 block uppercase font-bold">Total price from</span>
+                <strong class="text-lg font-black text-brand-orange">₦1,350,000</strong>
+              </div>
+              <button onclick="handleDirectTourSelect('Seychelles Romantic Luxury Escape', 1350000)" class="bg-brand-purple hover:bg-brand-orange text-white font-extrabold px-4.5 py-3 rounded-xl text-xs uppercase tracking-wider transition-all">
+                Book Safari
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+      THE CORE VALUES & COMPREHENSIVE SECURITY STATEMENT
+      ========================================== -->
+  <section id="marketing-value" class="bg-gradient-to-b from-white to-[#FDFBFD] py-20 px-4 sm:px-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        
+        <!-- Left Side: Copy parameters -->
+        <div class="space-y-6">
+          <span class="text-brand-orange text-xs font-black uppercase tracking-widest block">Structural Integrity</span>
+          <h2 class="text-2xl sm:text-4xl font-black text-brand-purple leading-tight uppercase">We prioritize reliability & lightning dispatch</h2>
+          <p class="text-slate-600 text-sm leading-relaxed font-semibold">
+            Alphaa.Africa transforms standard consumer reservations into frictionless, unified pathways. See why thousands of families and business operators trust our platform daily.
+          </p>
+          
+          <div class="space-y-4 pt-4 text-xs">
+            <div class="flex items-start space-x-3">
+              <span class="bg-purple-100 text-brand-purple p-2.5 rounded-xl text-sm font-bold">✓</span>
+              <div>
+                <strong class="text-brand-purple text-sm font-black block">60-Second Automated E-Ticket Delivery</strong>
+                <span class="text-slate-500 font-semibold">Upon transaction confirmation, our PDF compiling pipeline delivers official PNR boarding reference documents directly to your email inbox.</span>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="bg-purple-100 text-brand-purple p-2.5 rounded-xl text-sm font-bold">✓</span>
+              <div>
+                <strong class="text-brand-purple text-sm font-black block">Stateless Real-Time Price Engine</strong>
+                <span class="text-slate-500 font-semibold">Direct live integrations with hotel aggregators and GDS services eliminate hidden ticketing fee surges during passenger checkouts.</span>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="bg-purple-100 text-brand-purple p-2.5 rounded-xl text-sm font-bold">✓</span>
+              <div>
+                <strong class="text-brand-purple text-sm font-black block">24/7 Premium Operational Officers</strong>
+                <span class="text-slate-500 font-semibold">Gain immediate travel assistance, flight re-routings, hotel modifications, or booking cancellations through dedicated communication lines.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Interactive Security Panel Graphic -->
+        <div class="relative flex items-center justify-center">
+          <div class="absolute inset-0 bg-[#4C1D5C]/5 rounded-3xl transform rotate-2 -z-10"></div>
+          <div class="bg-gradient-to-br from-[#4C1D5C] to-[#2E1238] text-white p-8 sm:p-12 rounded-3xl border border-purple-400/20 shadow-xl space-y-6 text-left">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-lg">🔒</div>
+              <div>
+                <h4 class="font-extrabold text-sm text-brand-orange">Secure Webhook Architecture</h4>
+                <span class="text-[9px] text-purple-200">Payment Security & Verification Standards</span>
+              </div>
+            </div>
+            <p class="text-xs text-purple-100 leading-relaxed font-semibold">
+              Your ticketing credentials and transaction queries process over highly secure channels. By routing merchant data through verified webhooks, we ensure safe and efficient payment processing.
+            </p>
+            <div class="border-t border-purple-400/20 pt-4 flex items-center justify-between">
+              <div>
+                <span class="text-[8px] uppercase font-bold text-purple-300">Certified Integrator</span>
+                <strong class="text-white text-xs block tracking-widest font-mono">PAYSTACK & FLUTTERWAVE</strong>
+              </div>
+              <span class="text-3xl">💳</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+      INTERACTIVE CHECKOUT STEP MODAL
+      ========================================== -->
+  <div id="checkout-form-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white text-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-purple-100 shadow-2xl overflow-y-auto max-h-[90vh] text-left">
+      
+      <!-- Modal header -->
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-purple-50">
+        <div>
+          <span class="text-brand-orange text-[10px] uppercase font-black tracking-widest block">Checkout Portal</span>
+          <h3 class="text-xl font-black text-brand-purple">Passenger Registration</h3>
+        </div>
+        <button onclick="dismissActiveModal('checkout-form-modal')" class="text-slate-400 hover:text-brand-orange text-xl font-bold p-1">✕</button>
+      </div>
+
+      <!-- Selection details container -->
+      <div class="p-4 bg-purple-50/50 rounded-2xl border border-purple-100 mb-6">
+        <span class="text-[9px] text-slate-400 font-bold block uppercase mb-1">Your Booking Summary</span>
+        <h4 id="summary-display-title" class="font-extrabold text-brand-purple text-sm">Air Peace Airways</h4>
+        <p id="summary-display-subtitle" class="text-xs text-slate-500 mt-1">Route configuration details</p>
+        <div class="flex items-center justify-between border-t border-purple-100 mt-3 pt-3 text-xs">
+          <span class="text-slate-500 font-semibold">Total Price Due:</span>
+          <strong id="summary-display-price" class="text-brand-orange font-black text-base">₦0</strong>
+        </div>
+      </div>
+
+      <!-- Checkout Form -->
+      <form id="travel-registration-form" onsubmit="launchBillingOverlay(event)" class="space-y-4 text-xs">
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-slate-500 font-bold mb-1">First Name (As in Passport)</label>
+            <input type="text" id="pass-first-name" required placeholder="John" class="w-full bg-purple-50/30 border border-purple-100 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold" />
+          </div>
+          <div>
+            <label class="block text-slate-500 font-bold mb-1">Last Name (As in Passport)</label>
+            <input type="text" id="pass-last-name" required placeholder="Doe" class="w-full bg-purple-50/30 border border-purple-100 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-500 font-bold mb-1">Email Address (Receives E-Ticket PDF)</label>
+          <input type="email" id="pass-email" required placeholder="traveler@domain.com" class="w-full bg-purple-50/30 border border-purple-100 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold" />
+        </div>
+
+        <div>
+          <label class="block text-slate-500 font-bold mb-1">Phone Number (With International Prefix)</label>
+          <input type="tel" id="pass-phone" required placeholder="+234 812 345 6789" class="w-full bg-purple-50/30 border border-purple-100 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold" />
+        </div>
+
+        <button type="submit" class="w-full bg-brand-orange hover:bg-[#e05324] text-white font-black py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 mt-2">
+          Proceed to Secure Payment
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+      PAYSTACK INTEGRATION GATEWAY SIMULATOR MODAL
+      ========================================== -->
+  <div id="billing-payment-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
+    <div class="bg-white text-slate-800 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-slate-100 text-left">
+      
+      <!-- Secure Gateway Header -->
+      <div class="bg-slate-900 text-white p-6 flex items-center justify-between">
+        <div>
+          <span class="text-brand-orange text-[9px] uppercase font-black tracking-widest block">Paystack Secure Checkout</span>
+          <h3 id="billing-email-header" class="text-xs font-bold text-slate-300">traveler@domain.com</h3>
+        </div>
+        <span class="text-2xl">💳</span>
+      </div>
+
+      <!-- Interactive transactional contents -->
+      <div class="p-6 space-y-4 text-xs">
+        
+        <div class="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
+          <span class="text-slate-400 uppercase block tracking-wider text-[9px] font-bold">Transactional Total</span>
+          <strong id="billing-price-header" class="text-2xl font-black text-slate-900 block mt-1">₦0</strong>
+        </div>
+
+        <!-- CTA Options -->
+        <div id="payment-selection-controls" class="space-y-3">
+          <button onclick="processSimulatedSecureWebhook()" class="w-full bg-[#3EC193] hover:bg-[#34a47c] text-white font-extrabold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow">
+            <span>🔒 Pay Securely with Card</span>
+          </button>
+          <button onclick="processSimulatedSecureWebhook()" class="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3 rounded-xl transition-all text-center">
+            🏦 Pay with Local Bank Transfer
+          </button>
+        </div>
+
+        <!-- Loading webhook processing state triggers -->
+        <div id="payment-loading-indicators" class="hidden text-center py-6 space-y-3">
+          <div class="w-8 h-8 border-4 border-brand-orange border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <span id="loader-progress-text" class="block font-bold text-slate-600">Reaching secure Paystack servers...</span>
+        </div>
+
+        <div class="text-center text-[10px] text-slate-400 leading-tight border-t border-slate-100 pt-3">
+          Transaction security is guaranteed. Auto-dispatch of e-ticket references will complete on webhook verification.
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+      SUCCESS CORE MODULE: Printable Boarding E-Ticket Pass
+      ========================================== -->
+  <section id="boarding-pass-eticket-viewport" class="hidden max-w-2xl mx-auto py-12 px-4 sm:px-8">
+    
+    <div class="text-center max-w-md mx-auto mb-8">
+      <span class="text-5xl block mb-3 animate-bounce">🎉</span>
+      <h3 class="text-2xl font-black text-brand-purple uppercase tracking-tight">Booking Finalized!</h3>
+      <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+        The transaction webhook was successfully verified by our Django API layer. Your official boarding PNR Reference ticket has been compiled and emailed to you.
+      </p>
+    </div>
+
+    <!-- Official Styled Boarding Ticket Pass -->
+    <div id="printable-boarding-ticket" class="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-100 relative overflow-hidden text-left">
+      <!-- Decorative background visual cut -->
+      <div class="absolute top-0 right-0 w-24 h-24 bg-brand-orange/5 rounded-full -mr-12 -mt-12"></div>
+      
+      <!-- Top banner block -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-dashed border-slate-200 pb-5 mb-5">
+        <div class="flex items-center space-x-3">
+          
+          <!-- Logo Rebuilt reverse color -->
+          <svg class="w-10 h-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#F6EFF7" />
+            <path d="M52 25C37.5 25 26 36.5 26 51C26 65.5 37.5 77 52 77C58 77 64 74.5 67.5 70.5L62.5 62C57 65.5 52 65.5 52 65.5C44 65.5 38 59 38 51C38 43 44 36.5 52 36.5C59.5 39.5 63 39.5 63 39.5L67.5 35C63.5 27.5 58 25 52 25Z" fill="#4C1D5C" />
+            <path d="M68.5 77C70 75 57 41 53.5 39C50.5 39 45.5 52.5 45.5 52.5L53.5 44.5L64.5 73.5H68.5Z" fill="#FA6432" />
+          </svg>
+          <div>
+            <span class="text-xs font-black tracking-tight block text-brand-purple uppercase">ALPHAA.AFRICA</span>
+            <span class="text-[8px] font-bold text-brand-orange block tracking-widest uppercase">Travels E-Ticket System</span>
+          </div>
+        </div>
+        <div class="text-left sm:text-right">
+          <span class="text-[8px] text-slate-400 block uppercase font-bold tracking-wider">PNR Reference Code</span>
+          <strong id="eticket-pnr-reference" class="text-base font-black text-slate-900 tracking-wider uppercase font-mono bg-amber-100 text-amber-950 px-2.5 py-1 rounded-lg">
+            PNR-LOS7712
+          </strong>
+        </div>
+      </div>
+
+      <!-- Main Passenger Info block -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mb-6 pb-5 border-b border-slate-100">
+        <div>
+          <span class="text-slate-400 block uppercase font-bold text-[8px] tracking-wider">Passenger Name</span>
+          <strong id="eticket-passenger-name" class="text-slate-900 text-sm font-black">John Doe</strong>
+        </div>
+        <div>
+          <span class="text-slate-400 block uppercase font-bold text-[8px] tracking-wider">Travel Class</span>
+          <strong id="eticket-travel-class" class="text-slate-900 text-sm font-bold">Economy Cabin Class</strong>
+        </div>
+        <div>
+          <span class="text-slate-400 block uppercase font-bold text-[8px] tracking-wider">Seat Number</span>
+          <strong class="text-slate-900 text-sm font-bold">12A (Window)</strong>
+        </div>
+        <div>
+          <span class="text-slate-400 block uppercase font-bold text-[8px] tracking-wider">Security Reference</span>
+          <strong id="eticket-hash-reference" class="text-slate-900 text-sm font-mono text-slate-500">#TK-90218</strong>
+        </div>
+      </div>
+
+      <!-- Itinerary breakdown details -->
+      <div class="p-5 bg-purple-50/50 rounded-2xl border border-purple-100/40 text-xs mb-6 font-semibold">
+        <span class="text-[9px] text-brand-orange uppercase font-bold block mb-1">Itinerary Assignment Details</span>
+        <h4 id="eticket-assigned-title" class="text-sm font-black text-brand-purple">Air Peace Airways</h4>
+        <p id="eticket-assigned-route" class="text-slate-500 mt-1 leading-relaxed">
+          Standard non-stop service out of Murtala Muhammed International Airport.
+        </p>
+      </div>
+
+      <!-- QR codes & verification status details -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
+        <div class="flex items-center space-x-3">
+          <!-- Scalable vector Barcode -->
+          <svg class="w-14 h-14 bg-slate-50 p-1.5 rounded-lg text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+            <line x1="7" y1="7" x2="7" y2="7"></line>
+            <line x1="17" y1="7" x2="17" y2="7"></line>
+            <line x1="17" y1="17" x2="17" y2="17"></line>
+            <line x1="7" y1="17" x2="7" y2="17"></line>
+          </svg>
+          <div>
+            <span class="text-[8px] text-slate-400 block uppercase font-bold">Boarding Gate QR</span>
+            <strong class="text-[10px] text-slate-700 font-mono block">VERIFIED_PAYMENT_HOOK</strong>
+          </div>
+        </div>
+        
+        <div class="text-center sm:text-right">
+          <span class="text-[9px] text-slate-400 block">System Verification Status</span>
+          <strong class="text-xs text-green-600 uppercase font-black tracking-wider block">✓ APPROVED & DISPATCHED</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Actions for ticket -->
+    <div class="flex items-center justify-between mt-8">
+      <button onclick="resetNavigation(event)" class="text-xs font-bold text-slate-500 hover:text-brand-orange underline">
+        ← Return to Travel Hub
+      </button>
+      <button onclick="window.print()" class="bg-brand-orange hover:bg-[#e05324] text-white font-black px-6 py-4 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all">
+        Print / Save PDF Copy
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ==========================================
+      HIGH-CONVERSION PROMOTION FOOTER LAYOUT
+      ========================================== -->
+  <footer class="bg-brand-purple text-purple-100 py-16 px-4 sm:px-8 border-t border-purple-950 mt-20">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-xs text-left">
+      
+      <!-- Brand Profile column -->
+      <div class="space-y-4">
+        <div class="flex items-center space-x-2">
+          <!-- Custom Vector Logo white version -->
+          <svg class="w-10 h-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#5E2870" />
+            <path d="M52 25C37.5 25 26 36.5 26 51C26 65.5 37.5 77 52 77C58 77 64 74.5 67.5 70.5L62.5 62C57 65.5 52 65.5 52 65.5C44 65.5 38 59 38 51C38 43 44 36.5 52 36.5C59.5 39.5 63 39.5 63 39.5L67.5 35C63.5 27.5 58 25 52 25Z" fill="#ffffff" />
+            <path d="M68.5 77C70 75 57 41 53.5 39C50.5 39 45.5 52.5 45.5 52.5L53.5 44.5L64.5 73.5H68.5Z" fill="#FA6432" />
+          </svg>
+          <div>
+            <span class="text-sm font-black tracking-tight block text-white uppercase">ALPHAA<span class="text-brand-orange">.</span>AFRICA</span>
+            <span class="text-[8px] font-bold text-brand-orange block tracking-widest uppercase">Travel & Tours</span>
+          </div>
+        </div>
+        <p class="leading-relaxed text-purple-200 font-semibold">
+          Alphaa.Africa modernizes traditional booking pathways across the West African continent through real-time GDS pipelines and instant auto-delivered ticketing.
+        </p>
+        <span class="text-[9px] text-purple-300 block">© 2026 Alphaa.Africa Travel & Tours.</span>
+      </div>
+
+      <!-- Services Column -->
+      <div>
+        <h4 class="font-extrabold text-white mb-4 uppercase tracking-wider text-sm">Services Engine</h4>
+        <ul class="space-y-2 text-purple-200 font-semibold">
+          <li><a href="#booking-engine" onclick="switchActiveTab('flights')" class="hover:text-white transition-colors">Domestic Air Travel bookings</a></li>
+          <li><a href="#booking-engine" onclick="switchActiveTab('hotels')" class="hover:text-white transition-colors">Global Hotel Integrator</a></li>
+          <li><a href="#booking-engine" onclick="switchActiveTab('tours')" class="hover:text-white transition-colors">Safaris & Curated Tours</a></li>
+          <li><a href="#booking-engine" onclick="switchActiveTab('cars')" class="hover:text-white transition-colors">Premium Chauffeur Fleets</a></li>
+        </ul>
+      </div>
+
+      <!-- Webhook Infrastructure -->
+      <div>
+        <h4 class="font-extrabold text-white mb-4 uppercase tracking-wider text-sm">Fintech & Integrity</h4>
+        <ul class="space-y-2 text-purple-200 font-semibold">
+          <li>60-Second Auto PDF Ticket Delivery</li>
+          <li>Paystack Webhook Signatures</li>
+          <li>AES 256 Data Encryption</li>
+          <li>Zero Hidden Aggregator Fees</li>
+        </ul>
+      </div>
+
+      <!-- Newsletter subscription -->
+      <div>
+        <h4 class="font-extrabold text-white mb-4 uppercase tracking-wider text-sm">Get Flight Fare Alerts</h4>
+        <p class="leading-relaxed text-purple-200 mb-3 font-semibold">Receive direct, dynamic airfare promotional codes right to your inbox.</p>
+        <div class="flex items-center bg-[#5E2870] rounded-xl overflow-hidden p-1.5 border border-purple-400/20">
+          <input type="email" placeholder="Your email address" class="w-full bg-transparent px-3 py-2 text-white placeholder-purple-300 focus:outline-none text-xs" />
+          <button onclick="displayNotificationToast('Subscription active! Fare alert updates enabled.')" class="bg-brand-orange hover:bg-[#e05324] text-white px-4 py-2 rounded-lg font-black uppercase tracking-wider transition-all">Go</button>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ==========================================
+      FRONTEND INTERACTION LOGIC & API SIMULATION CONTROLLERS
+      ========================================== -->
+  <script>
+    let activeModuleSelection = 'flights';
+    let activeSelectedBookingItem = null;
+
+    // Premium Mock Databases for dynamic visual lookups
+    const AIR_OFFERS_MOCK = [
+      { id: 'FL-001', carrier: 'Air Peace', number: 'P4-LOS90', from: 'LOS', to: 'ABV', dep: '08:30 AM', arr: '09:45 AM', duration: '1h 15m', stops: 'Direct', price: 120000, logo: '✈️' },
+      { id: 'FL-002', carrier: 'Africa World Airlines', number: 'AW-ACC71', from: 'LOS', to: 'LHR', dep: '10:00 AM', arr: '04:45 PM', duration: '6h 45m', stops: 'Direct', price: 1250000, logo: '🦁' },
+      { id: 'FL-003', carrier: 'Qatar Airways', number: 'QR-DXB12', from: 'LOS', to: 'DXB', dep: '01:15 PM', arr: '10:45 PM', duration: '7h 30m', stops: '1 Stop', price: 980000, logo: '🇶🇦' }
+    ];
+
+    const HOTEL_OFFERS_MOCK = [
+      { id: 'HT-101', name: 'Radisson Blu Anchorage Hotel', location: 'Victoria Island, Lagos', rating: '5 Stars', price: 240000, image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80' },
+      { id: 'HT-102', name: 'Transcorp Hilton Abuja', location: 'Maitama, Abuja', rating: '5 Stars', price: 310000, image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80' }
+    ];
+
+    const CAR_OFFERS_MOCK = [
+      { id: 'CR-201', name: 'Toyota Land Cruiser Prado', desc: 'Automatic • Professional Chauffeur Included', price: 85000, image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=400&q=80' },
+      { id: 'CR-202', name: 'Hyundai Elantra Luxury', desc: 'Automatic • Self-Drive or Driver Options', price: 45000, image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80' }
+    ];
+
+    // Notification toast triggers
+    function displayNotificationToast(msg) {
+      const toast = document.getElementById('marketing-toast');
+      const toastText = document.getElementById('toast-message');
+      toastText.innerText = msg;
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 5000);
+    }
+
+    // Scroll to booking utility
+    function scrollToWidget() {
+      document.getElementById('booking-engine').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Reset Page state
+    function resetNavigation(event) {
+      if (event) event.preventDefault();
+      document.getElementById('boarding-pass-eticket-viewport').classList.add('hidden');
+      document.getElementById('listings-viewports').classList.add('hidden');
+      document.getElementById('booking-engine').scrollIntoView({ behavior: 'smooth' });
+      displayNotificationToast("Booking portal navigation reset.");
+    }
+
+    // Module Active Tab switcher
+    function switchActiveTab(tabId) {
+      activeModuleSelection = tabId;
+      document.getElementById('listings-viewports').classList.add('hidden');
+
+      const btnFlights = document.getElementById('module-flights-btn');
+      const btnHotels = document.getElementById('module-hotels-btn');
+      const btnTours = document.getElementById('module-tours-btn');
+      const btnCars = document.getElementById('module-cars-btn');
+
+      const flightParams = document.getElementById('category-flight-only');
+      const ctaText = document.getElementById('search-cta-text');
+
+      // Reset all buttons to default inactive styling
+      [btnFlights, btnHotels, btnTours, btnCars].forEach(btn => {
+        btn.className = "flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all text-slate-500 hover:text-brand-purple hover:bg-purple-50";
+      });
+
+      flightParams.classList.add('hidden');
+
+      // Apply active configurations
+      if (tabId === 'flights') {
+        btnFlights.className = "flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all bg-brand-purple text-white shadow-lg shadow-[#4C1D5C]/10";
+        flightParams.classList.remove('hidden');
+        ctaText.innerText = "Check Flight Offers";
+        configureWidgetInputs("Departure City", "Arrival Destination", "Departure Date", "Cabin Selections");
+      } else if (tabId === 'hotels') {
+        btnHotels.className = "flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all bg-brand-purple text-white shadow-lg shadow-[#4C1D5C]/10";
+        ctaText.innerText = "Check Hotel Options";
+        configureWidgetInputs("Hotel Location", "Guest Capacity", "Check-In Date", "Lodging Tier");
+      } else if (tabId === 'tours') {
+        btnTours.className = "flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all bg-brand-purple text-white shadow-lg shadow-[#4C1D5C]/10";
+        ctaText.innerText = "Check Tour Packages";
+        configureWidgetInputs("Adventure Region", "Safari Duration", "Preferred Start Date", "Guidance Package");
+      } else if (tabId === 'cars') {
+        btnCars.className = "flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all bg-brand-purple text-white shadow-lg shadow-[#4C1D5C]/10";
+        ctaText.innerText = "Check Vehicle Fleet";
+        configureWidgetInputs("Pick-Up Point", "Drop-Off Point", "Rental Date", "Vehicle Category");
+      }
+
+      displayNotificationToast(`Switched search module: ${tabId.toUpperCase()}`);
+    }
+
+    function configureWidgetInputs(lbl1, lbl2, lbl3, lbl4) {
+      document.getElementById('interactive-label-1').innerText = lbl1;
+      document.getElementById('interactive-label-2').innerText = lbl2;
+      document.getElementById('interactive-label-3').innerText = lbl3;
+      document.getElementById('interactive-label-4').innerText = lbl4;
+    }
+
+    // Dynamic Search handling simulation
+    function handleAggregatorSearch(event) {
+      event.preventDefault();
+
+      const listingsView = document.getElementById('listings-viewports');
+      const skeleton = document.getElementById('loading-gds-skeleton');
+      const targetGrid = document.getElementById('aggregator-matches-grid');
+
+      listingsView.classList.remove('hidden');
+      skeleton.classList.remove('hidden');
+      targetGrid.innerHTML = "";
+
+      listingsView.scrollIntoView({ behavior: 'smooth' });
+      displayNotificationToast("Reaching Sabre & Amadeus API databases...");
+
+      setTimeout(() => {
+        skeleton.classList.add('hidden');
+        let cardInjections = "";
+
+        if (activeModuleSelection === 'flights') {
+          const originCity = document.getElementById('origin-selector').value;
+          const destCity = document.getElementById('destination-selector').value;
+
+          AIR_OFFERS_MOCK.forEach(flight => {
+            cardInjections += `
+              <div class="bg-white hover:bg-[#F6EFF7]/10 transition-all rounded-3xl p-6 border border-purple-100/60 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center space-x-4 self-start md:self-center">
+                  <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl border border-purple-100">
+                    ${flight.logo}
+                  </div>
+                  <div>
+                    <span class="text-xs text-brand-orange font-black block">${flight.carrier}</span>
+                    <span class="text-[9px] text-slate-400 font-bold block">${flight.number}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center space-x-8">
+                  <div class="text-center">
+                    <span class="text-base font-black text-brand-purple block">${flight.dep}</span>
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold">${originCity}</span>
+                  </div>
+                  <div class="text-center px-4">
+                    <span class="text-[10px] text-slate-400 block">${flight.duration}</span>
+                    <div class="w-16 h-0.5 bg-purple-200 my-1 relative">
+                      <div class="w-2 h-2 rounded-full bg-brand-orange absolute top-1/2 left-1/2 -translate-y-1/2"></div>
+                    </div>
+                    <span class="text-[9px] text-emerald-500 block font-bold">${flight.stops}</span>
+                  </div>
+                  <div class="text-center">
+                    <span class="text-base font-black text-brand-purple block">${flight.arr}</span>
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold">${destCity}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between md:justify-end w-full md:w-auto gap-8 border-t md:border-t-0 pt-4 md:pt-0 border-purple-50">
+                  <div class="text-left md:text-right">
+                    <span class="text-[9px] text-slate-400 block">All Taxes Inclusive</span>
+                    <strong class="text-xl sm:text-2xl font-black text-brand-purple block">₦${flight.price.toLocaleString()}</strong>
+                  </div>
+                  <button onclick="launchCheckoutWizard('flight', '${flight.carrier}', ${flight.price})" class="bg-brand-orange hover:bg-[#e05324] text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                    Book Flight
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        } else if (activeModuleSelection === 'hotels') {
+          HOTEL_OFFERS_MOCK.forEach(hotel => {
+            cardInjections += `
+              <div class="bg-white hover:bg-[#F6EFF7]/10 transition-all rounded-3xl p-6 border border-purple-100/60 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center space-x-4 self-start md:self-center">
+                  <img src="${hotel.image}" class="w-20 h-20 rounded-2xl object-cover border border-purple-100" />
+                  <div>
+                    <span class="text-[9px] text-brand-orange uppercase font-bold block">📍 ${hotel.location}</span>
+                    <h4 class="text-base font-extrabold text-brand-purple leading-tight">${hotel.name}</h4>
+                    <span class="text-[10px] text-slate-400 block mt-1">${hotel.rating} • Aggregator Option Verified</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between md:justify-end w-full md:w-auto gap-8 border-t md:border-t-0 pt-4 md:pt-0 border-purple-50">
+                  <div class="text-left md:text-right">
+                    <span class="text-[9px] text-slate-400 block">Price / Night</span>
+                    <strong class="text-xl sm:text-2xl font-black text-brand-purple block">₦${hotel.price.toLocaleString()}</strong>
+                  </div>
+                  <button onclick="launchCheckoutWizard('hotel reservation', '${hotel.name}', ${hotel.price})" class="bg-brand-orange hover:bg-[#e05324] text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                    Reserve Hotel
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          CAR_OFFERS_MOCK.forEach(car => {
+            cardInjections += `
+              <div class="bg-white hover:bg-[#F6EFF7]/10 transition-all rounded-3xl p-6 border border-purple-100/60 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center space-x-4 self-start md:self-center">
+                  <img src="${car.image}" class="w-20 h-20 rounded-2xl object-cover border border-purple-100" />
+                  <div>
+                    <span class="text-[9px] text-brand-orange uppercase font-bold block">🚗 Alphaa Fleet Selection</span>
+                    <h4 class="text-base font-extrabold text-brand-purple leading-tight">${car.name}</h4>
+                    <span class="text-[10px] text-slate-400 block mt-1">${car.desc}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between md:justify-end w-full md:w-auto gap-8 border-t md:border-t-0 pt-4 md:pt-0 border-purple-50">
+                  <div class="text-left md:text-right">
+                    <span class="text-[9px] text-slate-400 block">Daily Hire Rate</span>
+                    <strong class="text-xl sm:text-2xl font-black text-brand-purple block">₦${car.price.toLocaleString()}</strong>
+                  </div>
+                  <button onclick="launchCheckoutWizard('vehicle hire', '${car.name}', ${car.price})" class="bg-brand-orange hover:bg-[#e05324] text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all">
+                    Hire Vehicle
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        targetGrid.innerHTML = cardInjections;
+        displayNotificationToast("GDS response matching parameters successfully generated.");
+      }, 1000);
+    }
+
+    function clearSearchGrid() {
+      document.getElementById('listings-viewports').classList.add('hidden');
+      document.getElementById('booking-engine').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Direct Safari select triggers
+    function handleDirectTourSelect(title, price) {
+      launchCheckoutWizard('holiday safari', title, price);
+    }
+
+    // Modal Control wrappers
+    function displayActiveModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function dismissActiveModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Open Checkout Forms
+    function launchCheckoutWizard(type, name, price) {
+      activeSelectedBookingItem = { type, name, price };
+
+      document.getElementById('summary-display-title').innerText = name;
+      document.getElementById('summary-display-subtitle').innerText = `Primary Segment: ${type.toUpperCase()}`;
+      document.getElementById('summary-display-price').innerText = `₦${price.toLocaleString()}`;
+
+      displayActiveModal('checkout-form-modal');
+      displayNotificationToast(`Checkout created for ${name}`);
+    }
+
+    // Billing step overlay triggers
+    function launchBillingOverlay(event) {
+      event.preventDefault();
+
+      const userEmail = document.getElementById('pass-email').value;
+      const totalCost = activeSelectedBookingItem.price;
+
+      document.getElementById('billing-email-header').innerText = userEmail;
+      document.getElementById('billing-price-header').innerText = `₦${totalCost.toLocaleString()}`;
+
+      dismissActiveModal('checkout-form-modal');
+      displayActiveModal('billing-payment-modal');
+
+      document.getElementById('payment-selection-controls').classList.remove('hidden');
+      document.getElementById('payment-loading-indicators').classList.add('hidden');
+    }
+
+    // Process secure Webhooks simulated
+    function processSimulatedSecureWebhook() {
+      const selections = document.getElementById('payment-selection-controls');
+      const loaders = document.getElementById('payment-loading-indicators');
+      const loaderLabel = document.getElementById('loader-progress-text');
+
+      selections.classList.add('hidden');
+      loaders.classList.remove('hidden');
+
+      loaderLabel.innerText = "Querying secure transaction layers with Paystack...";
+
+      setTimeout(() => {
+        loaderLabel.innerText = "TX_SUCCESS verified signature received. Dispatching payload...";
+        displayNotificationToast("Paystack payment webhook verified successfully.");
+
+        setTimeout(() => {
+          loaderLabel.innerText = "Locking down flight provider PNR reference credentials...";
+
+          setTimeout(() => {
+            loaderLabel.innerText = "Compiling boarding PDF e-ticket with SMTP relay...";
+
+            setTimeout(() => {
+              // Successfully concluded transaction!
+              dismissActiveModal('billing-payment-modal');
+
+              const fNameInput = document.getElementById('pass-first-name').value;
+              const lNameInput = document.getElementById('pass-last-name').value;
+
+              // Generated dynamic values matching e-ticket
+              const mockPnrCode = `PNR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+              const mockSecHash = `#TK-${Math.floor(100000 + Math.random() * 900000)}`;
+
+              document.getElementById('eticket-passenger-name').innerText = `${fNameInput} ${lNameInput}`;
+              document.getElementById('eticket-pnr-reference').innerText = mockPnrCode;
+              document.getElementById('eticket-hash-reference').innerText = mockSecHash;
+              document.getElementById('eticket-assigned-title').innerText = `${activeSelectedBookingItem.name} (${activeSelectedBookingItem.type.toUpperCase()})`;
+              
+              const chosenCabinClass = document.getElementById('cabin-or-grade').value;
+              document.getElementById('eticket-travel-class').innerText = `${chosenCabinClass} Class`;
+
+              if (activeModuleSelection === 'flights') {
+                document.getElementById('eticket-assigned-route').innerText = "Departure is scheduled out of Murtala Muhammed International Airport. Please conclude gate checks 45 minutes prior.";
+              } else {
+                document.getElementById('eticket-assigned-route').innerText = `Vetted accommodations or logistics itinerary resolved at ${activeSelectedBookingItem.name}.`;
+              }
+
+              // Display the ticket viewport
+              document.getElementById('boarding-pass-eticket-viewport').classList.remove('hidden');
+              document.getElementById('boarding-pass-eticket-viewport').scrollIntoView({ behavior: 'smooth' });
+
+              displayNotificationToast("Automated E-Ticket successfully delivered!");
+            }, 1000);
+          }, 1000);
+        }, 1200);
+      }, 1200);
+    }
+  </script>
+
+</body>
+</html>
