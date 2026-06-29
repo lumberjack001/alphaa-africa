@@ -24,12 +24,11 @@ export default function Footer({ onSwitchTab, triggerToast }: FooterProps) {
         {/* Brand Profile column */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            {/* Custom Vector Logo white version */}
-            <svg className="w-10 h-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="50" r="48" fill="#5E2870" />
-              <path d="M52 25C37.5 25 26 36.5 26 51C26 65.5 37.5 77 52 77C58 77 64 74.5 67.5 70.5L62.5 62C57 65.5 52 65.5 52 65.5C44 65.5 38 59 38 51C38 43 44 36.5 52 36.5C59.5 39.5 63 39.5 63 39.5L67.5 35C63.5 27.5 58 25 52 25Z" fill="#ffffff" />
-              <path d="M68.5 77C70 75 57 41 53.5 39C50.5 39 45.5 52.5 45.5 52.5L53.5 44.5L64.5 73.5H68.5Z" fill="#FA6432" />
-            </svg>
+            <img 
+              src="/logo.png" 
+              alt="Alphaa.Africa Logo" 
+              className="w-10 h-10 rounded-xl object-contain bg-white p-0.5" 
+            />
             <div>
               <span className="text-sm font-black tracking-tight block text-white uppercase font-sans">ALPHAA<span className="text-brand-orange">.</span>AFRICA</span>
               <span className="text-[8px] font-bold text-brand-orange block tracking-widest uppercase">Travel & Tours</span>

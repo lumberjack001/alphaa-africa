@@ -17,6 +17,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Alphaa Africa Travels & Tours",
   description: "Seamless Flights, Curated Holidays & Expert Support",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -29,7 +32,7 @@ export default function RootLayout({
       lang="en"
       className={`${montserrat.variable} ${outfit.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col overflow-x-hidden">{children}</body>
+      <body suppressHydrationWarning className="min-h-full flex flex-col overflow-x-hidden">{children}</body>
     </html>
   );
 }

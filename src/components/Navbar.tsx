@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getStoredUser, clearTokens, clearStoredUser, type User } from '@/lib/api';
 
 interface NavbarProps {
   onSwitchTab: (tabId: string) => void;
@@ -13,6 +14,9 @@ interface NavbarProps {
 
 export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const tabs = [
     { id: 'flights', label: 'Flights' },
@@ -21,14 +25,42 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
     { id: 'booking', label: 'Manage Booking' },
   ];
 
+  // Load user from local storage
+  useEffect(() => {
+    setUser(getStoredUser());
+  }, []);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = () => {
+    clearTokens();
+    clearStoredUser();
+    setUser(null);
+    setIsProfileOpen(false);
+    window.location.href = '/';
+  };
+
+  const userInitials = user
+    ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+    : '';
+
   return (
     <header className="relative sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-purple-100 py-3.5 px-4 sm:px-8 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
 
-        {/* Brand Logo - Scalable Vector Reconstructed */}
+        {/* Brand Logo */}
         <button onClick={onReset} className="flex items-center space-x-3 group text-left cursor-pointer">
           <Image
-            src="/logo.jpeg"
+            src="/logo.png"
             alt="Alphaa.Africa Logo"
             width={48}
             height={48}
@@ -41,13 +73,20 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           </div>
         </button>
 
-        {/* Navigation Paths (Desktop viewport) */}
+        {/* Navigation Paths (Desktop) */}
         <nav className="hidden md:flex items-center space-x-8 text-xs font-bold uppercase tracking-wider">
           {tabs.map(tab => (
             <a
               key={tab.id}
-              href="#booking-engine"
-              onClick={() => onSwitchTab(tab.id)}
+              href={`/?tab=${tab.id}#booking-engine`}
+              onClick={(e) => {
+                if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                  e.preventDefault();
+                  onSwitchTab(tab.id);
+                  const el = document.getElementById('booking-engine');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
               className={`${activeTab === tab.id
                 ? 'text-brand-purple hover:text-brand-orange font-extrabold border-b border-brand-orange pb-1'
                 : 'text-slate-500 hover:text-brand-purple'
@@ -58,23 +97,81 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           ))}
         </nav>
 
-        {/* Auth Actions: Sign Up then Login (Desktop Viewport) */}
-        <div className="hidden md:flex items-center space-x-5">
-          <Link
-            href="/signup"
-            className="bg-brand-orange hover:bg-brand-purple text-white text-xs font-black px-5 py-3.5 rounded-xl uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all hover:-translate-y-0.5 cursor-pointer text-center inline-block"
-          >
-            Sign Up
-          </Link>
-          <Link
-            href="/login"
-            className="text-slate-500 hover:text-brand-purple text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors text-center inline-block"
-          >
-            Login
-          </Link>
+        {/* Auth Actions (Desktop) */}
+        <div className="hidden md:flex items-center space-x-4">
+          {user ? (
+            // Authenticated user: avatar + name + hover dropdown
+            <div ref={profileRef} className="relative">
+              <button
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onClick={() => setIsProfileOpen(prev => !prev)}
+                className="flex items-center space-x-2.5 group cursor-pointer"
+              >
+                {/* Avatar circle with initials */}
+                <div className="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center text-white text-[11px] font-black flex-shrink-0 ring-2 ring-brand-orange/30 group-hover:ring-brand-orange/60 transition-all">
+                  {userInitials}
+                </div>
+                <div className="text-left">
+                  <span className="text-[11px] font-black text-brand-purple block leading-none group-hover:text-brand-orange transition-colors">
+                    {user.first_name} {user.last_name}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-bold block mt-0.5 truncate max-w-28">{user.email}</span>
+                </div>
+                {/* Chevron */}
+                <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Profile Dropdown */}
+              {isProfileOpen && (
+                <div
+                  onMouseLeave={() => setIsProfileOpen(false)}
+                  className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-xl border border-purple-100 py-2 z-50 animate-fadeIn"
+                >
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-bold text-slate-600 hover:text-brand-purple hover:bg-purple-50/50 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    My Profile
+                  </Link>
+                  <div className="border-t border-purple-50 mx-3 my-1"></div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-bold text-slate-400 hover:text-red-500 hover:bg-red-50/40 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Guest: Sign Up + Login
+            <>
+              <Link
+                href="/signup"
+                className="bg-brand-orange hover:bg-brand-purple text-white text-xs font-black px-5 py-3.5 rounded-xl uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all hover:-translate-y-0.5 cursor-pointer text-center inline-block"
+              >
+                Sign Up
+              </Link>
+              <Link
+                href="/login"
+                className="text-slate-500 hover:text-brand-purple text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors text-center inline-block"
+              >
+                Login
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Hamburger Menu Icon (Mobile Viewport) */}
+        {/* Hamburger (Mobile) */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="md:hidden p-2 text-brand-purple hover:text-brand-orange focus:outline-none transition-colors cursor-pointer"
@@ -91,20 +188,27 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
 
       </div>
 
-      {/* Mobile Dropdown Overlay Menu */}
+      {/* Mobile Dropdown Overlay */}
       {isOpen && (
         <div className="md:hidden absolute top-[100%] left-0 w-full bg-white border-b border-purple-100 shadow-xl p-5 space-y-4 flex flex-col z-30 animate-fadeIn duration-200">
           {tabs.map(tab => (
             <a
               key={tab.id}
-              href="#booking-engine"
-              onClick={() => {
-                onSwitchTab(tab.id);
-                setIsOpen(false);
+              href={`/?tab=${tab.id}#booking-engine`}
+              onClick={(e) => {
+                if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                  e.preventDefault();
+                  onSwitchTab(tab.id);
+                  setIsOpen(false);
+                  const el = document.getElementById('booking-engine');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  setIsOpen(false);
+                }
               }}
               className={`block text-xs font-black uppercase tracking-wider py-2 transition-colors ${activeTab === tab.id
-                  ? 'text-brand-purple border-l-2 border-brand-orange pl-3'
-                  : 'text-slate-500 hover:text-brand-purple pl-3'
+                ? 'text-brand-purple border-l-2 border-brand-orange pl-3'
+                : 'text-slate-500 hover:text-brand-purple pl-3'
                 }`}
             >
               {tab.label}
@@ -112,20 +216,49 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           ))}
           <hr className="border-purple-100 my-2" />
           <div className="flex flex-col gap-3">
-            <Link
-              href="/signup"
-              onClick={() => setIsOpen(false)}
-              className="w-full bg-brand-orange hover:bg-brand-purple text-white text-xs font-black py-3.5 rounded-xl uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all cursor-pointer text-center block"
-            >
-              Sign Up
-            </Link>
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="w-full border border-purple-100 hover:border-brand-purple text-slate-500 hover:text-brand-purple text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider cursor-pointer transition-colors text-center block"
-            >
-              Login
-            </Link>
+            {user ? (
+              <>
+                <div className="flex items-center gap-3 px-1 py-2">
+                  <div className="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center text-white text-[11px] font-black flex-shrink-0">
+                    {userInitials}
+                  </div>
+                  <div>
+                    <span className="text-sm font-black text-brand-purple block">{user.first_name} {user.last_name}</span>
+                    <span className="text-[10px] text-slate-400">{user.email}</span>
+                  </div>
+                </div>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full border border-purple-100 hover:border-brand-purple text-slate-600 hover:text-brand-purple text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider cursor-pointer transition-colors text-center block"
+                >
+                  My Profile
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full border border-red-100 hover:bg-red-50 text-red-400 hover:text-red-600 text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider cursor-pointer transition-colors text-center"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full bg-brand-orange hover:bg-brand-purple text-white text-xs font-black py-3.5 rounded-xl uppercase tracking-wider shadow-lg shadow-[#FA6432]/10 transition-all cursor-pointer text-center block"
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full border border-purple-100 hover:border-brand-purple text-slate-500 hover:text-brand-purple text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider cursor-pointer transition-colors text-center block"
+                >
+                  Login
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
