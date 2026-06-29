@@ -13,6 +13,7 @@ interface SearchWidgetProps {
     origin: string;
     destination: string;
     date: string;
+    checkoutDate?: string;
     cabin: string;
   }) => void;
 }
@@ -21,6 +22,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
   const [origin, setOrigin] = useState('LOS');
   const [destination, setDestination] = useState('ABV');
   const [date, setDate] = useState('2026-07-20');
+  const [checkoutDate, setCheckoutDate] = useState('2026-07-27');
   const [cabinClass, setCabinClass] = useState('Economy');
 
   // Flight tab states
@@ -60,6 +62,8 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
     } else if (activeTab === 'hotels') {
       setOrigin('LOS');
       setDestination('2 Guests');
+      setDate('2026-07-20');
+      setCheckoutDate('2026-07-27');
       setCabinClass('5 Stars');
     } else if (activeTab === 'tours') {
       setOrigin('ZNZ');
@@ -96,8 +100,9 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
       onSearch({
         tab: activeTab,
         origin,
-        destination,
+        destination: activeTab === 'hotels' ? `${adultsCount + childrenCount + infantsCount} Guests` : destination,
         date,
+        checkoutDate: activeTab === 'hotels' ? checkoutDate : undefined,
         cabin: cabinClass,
       });
     }
@@ -628,6 +633,18 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
               )}
 
               <div className="flex items-center gap-3 ml-auto w-full sm:w-auto justify-end">
+                {tripType === 'multi-city' && (
+                  <TravellersSelect
+                    adultsCount={adultsCount}
+                    setAdultsCount={setAdultsCount}
+                    childrenCount={childrenCount}
+                    setChildrenCount={setChildrenCount}
+                    infantsCount={infantsCount}
+                    setInfantsCount={setInfantsCount}
+                    className="w-56 text-left shrink-0 py-2.5"
+                  />
+                )}
+
                 {tripType !== 'multi-city' && (
                   <CustomSelect
                     id="flight-cabin"
@@ -662,46 +679,86 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
         ) : (
           /* STANDARD OTHER MODULES (Hotels, Packages, Car Rentals) */
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === 'hotels' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
 
               {/* INPUT UNIT 1: Source / Region */}
-              <CustomSelect
-                id="standard-origin"
-                label={config.lbl1}
-                value={origin}
-                options={config.options1}
-                onChange={setOrigin}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                  </svg>
-                }
-              />
+              {activeTab === 'hotels' ? (
+                <div className="custom-picker-container relative bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange focus-within:border-brand-orange transition-all duration-300 flex flex-col justify-center">
+                  <label className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Hotel Location / Name</label>
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Where are you staying?"
+                      value={origin}
+                      onChange={(e) => setOrigin(e.target.value)}
+                      className="w-full bg-transparent text-brand-purple font-extrabold text-sm focus:outline-none placeholder:text-slate-400 border-none p-0 outline-none"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <CustomSelect
+                  id="standard-origin"
+                  label={config.lbl1}
+                  value={origin}
+                  options={config.options1}
+                  onChange={setOrigin}
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  }
+                />
+              )}
 
               {/* INPUT UNIT 2: Destination */}
-              <CustomSelect
-                id="standard-destination"
-                label={config.lbl2}
-                value={destination}
-                options={config.options2}
-                onChange={setDestination}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                  </svg>
-                }
-              />
+              {activeTab === 'hotels' ? (
+                <TravellersSelect
+                  adultsCount={adultsCount}
+                  setAdultsCount={setAdultsCount}
+                  childrenCount={childrenCount}
+                  setChildrenCount={setChildrenCount}
+                  infantsCount={infantsCount}
+                  setInfantsCount={setInfantsCount}
+                />
+              ) : (
+                <CustomSelect
+                  id="standard-destination"
+                  label={config.lbl2}
+                  value={destination}
+                  options={config.options2}
+                  onChange={setDestination}
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  }
+                />
+              )}
 
-              {/* INPUT UNIT 3: Calendars */}
+              {/* INPUT UNIT 3: Calendars (Check-In) */}
               <CustomDatePicker
                 id="standard-date"
                 label={config.lbl3}
                 value={date}
                 onChange={setDate}
-                alignRight={true}
+                alignRight={activeTab !== 'hotels'}
               />
+
+              {/* INPUT UNIT 3B: Check-Out Date (Hotels only) */}
+              {activeTab === 'hotels' && (
+                <CustomDatePicker
+                  id="hotel-checkout"
+                  label="Check-Out Date"
+                  value={checkoutDate}
+                  onChange={setCheckoutDate}
+                  alignRight={false}
+                />
+              )}
 
               {/* INPUT UNIT 4: Selections classes */}
               <CustomSelect
