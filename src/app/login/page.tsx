@@ -13,15 +13,15 @@ type AuthView = 'login' | 'forgot_request' | 'forgot_confirm';
 export default function LoginPage() {
   const router = useRouter();
   const [view, setView] = useState<AuthView>('login');
-  
+
   // Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // Reset Password Fields
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  
+
   // UX State
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -63,7 +63,7 @@ export default function LoginPage() {
       setTokens(data.access, data.refresh);
       setStoredUser(data.user);
       triggerToast(`Welcome back, ${data.user.first_name}!`);
-      
+
       // Redirect to home dashboard
       setTimeout(() => {
         router.push('/');
@@ -145,15 +145,15 @@ export default function LoginPage() {
 
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
-      
+
       <Navbar
-        onSwitchTab={() => {}}
+        onSwitchTab={() => { }}
         onReset={() => router.push('/')}
         activeTab=""
       />
 
       <main className="flex-grow">
-        
+
         {/* Purple Banner Header */}
         <div className="bg-gradient-to-br from-[#4C1D5C] to-[#2E1238] text-white pt-16 pb-28 px-4 text-center">
           <h1 className="text-3xl sm:text-4xl font-black font-sans uppercase tracking-tight">
@@ -171,11 +171,11 @@ export default function LoginPage() {
         {/* Form Overlay Container */}
         <div className="max-w-md w-full mx-auto px-4 -mt-16 mb-20 relative z-10">
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-purple-50 text-left">
-            
+
             {view === 'login' && (
               <>
                 {/* Third-Party Authentication buttons */}
-                <div className="space-y-3">
+                {/* <div className="space-y-3">
                   <button
                     type="button"
                     onClick={() => handleOAuth('Google')}
@@ -202,12 +202,12 @@ export default function LoginPage() {
                   </button>
                 </div>
 
-                {/* Divider */}
+                {/* Divider 
                 <div className="flex items-center my-6">
                   <div className="flex-grow border-t border-slate-100"></div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mx-3">or sign in with email</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mx-3">sign in with email</span>
                   <div className="flex-grow border-t border-slate-100"></div>
-                </div>
+                </div> */}
 
                 {/* Login Form */}
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -358,7 +358,7 @@ export default function LoginPage() {
 
       </main>
 
-      <Footer onSwitchTab={() => {}} triggerToast={triggerToast} />
+      <Footer onSwitchTab={() => { }} triggerToast={triggerToast} />
 
       <Toast message={toastMessage} visible={toastVisible} />
 
