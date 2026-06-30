@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface FooterProps {
   onSwitchTab: (tabId: string) => void;
@@ -9,6 +10,19 @@ interface FooterProps {
 
 export default function Footer({ onSwitchTab, triggerToast }: FooterProps) {
   const [email, setEmail] = useState('');
+  const router = useRouter();
+
+  const handleTabNav = (tabId: string) => {
+    onSwitchTab(tabId);
+    // If already on home page, scrolling is handled by onSwitchTab.
+    // If on another page, navigate home with the tab param.
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      router.push(`/?tab=${tabId}`);
+    } else {
+      const el = document.getElementById('booking-engine');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,40 +59,36 @@ export default function Footer({ onSwitchTab, triggerToast }: FooterProps) {
           <h4 className="font-extrabold text-white mb-4 uppercase tracking-wider text-sm font-sans">Services Engine</h4>
           <ul className="space-y-2 text-purple-200 font-semibold">
             <li>
-              <a
-                href="#booking-engine"
-                onClick={() => onSwitchTab('flights')}
-                className="hover:text-white transition-colors cursor-pointer"
+              <button
+                onClick={() => handleTabNav('flights')}
+                className="hover:text-white transition-colors cursor-pointer bg-transparent border-none text-left text-purple-200 font-semibold"
               >
                 Domestic Air Travel bookings
-              </a>
+              </button>
             </li>
             <li>
-              <a
-                href="#booking-engine"
-                onClick={() => onSwitchTab('hotels')}
-                className="hover:text-white transition-colors cursor-pointer"
+              <button
+                onClick={() => handleTabNav('hotels')}
+                className="hover:text-white transition-colors cursor-pointer bg-transparent border-none text-left text-purple-200 font-semibold"
               >
                 Global Hotel Integrator
-              </a>
+              </button>
             </li>
             <li>
-              <a
-                href="#booking-engine"
-                onClick={() => onSwitchTab('tours')}
-                className="hover:text-white transition-colors cursor-pointer"
+              <button
+                onClick={() => handleTabNav('tours')}
+                className="hover:text-white transition-colors cursor-pointer bg-transparent border-none text-left text-purple-200 font-semibold"
               >
-                Safaris & Curated Tours
-              </a>
+                Safaris &amp; Curated Tours
+              </button>
             </li>
             <li>
-              <a
-                href="#booking-engine"
-                onClick={() => onSwitchTab('cars')}
-                className="hover:text-white transition-colors cursor-pointer"
+              <button
+                onClick={() => handleTabNav('cars')}
+                className="hover:text-white transition-colors cursor-pointer bg-transparent border-none text-left text-purple-200 font-semibold"
               >
                 Premium Chauffeur Fleets
-              </a>
+              </button>
             </li>
           </ul>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -16,6 +17,7 @@ import {
 } from '@/lib/api';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,7 +49,7 @@ export default function ProfilePage() {
       // If not logged in, redirect
       const stored = getStoredUser();
       if (!stored) {
-        window.location.href = '/login';
+        router.push('/login');
         return;
       }
 
@@ -64,7 +66,7 @@ export default function ProfilePage() {
         if (error instanceof ApiError && error.status === 401) {
           clearTokens();
           clearStoredUser();
-          window.location.href = '/login';
+          router.push('/login');
         } else {
           // Use cached data as fallback
           setUser(stored);
@@ -138,7 +140,7 @@ export default function ProfilePage() {
   const handleSignOut = () => {
     clearTokens();
     clearStoredUser();
-    window.location.href = '/';
+    router.push('/');
   };
 
   const userInitials = user
@@ -148,8 +150,8 @@ export default function ProfilePage() {
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
       <Navbar
-        onSwitchTab={() => {}}
-        onReset={() => (window.location.href = '/')}
+        onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)}
+        onReset={() => router.push('/')}
         activeTab=""
       />
 

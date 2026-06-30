@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -11,7 +11,7 @@ import BoardingPass from '@/components/BoardingPass';
 import { ApiError } from '@/lib/api';
 import { hotelService } from '@/services/hotelService';
 
-export default function HotelDetailPage() {
+function HotelDetailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { slug } = useParams() as { slug: string };
@@ -197,7 +197,7 @@ export default function HotelDetailPage() {
   if (isLoading) {
     return (
       <div className="bg-[#FAF8F5] min-h-screen flex flex-col justify-between">
-        <Navbar onSwitchTab={() => {}} onReset={() => router.push('/')} activeTab="hotels" />
+        <Navbar onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)} onReset={() => router.push('/')} activeTab="hotels" />
         <div className="flex-grow flex items-center justify-center p-8">
           <div className="text-center space-y-4">
             <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -214,7 +214,7 @@ export default function HotelDetailPage() {
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
       <Navbar
-        onSwitchTab={(tabId) => (window.location.href = `/#booking-engine`)}
+        onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)}
         onReset={() => router.push('/')}
         activeTab="hotels"
       />
@@ -383,5 +383,17 @@ export default function HotelDetailPage() {
 
       <Toast message={toastMessage} visible={toastVisible} />
     </div>
+  );
+}
+
+export default function HotelDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+    }>
+      <HotelDetailPageContent />
+    </Suspense>
   );
 }

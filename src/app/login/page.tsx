@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,6 +11,7 @@ import { apiFetch, setTokens, setStoredUser, ApiError } from '@/lib/api';
 type AuthView = 'login' | 'forgot_request' | 'forgot_confirm';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [view, setView] = useState<AuthView>('login');
   
   // Fields
@@ -64,7 +66,7 @@ export default function LoginPage() {
       
       // Redirect to home dashboard
       setTimeout(() => {
-        window.location.href = '/';
+        router.push('/');
       }, 1000);
 
     } catch (error) {
@@ -146,7 +148,7 @@ export default function LoginPage() {
       
       <Navbar
         onSwitchTab={() => {}}
-        onReset={() => window.location.href = '/'}
+        onReset={() => router.push('/')}
         activeTab=""
       />
 

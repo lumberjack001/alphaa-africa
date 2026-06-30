@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import SearchWidget from '@/components/SearchWidget';
@@ -8,7 +8,7 @@ import Listings from '@/components/Listings';
 import Footer from '@/components/Footer';
 import Toast from '@/components/Toast';
 
-export default function HotelsQueryPage() {
+function HotelsQueryPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -87,7 +87,7 @@ export default function HotelsQueryPage() {
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
       <Navbar
-        onSwitchTab={(tabId) => (window.location.href = `/#booking-engine`)}
+        onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)}
         onReset={() => router.push('/')}
         activeTab="hotels"
       />
@@ -136,5 +136,17 @@ export default function HotelsQueryPage() {
       <Footer onSwitchTab={() => {}} triggerToast={triggerToast} />
       <Toast message={toastMessage} visible={toastVisible} />
     </div>
+  );
+}
+
+export default function HotelsQueryPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <HotelsQueryPageContent />
+    </Suspense>
   );
 }

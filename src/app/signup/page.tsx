@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,6 +11,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 type SignupStep = 'register' | 'verify';
 
 export default function SignupPage() {
+  const router = useRouter();
   const [step, setStep] = useState<SignupStep>('register');
   
   // Registration Fields
@@ -101,7 +103,7 @@ export default function SignupPage() {
       
       // Redirect to login page
       setTimeout(() => {
-        window.location.href = '/login';
+        router.push('/login');
       }, 1500);
 
     } catch (error) {
@@ -137,7 +139,7 @@ export default function SignupPage() {
       
       <Navbar
         onSwitchTab={() => {}}
-        onReset={() => window.location.href = '/'}
+        onReset={() => router.push('/')}
         activeTab=""
       />
 

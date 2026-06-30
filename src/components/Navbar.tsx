@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getStoredUser, clearTokens, clearStoredUser, type User } from '@/lib/api';
 
 interface NavbarProps {
@@ -13,6 +14,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
     clearStoredUser();
     setUser(null);
     setIsProfileOpen(false);
-    window.location.href = '/';
+    router.push('/');
   };
 
   const userInitials = user
