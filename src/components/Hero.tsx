@@ -15,24 +15,76 @@ interface HeroProps {
   }) => void;
 }
 
+const CAROUSEL_SLIDES = [
+  {
+    image: '/kilimanjaro_hero_bg.png',
+    label: 'Mount Kilimanjaro, Tanzania',
+  },
+  {
+    image: '/zanzibar_beach.png',
+    label: 'Zanzibar Beaches, Tanzania',
+  },
+  {
+    image: '/serengeti_safari.png',
+    label: 'Serengeti National Park, Tanzania',
+  },
+  {
+    image: '/lagos_nigeria.png',
+    label: 'Lagos, Nigeria',
+  },
+  {
+    image: '/abuja_aso_rock.png',
+    label: 'Abuja, Nigeria',
+  },
+  {
+    image: '/cape_town.png',
+    label: 'Cape Town, South Africa',
+  },
+];
+
+const SLIDE_DURATION = 5000; // ms per slide
+
 export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
+    }, SLIDE_DURATION);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section
-      className="relative bg-scroll md:bg-fixed bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
-      style={{ backgroundImage: "url('/kilimanjaro_hero_bg.png')" }}
+      className="relative bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
     >
+      {/* Carousel background layers - cross-fade */}
+      {CAROUSEL_SLIDES.map((slide, idx) => (
+        <div
+          key={slide.image}
+          aria-hidden="true"
+          className="absolute inset-0 bg-center bg-cover bg-no-repeat"
+          style={{
+            backgroundImage: `url('${slide.image}')`,
+            opacity: idx === currentSlide ? 1 : 0,
+            transition: 'opacity 1.2s ease-in-out',
+            zIndex: idx === currentSlide ? 1 : 0,
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+
       {/* Rich dark purple/blue gradient overlay for premium contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#2E1238]/85 via-[#4C1D5C]/60 to-[#FAF8F5] z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#2E1238]/85 via-[#4C1D5C]/60 to-[#FAF8F5] z-10 pointer-events-none"></div>
 
       {/* Giant Triplio-style Background Text */}
       <div
-        className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10vw] font-black text-white/5 uppercase tracking-[0.1em] pointer-events-none select-none z-0 transition-all duration-1000 ease-out ${
+        className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10vw] font-black text-white/5 uppercase tracking-[0.1em] pointer-events-none select-none z-10 transition-all duration-1000 ease-out ${
           isLoaded ? 'top-1/2 opacity-100' : 'top-[55%] opacity-0'
         }`}
       >
@@ -41,28 +93,27 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
         AFRICA
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col justify-between h-full">
+      <div className="relative z-20 max-w-7xl mx-auto w-full flex flex-col justify-between h-full">
 
         {/* Content Row: Text Details */}
         <div className="text-left max-w-4xl mb-10 space-y-4">
 
-
-          {/* Main Headline from Screenshot 2 */}
+          {/* Main Headline */}
           <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight uppercase font-sans">
             Travel Beyond <span className="text-brand-orange">Borders</span>
           </h1>
 
-          {/* Subheadline from Screenshot 2 */}
+          {/* Subheadline */}
           <h2 className="text-lg sm:text-2xl font-bold text-white tracking-wide font-sans leading-snug">
             Seamless Flights. Curated Holidays. Trusted Travel Experts.
           </h2>
 
-          {/* Description from Screenshot 2 */}
+          {/* Description */}
           <p className="text-sm sm:text-base text-purple-100/90 max-w-3xl leading-relaxed font-semibold">
             From local trips to global journeys, Alphaa Africa Travels and Tours delivers the best travel deals with stress-free planning and expert support every step of the way.
           </p>
 
-          {/* Badges/Trust Row from Screenshot 1 & 2 */}
+          {/* Badges/Trust Row */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4 text-xs font-semibold text-white">
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
