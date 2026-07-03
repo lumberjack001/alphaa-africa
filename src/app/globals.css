@@ -10,8 +10,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-outfit);
   --font-heading: var(--font-montserrat);
-  --color-brand-purple: #4C1D5C;
-  --color-brand-orange: #FA6432;
+  --color-brand-purple: #4f1758;
+  --color-brand-orange: #ff6736;
 }
 
 @media (prefers-color-scheme: dark) {
