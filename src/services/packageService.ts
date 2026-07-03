@@ -38,7 +38,13 @@ export interface EnquiryPayload {
 
 export const packageService = {
   async getDestinations(): Promise<Destination[]> {
-    return apiFetch<Destination[]>('/api/packages/destinations/');
+    const data = await apiFetch<any>('/api/packages/destinations/');
+    return Array.isArray(data) ? data : (data.results || []);
+  },
+
+  async getAllPackages(): Promise<Package[]> {
+    const data = await apiFetch<any>('/api/packages/');
+    return Array.isArray(data) ? data : (data.results || []);
   },
 
   async getPackages(destinationSlug: string): Promise<Package[]> {
