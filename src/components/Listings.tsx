@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   AIR_OFFERS_MOCK,
-  HOTEL_OFFERS_MOCK,
   CAR_OFFERS_MOCK,
   AIRPORT_REGISTRY
 } from '../constants/mockData';
@@ -46,6 +45,7 @@ export default function Listings({
 
   // Detail view state for modal (fallback when onHotelClick is not active)
   const [selectedHotel, setSelectedHotel] = useState<HotelDetails | null>(null);
+  const [selectedFlight, setSelectedFlight] = useState<any | null>(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
 
   // Load dynamic hotels when tab is hotels
@@ -101,18 +101,8 @@ export default function Listings({
   const originName = getCityName(origin);
   const destinationName = getCityName(destination);
 
-  // Fallback support for hotels to ensure beautiful demo rendering
-  const activeHotels: HotelCard[] = hotels.length > 0 ? hotels : HOTEL_OFFERS_MOCK.map((mock) => ({
-    id: mock.id,
-    name: mock.name,
-    slug: mock.id.toLowerCase(),
-    city: mock.location.split(',')[0].trim(),
-    country: mock.location.split(',')[1]?.trim() || 'Nigeria',
-    star_rating: 5,
-    main_image: mock.image,
-    starting_price: mock.price,
-    amenities_list: ['Free Wifi', 'Pool', 'Breakfast Included', 'Gym']
-  }));
+  // Live active hotels from backend
+  const activeHotels: HotelCard[] = hotels;
 
   const handleOpenHotelDetails = async (hotelCard: HotelCard) => {
     setFetchingDetails(true);
@@ -121,41 +111,8 @@ export default function Listings({
       const data = await hotelService.getHotelDetails(slug);
       setSelectedHotel(data);
     } catch (e) {
-      console.warn("Could not fetch hotel details from API, using client mock details:", e);
-      // Construct fallback details page
-      setSelectedHotel({
-        id: hotelCard.id,
-        name: hotelCard.name,
-        slug: hotelCard.slug,
-        city: hotelCard.city,
-        country: hotelCard.country,
-        star_rating: hotelCard.star_rating,
-        main_image: hotelCard.main_image,
-        starting_price: hotelCard.starting_price,
-        description: "Experience premium lodging with Alphaa.Africa integration. Exceptional hospitality in the heart of the city.",
-        amenities_list: hotelCard.amenities_list,
-        gallery_images: [hotelCard.main_image],
-        room_types: [
-          {
-            id: 1,
-            name: "Standard Deluxe Room",
-            description: "Comfortable single king bed with modern business amenities.",
-            price_per_night: hotelCard.starting_price,
-            max_guests: 2,
-            total_rooms: 10,
-            image: hotelCard.main_image
-          },
-          {
-            id: 2,
-            name: "Executive Penthouse Suite",
-            description: "Panoramic city line scenery with private mini-bar and premium workspace.",
-            price_per_night: Math.round(Number(hotelCard.starting_price) * 1.5),
-            max_guests: 4,
-            total_rooms: 3,
-            image: hotelCard.main_image
-          }
-        ]
-      });
+      console.error("Could not fetch hotel details from API:", e);
+      setSelectedHotel(null);
     } finally {
       setFetchingDetails(false);
     }
@@ -218,19 +175,24 @@ export default function Listings({
                 originName={originName}
                 destinationName={destinationName}
                 onBook={onBook}
+                onSelect={setSelectedFlight}
               />
             ))}
 
           {/* Hotel Listings */}
           {activeTab === 'hotels' &&
-            activeHotels.map((hotel) => (
-              <HotelListingCard
-                key={hotel.id}
-                hotel={hotel}
-                fetchingDetails={fetchingDetails}
-                onSelect={handleSelectHotelCard}
-                hasClickRouter={!!onHotelClick}
-              />
+            (activeHotels.length === 0 ? (
+              <p className="text-center text-slate-400 font-bold py-12">No active hotel accommodations currently listed for this search criteria.</p>
+            ) : (
+              activeHotels.map((hotel) => (
+                <HotelListingCard
+                  key={hotel.id}
+                  hotel={hotel}
+                  fetchingDetails={fetchingDetails}
+                  onSelect={handleSelectHotelCard}
+                  hasClickRouter={!!onHotelClick}
+                />
+              ))
             ))}
 
           {/* Vehicle Hire Listings */}
@@ -330,6 +292,90 @@ export default function Listings({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Flight details selector modal */}
+      {selectedFlight && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white text-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-purple-100 shadow-2xl overflow-y-auto max-h-[90vh] text-left">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-purple-50">
+              <div>
+                <span className="text-brand-orange text-[10px] uppercase font-black tracking-widest block font-sans">✈️ Flight Information</span>
+                <h3 className="text-2xl font-black text-brand-purple font-sans">{selectedFlight.carrier} • {selectedFlight.number}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedFlight(null)}
+                className="text-slate-400 hover:text-brand-orange text-xl font-bold p-1 cursor-pointer border-none bg-transparent"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Flight itinerary visualization */}
+              <div className="bg-purple-50/20 border border-purple-100/40 rounded-2xl p-6 flex justify-between items-center gap-4">
+                <div className="text-left">
+                  <strong className="text-2xl font-black text-brand-purple block leading-none">{selectedFlight.dep}</strong>
+                  <span className="text-xs text-slate-500 font-bold uppercase mt-1.5 block">{originName}</span>
+                </div>
+                
+                <div className="flex-1 flex flex-col items-center px-4">
+                  <span className="text-[10px] text-slate-400 font-semibold">{selectedFlight.duration}</span>
+                  <div className="w-full h-0.5 bg-brand-orange/30 my-2 relative">
+                    <div className="w-2.5 h-2.5 rounded-full bg-brand-orange absolute top-1/2 left-1/2 -translate-y-1/2"></div>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{selectedFlight.stops}</span>
+                </div>
+
+                <div className="text-right">
+                  <strong className="text-2xl font-black text-brand-purple block leading-none">{selectedFlight.arr}</strong>
+                  <span className="text-xs text-slate-500 font-bold uppercase mt-1.5 block">{destinationName}</span>
+                </div>
+              </div>
+
+              {/* Detailed specs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white rounded-2xl p-4 border border-purple-50 space-y-3">
+                  <h4 className="font-extrabold text-brand-purple text-xs uppercase tracking-wider">Flight Specifications</h4>
+                  <ul className="text-xs space-y-2 font-semibold text-slate-600">
+                    <li>✈️ <span className="text-slate-400">Aircraft:</span> Boeing 787-9 / E195-E2</li>
+                    <li>🛋️ <span className="text-slate-400">Cabin Class:</span> Standard Economy</li>
+                    <li>📏 <span className="text-slate-400">Seat Pitch:</span> 32 inches (Standard)</li>
+                    <li>🔄 <span className="text-slate-400">Refund Policy:</span> Changeable with fee</li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 border border-purple-50 space-y-3">
+                  <h4 className="font-extrabold text-brand-purple text-xs uppercase tracking-wider">Baggage & Amenities</h4>
+                  <ul className="text-xs space-y-2 font-semibold text-slate-600">
+                    <li>🧳 <span className="text-slate-400">Checked:</span> 2x 23kg Bags Included</li>
+                    <li>🎒 <span className="text-slate-400">Carry-on:</span> 1x 7kg Bag Included</li>
+                    <li>📶 <span className="text-slate-400">Onboard WiFi:</span> High-speed (paid)</li>
+                    <li>🍔 <span className="text-slate-400">Catering:</span> Hot meals & beverages</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Booking Actions */}
+              <div className="border-t border-purple-50 pt-6 flex items-center justify-between">
+                <div>
+                  <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Total price from</span>
+                  <strong className="text-2xl font-black text-brand-purple">₦{selectedFlight.price.toLocaleString()}</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onBook({ type: 'flight', name: selectedFlight.carrier, price: selectedFlight.price });
+                    setSelectedFlight(null);
+                  }}
+                  className="bg-brand-orange hover:bg-brand-purple text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer border-none shadow-md"
+                >
+                  Book E-Ticket
+                </button>
               </div>
             </div>
           </div>

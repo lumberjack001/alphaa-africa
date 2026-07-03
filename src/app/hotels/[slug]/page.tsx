@@ -76,41 +76,8 @@ function HotelDetailPageContent() {
         const data = await hotelService.getHotelDetails(slug);
         setHotel(data);
       } catch (error) {
-        console.warn("Could not fetch hotel details from API, using dynamic fallback:", error);
-        // Clean fallback
-        setHotel({
-          id: 1,
-          name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-          slug: slug,
-          city: "Lagos",
-          country: "Nigeria",
-          star_rating: 5,
-          main_image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-          description: "Experience absolute premium lodging with Alphaa.Africa integration. Exceptional hospitality in the heart of the city with luxury rooms and direct pool access.",
-          amenities_list: ["Free Wifi", "Pool Access", "Breakfast Included", "Fitness Gym", "24/7 Security"],
-          gallery_images: [
-            "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1582719478250-c89cae4db85b?auto=format&fit=crop&w=800&q=80"
-          ],
-          room_types: [
-            {
-              id: 1,
-              name: "Standard Deluxe Room",
-              description: "Comfortable single king bed with modern business amenities and workspace.",
-              price_per_night: 45000,
-              max_guests: 2,
-              image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"
-            },
-            {
-              id: 2,
-              name: "Executive Penthouse Suite",
-              description: "Panoramic city line scenery with private mini-bar, double king beds, and premium bathroom amenities.",
-              price_per_night: 85000,
-              max_guests: 4,
-              image: "https://images.unsplash.com/photo-1582719478250-c89cae4db85b?auto=format&fit=crop&w=800&q=80"
-            }
-          ]
-        });
+        console.error("Could not fetch hotel details from API:", error);
+        setHotel(null);
       } finally {
         setIsLoading(false);
       }
@@ -209,7 +176,28 @@ function HotelDetailPageContent() {
     );
   }
 
-  if (!hotel) return null;
+  if (!hotel) {
+    return (
+      <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
+        <Navbar onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)} onReset={() => router.push('/')} activeTab="hotels" />
+        <div className="flex-grow flex items-center justify-center p-8">
+          <div className="text-center space-y-4">
+            <span className="text-4xl block">🏨</span>
+            <h2 className="text-lg font-black text-brand-purple uppercase tracking-tight">Accommodation Details Unavailable</h2>
+            <p className="text-xs text-slate-400 font-semibold max-w-sm mx-auto">This hotel could not be loaded from the backend API. Please check your network connection or try another search selection.</p>
+            <button
+              onClick={() => router.push('/hotels')}
+              className="bg-brand-purple hover:bg-brand-orange text-white font-extrabold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all border-none cursor-pointer mt-4"
+            >
+              Back to hotels list
+            </button>
+          </div>
+        </div>
+        <Footer onSwitchTab={() => {}} triggerToast={triggerToast} />
+        <Toast message={toastMessage} visible={toastVisible} />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">

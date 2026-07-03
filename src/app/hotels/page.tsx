@@ -49,6 +49,20 @@ function HotelsQueryPageContent() {
     });
   }, [destinationParam, checkInParam, checkOutParam, guestsParam, starsParam]);
 
+  // Smooth scroll search results into view
+  useEffect(() => {
+    if (!isLoading) {
+      const hasQuery = searchParams.has('destination') || searchParams.has('check_in');
+      if (hasQuery) {
+        const timer = setTimeout(() => {
+          const el = document.getElementById('listings-viewports');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isLoading, searchParams]);
+
   const handleSearchSubmit = (params: {
     tab: string;
     origin: string;
@@ -57,6 +71,15 @@ function HotelsQueryPageContent() {
     checkoutDate?: string;
     cabin: string;
   }) => {
+    if (params.tab === 'tours' || params.tab === 'packages') {
+      router.push('/packages');
+      return;
+    }
+    if (params.tab === 'flights') {
+      router.push(`/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}&cabin=${encodeURIComponent(params.cabin)}`);
+      return;
+    }
+
     setIsLoading(true);
     triggerToast("Searching active travel database records...");
     
@@ -73,6 +96,18 @@ function HotelsQueryPageContent() {
     setTimeout(() => {
       setIsLoading(false);
     }, 1000); // reset loader state
+  };
+
+  const handleSwitchTab = (tabId: string) => {
+    if (tabId === 'flights') {
+      router.push('/flights');
+    } else if (tabId === 'hotels') {
+      router.push('/hotels');
+    } else if (tabId === 'tours' || tabId === 'packages') {
+      router.push('/packages');
+    } else {
+      router.push(`/?tab=${tabId}`);
+    }
   };
 
   const handleHotelClick = (slug: string) => {
@@ -108,7 +143,7 @@ function HotelsQueryPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-16 relative z-10">
           <SearchWidget
             activeTab="hotels"
-            onSwitchTab={() => {}}
+            onSwitchTab={handleSwitchTab}
             onSearch={handleSearchSubmit}
           />
         </div>
