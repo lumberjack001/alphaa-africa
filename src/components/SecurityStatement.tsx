@@ -1,121 +1,212 @@
 "use client";
 
 import React from 'react';
+import { useScrollEntrance } from '@/hooks/useScrollEntrance';
 
 export default function SecurityStatement() {
-  const benefits = [
-    {
-      title: "Rapid E-Ticket Delivery",
-      description: "Confirmed bookings are processed immediately, with official e-tickets and PNR boarding documents delivered straight to your inbox.",
-      icon: "⚡"
-    },
-    {
-      title: "Fast, Hassle-Free Bookings",
-      description: "We find the best routes and fares quickly—so you spend less time searching and more time traveling.",
-      icon: "✈️"
-    },
-    {
-      title: "Real-Time Pricing",
-      description: "Live access to airline and travel inventories ensures transparent pricing and up-to-date availability, with no hidden charges.",
-      icon: "📊"
-    },
-    {
-      title: "Expert-Led Advisory",
-      description: "Every trip is guided by experienced travel consultants who validate routes, fares, visas, and conditions before confirmation.",
-      icon: "🎓"
-    },
-    {
-      title: "24/7 Human Support",
-      description: "Enjoy responsive assistance for rebookings, cancellations, rerouting, and urgent travel needs handled by real professionals.",
-      icon: "📞"
-    },
-    {
-      title: "Africa-Rooted. Global.",
-      description: "We blend deep local travel knowledge with international standards, offering guidance that works in real-world environments.",
-      icon: "🌍"
-    },
-    {
-      title: "Built for Modern Travelers",
-      description: "Whether you’re traveling for work, family, or leisure, we keep things simple, reliable, and stress-free.",
-      icon: "💼",
-      colSpan: true
-    }
-  ];
+  const [band1Ref, band1Visible] = useScrollEntrance();
+  const [band2Ref, band2Visible] = useScrollEntrance();
+  const [band3Ref, band3Visible] = useScrollEntrance();
 
   return (
-    <section id="marketing-value" className="relative bg-gradient-to-b from-white via-[#FAF8F5] to-[#F6EFF7]/30 py-24 px-4 sm:px-8 overflow-hidden text-left">
+    <div id="marketing-value" className="w-full overflow-hidden">
       
-      {/* Decorative colored glow orbs for premium aesthetics */}
-      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-brand-orange/5 to-transparent rounded-full filter blur-3xl pointer-events-none -z-10 animate-pulse duration-10000"></div>
-      <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-gradient-to-tr from-brand-purple/5 to-transparent rounded-full filter blur-3xl pointer-events-none -z-10"></div>
-
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      {/* Band 1: Trust & Security (Dark Mode) */}
+      <section 
+        ref={band1Ref}
+        className="bg-gradient-to-br from-[#2E1238] via-[#1D0C22] to-[#120518] text-white py-24 px-4 sm:px-8 relative border-b border-purple-950"
+      >
+        {/* Glow orb */}
+        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-brand-orange/5 rounded-full filter blur-3xl pointer-events-none -z-10 animate-pulse duration-10000"></div>
+        
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center text-left">
           
-          {/* Left Column: Why Choose Us Info (5 cols) */}
-          <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
-            <div className="space-y-4">
-              <span className="bg-brand-orange/10 text-brand-orange text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full inline-block">
-                Why Choose Us
-              </span>
-              <h2 className="text-3xl sm:text-5xl font-black text-brand-purple leading-[1.1] uppercase font-sans tracking-tight">
-                Travel Today Is <span className="text-brand-orange">Unpredictable.</span> <br />
-                Your Support <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple to-brand-orange">Shouldn’t Be.</span>
-              </h2>
-              <div className="w-16 h-1.5 bg-gradient-to-r from-brand-orange to-brand-purple rounded-full"></div>
-            </div>
-            
-            <p className="text-slate-600 text-sm leading-relaxed font-semibold">
-              Alphaa Africa transforms standard travel bookings into seamless, end-to-end journeys. Our systems, expertise, and support structure are designed to remove friction, eliminate uncertainty, and deliver consistent results for individuals, families, and corporate travelers.
+          {/* Header & Typography (7 cols) */}
+          <div 
+            className={`lg:col-span-7 space-y-6 transition-all duration-1000 ease-out transform ${
+              band1Visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-16'
+            }`}
+          >
+            <span className="text-brand-orange text-xs font-black uppercase tracking-widest block animate-pulse">
+              01 / Global Trust & Standards
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black leading-[1.1] uppercase font-sans tracking-tight">
+              Secured on <span className="text-brand-orange">Official</span> <br />
+              Airline API Channels.
+            </h2>
+            <div className="w-20 h-1.5 bg-brand-orange rounded-full transition-all duration-1000 delay-500 scale-x-100 origin-left"></div>
+            <p className="text-purple-200/80 text-sm leading-relaxed font-semibold max-w-xl">
+              We safeguard your transactions through direct system handshakes. By routing ticketing credentials over encrypted, official GDS and NDC connections, we eliminate mid-tier handlers and ensure complete checkout security.
             </p>
-
-            {/* Embedded Visual Badge with glassmorphism */}
-            <div className="bg-gradient-to-br from-brand-purple via-brand-purple to-[#2E1238] text-white p-6 rounded-[2rem] border border-purple-400/20 shadow-xl shadow-brand-purple/10 hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-lg">🛡️</div>
-                <div>
-                  <h4 className="font-extrabold text-xs text-brand-orange font-sans tracking-wide uppercase">Verified Agency Standards</h4>
-                  <span className="text-[8px] text-purple-200 uppercase font-black tracking-widest block mt-0.5">IATA Certified Integrator</span>
-                </div>
-              </div>
-              <p className="text-[11px] text-purple-100/90 leading-relaxed font-medium">
-                Your ticketing credentials and transaction queries process over highly secure channels. Built on reliability. Driven by precision.
-              </p>
-            </div>
           </div>
-
-          {/* Right Column: Benefits Checklist (7 cols, 2-column grid of cards) */}
-          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {benefits.map((b, idx) => (
-              <div 
-                key={idx} 
-                className={`bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-purple-100/60 hover:border-brand-orange/40 hover:shadow-xl hover:shadow-brand-purple/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between space-y-4 ${
-                  b.colSpan ? 'sm:col-span-2' : ''
-                }`}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-9 h-9 rounded-2xl bg-purple-50 group-hover:bg-brand-orange/10 text-brand-purple group-hover:text-brand-orange transition-colors flex items-center justify-center text-sm font-bold shadow-sm">
-                      {b.icon}
-                    </div>
-                    <span className="text-[10px] text-brand-orange/60 font-black tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-                      ✓ verified
-                    </span>
-                  </div>
-                  
-                  <h4 className="text-brand-purple font-extrabold text-sm sm:text-base font-sans tracking-tight group-hover:text-brand-orange transition-colors">
-                    {b.title}
-                  </h4>
-                  <p className="text-slate-500 text-xs leading-relaxed font-semibold">
-                    {b.description}
-                  </p>
+          
+          {/* Visual Trust Badge (5 cols) */}
+          <div 
+            className={`lg:col-span-5 transition-all duration-1000 ease-out delay-200 transform ${
+              band1Visible ? 'opacity-100 translate-y-0 rotate-0' : 'opacity-0 translate-y-16 rotate-2'
+            }`}
+          >
+            <div className="bg-white/5 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/10 shadow-2xl space-y-6 hover:border-brand-orange/30 hover:shadow-brand-orange/5 hover:scale-[1.01] transition-all duration-500 group">
+              <div className="flex items-center space-x-4">
+                <div className="w-14 h-14 bg-brand-orange text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-brand-orange/20 group-hover:rotate-6 transition-transform duration-300">
+                  🛡️
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-sm text-brand-orange font-sans tracking-wide uppercase">IATA Certified Integrator</h4>
+                  <span className="text-[9px] text-purple-300 uppercase font-black tracking-widest block mt-0.5">TLS 1.3 Encrypted Channel</span>
                 </div>
               </div>
-            ))}
+              
+              <ul className="space-y-4 text-xs font-semibold text-purple-100/90">
+                {[
+                  { bold: "Direct Handshakes:", detail: "Instant booking credentials verification." },
+                  { bold: "Data Protection:", detail: "Full passenger info encryption standard." },
+                  { bold: "Official PNR:", detail: "Direct airline-validated record creation." }
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start space-x-2.5 group/item">
+                    <span className="text-brand-orange text-sm leading-none transition-transform group-hover/item:scale-125">✓</span>
+                    <span><strong>{item.bold}</strong> {item.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Band 2: Support & Dedication (Light Mode) */}
+      <section 
+        ref={band2Ref}
+        className="bg-white text-slate-800 py-24 px-4 sm:px-8 border-b border-purple-50"
+      >
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center text-left">
+          
+          {/* Visual Support Avatar Showcase (5 cols) */}
+          <div 
+            className={`lg:col-span-5 lg:order-1 order-2 transition-all duration-1000 ease-out transform ${
+              band2Visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-16'
+            }`}
+          >
+            <div className="bg-gradient-to-br from-[#FAF8F5] to-[#F6EFF7]/40 p-8 rounded-[2.5rem] border border-purple-100/50 shadow-sm space-y-6 hover:shadow-2xl hover:border-brand-purple/20 transition-all duration-500 group">
+              <div className="flex items-center justify-between">
+                <div className="flex -space-x-3.5">
+                  {[
+                    { name: 'Sarah', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=80&h=80&q=80', translate: 'group-hover:-translate-x-1' },
+                    { name: 'Daniel', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=80&h=80&q=80', translate: '' },
+                    { name: 'Amara', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=facearea&facepad=2&w=80&h=80&q=80', translate: 'group-hover:translate-x-1' },
+                  ].map((av, i) => (
+                    <img
+                      key={i}
+                      src={av.img}
+                      alt={av.name}
+                      className={`w-12 h-12 rounded-full border-4 border-white object-cover shadow-sm transition-transform duration-300 ${av.translate}`}
+                    />
+                  ))}
+                </div>
+                <span className="bg-brand-purple/10 text-brand-purple text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> ALWAYS ONLINE
+                </span>
+              </div>
+
+              <ul className="space-y-4 text-xs font-semibold text-slate-600">
+                {[
+                  { bold: "Zero Bot Queues:", detail: "Connect directly to certified travel specialists." },
+                  { bold: "Instant Rerouting:", detail: "Quick rebookings during flight cancellations." },
+                  { bold: "Global Care:", detail: "24/7 urgent handling of travel logistics." }
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start space-x-2.5 group/item">
+                    <span className="text-brand-purple text-sm leading-none transition-transform group-hover/item:scale-125">✓</span>
+                    <span><strong>{item.bold}</strong> {item.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Header & Typography (7 cols) */}
+          <div 
+            className={`lg:col-span-7 lg:order-2 order-1 space-y-6 transition-all duration-1000 ease-out delay-200 transform ${
+              band2Visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-16'
+            }`}
+          >
+            <span className="text-brand-purple text-xs font-black uppercase tracking-widest block">
+              02 / 24-7 Human Dedication
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black leading-[1.1] uppercase font-sans tracking-tight text-brand-purple">
+              We Solve Travel <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple to-brand-orange">Complications</span> <br />
+              In Minutes.
+            </h2>
+            <div className="w-20 h-1.5 bg-brand-purple rounded-full"></div>
+            <p className="text-slate-500 text-sm leading-relaxed font-semibold max-w-xl">
+              Travel today is unpredictable, but your support structure shouldn't be. Bypassing automated chatbots, our dedicated team of live consultants works around the clock to handle cancellations, visa verification, and immediate re-routing.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Band 3: Inventory & Pricing (Soft Lilac Mode) */}
+      <section 
+        ref={band3Ref}
+        className="bg-gradient-to-b from-white via-[#FAF8F5] to-[#F6EFF7]/30 py-24 px-4 sm:px-8"
+      >
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center text-left">
+          
+          {/* Header & Typography (7 cols) */}
+          <div 
+            className={`lg:col-span-7 space-y-6 transition-all duration-1000 ease-out transform ${
+              band3Visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-16'
+            }`}
+          >
+            <span className="text-brand-purple text-xs font-black uppercase tracking-widest block">
+              03 / Real-Time Sync & Booking
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black leading-[1.1] uppercase font-sans tracking-tight text-brand-purple">
+              Real-Time Pricing. <br />
+              <span className="text-brand-orange">Instant</span> PNR Delivery.
+            </h2>
+            <div className="w-20 h-1.5 bg-gradient-to-r from-brand-purple to-brand-orange rounded-full"></div>
+            <p className="text-slate-500 text-sm leading-relaxed font-semibold max-w-xl">
+              Compare flight schedules and lodging availability directly connected to live carrier databases. With transparent pricing, automatic currency conversion, and instant boarding pass dispatch, what you book is guaranteed.
+            </p>
+          </div>
+          
+          {/* Visual Booking Confirmation Pass (5 cols) */}
+          <div 
+            className={`lg:col-span-5 transition-all duration-1000 ease-out delay-200 transform ${
+              band3Visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
+            }`}
+          >
+            <div className="bg-white border border-purple-100 p-8 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:border-brand-orange/30 hover:scale-[1.005] transition-all duration-500 space-y-6 group">
+              <div className="flex items-center justify-between border-b border-purple-50 pb-4">
+                <div className="space-y-1">
+                  <span className="text-[8px] text-slate-400 font-bold uppercase block leading-none">Best Price Found</span>
+                  <strong className="text-lg font-black text-brand-purple">₦850,000</strong>
+                </div>
+                <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-[9px] font-black px-3 py-1 rounded-xl uppercase tracking-wider transition-colors group-hover:bg-emerald-100">
+                  ✓ 100% Verified
+                </span>
+              </div>
+              
+              <ul className="space-y-4 text-xs font-semibold text-slate-600">
+                {[
+                  { bold: "Zero Hidden Fees:", detail: "Live pricing synced with GDS." },
+                  { bold: "Rapid E-Ticket:", detail: "PNR reference delivered instantly." },
+                  { bold: "Optimal Routing:", detail: "Auto-combines layovers and best fares." }
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start space-x-2.5 group/item">
+                    <span className="text-brand-orange text-sm leading-none transition-transform group-hover/item:scale-125">✓</span>
+                    <span><strong>{item.bold}</strong> {item.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
   );
 }
