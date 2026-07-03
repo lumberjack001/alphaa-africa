@@ -17,17 +17,20 @@ interface FlightListingCardProps {
   originName: string;
   destinationName: string;
   onBook: (item: { type: string; name: string; price: number }) => void;
+  onSelect?: (flight: any) => void;
 }
 
 export default function FlightListingCard({
   flight,
   originName,
   destinationName,
-  onBook
+  onBook,
+  onSelect
 }: FlightListingCardProps) {
   return (
     <div
-      className="bg-white hover:bg-[#F6EFF7]/10 transition-all rounded-3xl p-6 border border-purple-100/60 flex flex-col md:flex-row items-center justify-between gap-6"
+      onClick={() => onSelect && onSelect(flight)}
+      className="bg-white hover:bg-[#F6EFF7]/10 transition-all rounded-3xl p-6 border border-purple-100/60 flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:border-brand-purple/40"
     >
       <div className="flex items-center space-x-4 self-start md:self-center">
         <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl border border-purple-100">
@@ -66,7 +69,10 @@ export default function FlightListingCard({
         </div>
         <button
           type="button"
-          onClick={() => onBook({ type: 'flight', name: flight.carrier, price: flight.price })}
+          onClick={(e) => {
+            e.stopPropagation();
+            onBook({ type: 'flight', name: flight.carrier, price: flight.price });
+          }}
           className="bg-brand-orange hover:bg-brand-purple text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none"
         >
           Book Flight
