@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import CustomSelect from './CustomSelect';
 import CustomDatePicker from './CustomDatePicker';
 import TravellersSelect from './TravellersSelect';
@@ -239,16 +240,15 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
         >
           <span>🏨</span> <span>Hotels</span>
         </button>
-        <button
-          type="button"
-          onClick={() => onSwitchTab('tours')}
+        <Link
+          href="/packages"
           className={`flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${activeTab === 'tours'
             ? ' shadow-lg shadow-[#4C1D5C]/10'
             : 'text-slate-500 hover:text-brand-purple hover:bg-purple-50'
             }`}
         >
           <span>🧳</span> <span>Packages</span>
-        </button>
+        </Link>
         <button
           type="button"
           onClick={() => onSwitchTab('cars')}

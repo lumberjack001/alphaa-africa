@@ -24,7 +24,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
     { id: 'flights', label: 'Flights' },
     { id: 'hotels', label: 'Hotels' },
     { id: 'tours', label: 'Packages' },
-    { id: 'booking', label: 'Manage Booking' },
+    // { id: 'booking', label: 'Manage Booking' },
   ];
 
   // Load user from local storage
@@ -75,13 +75,15 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           </div>
         </button>
 
-        {/* Navigation Paths (Desktop) */}
         <nav className="hidden md:flex items-center space-x-8 text-xs font-bold uppercase tracking-wider">
           {tabs.map(tab => (
             <a
               key={tab.id}
-              href={`/?tab=${tab.id}#booking-engine`}
+              href={tab.id === 'tours' ? '/packages' : `/?tab=${tab.id}#booking-engine`}
               onClick={(e) => {
+                if (tab.id === 'tours') {
+                  return;
+                }
                 if (typeof window !== 'undefined' && window.location.pathname === '/') {
                   e.preventDefault();
                   onSwitchTab(tab.id);
@@ -196,8 +198,12 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           {tabs.map(tab => (
             <a
               key={tab.id}
-              href={`/?tab=${tab.id}#booking-engine`}
+              href={tab.id === 'tours' ? '/packages' : `/?tab=${tab.id}#booking-engine`}
               onClick={(e) => {
+                if (tab.id === 'tours') {
+                  setIsOpen(false);
+                  return;
+                }
                 if (typeof window !== 'undefined' && window.location.pathname === '/') {
                   e.preventDefault();
                   onSwitchTab(tab.id);

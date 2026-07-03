@@ -104,6 +104,14 @@ function HomeContent() {
       window.location.href = `/hotels?destination=${encodeURIComponent(params.origin)}&check_in=${params.date}&check_out=${params.checkoutDate || ''}&guests=${params.destination}&stars=${params.cabin}`;
       return;
     }
+    if (params.tab === 'flights') {
+      window.location.href = `/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}&cabin=${encodeURIComponent(params.cabin)}`;
+      return;
+    }
+    if (params.tab === 'tours') {
+      window.location.href = '/packages';
+      return;
+    }
     setLocalSearchParams({
       origin: params.origin,
       destination: params.destination,
