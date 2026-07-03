@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import Toast from '@/components/Toast';
 import { apiFetch, setTokens, setStoredUser, ApiError } from '@/lib/api';
 
-type AuthView = 'login' | 'forgot_request' | 'forgot_confirm';
+type AuthView = 'login' | 'forgot_request' | 'forgot_verify' | 'forgot_reset_password';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,6 +21,9 @@ export default function LoginPage() {
   // Reset Password Fields
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const isPasswordMismatched = confirmPassword !== '' && newPassword !== confirmPassword;
 
   // UX State
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +100,7 @@ export default function LoginPage() {
       });
 
       triggerToast("Reset request sent! Please check your inbox for a verification code.");
-      setView('forgot_confirm');
+      setView('forgot_verify');
     } catch (error) {
       // Endpoint always returns success for privacy, but handle client/network faults
       triggerToast("Connection failed. Try again.");
@@ -106,10 +109,27 @@ export default function LoginPage() {
     }
   };
 
+  const handleVerifyCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetCode) {
+      triggerToast("Please enter the verification code.");
+      return;
+    }
+    if (resetCode.trim().length !== 6) {
+      triggerToast("Verification code must be exactly 6 digits.");
+      return;
+    }
+    setView('forgot_reset_password');
+  };
+
   const handleForgotPasswordConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !resetCode || !newPassword) {
+    if (!email || !resetCode || !newPassword || !confirmPassword) {
       triggerToast("Please fill in all recovery fields.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
       return;
     }
 
@@ -127,6 +147,9 @@ export default function LoginPage() {
       triggerToast("Password reset successfully! You can now log in.");
       setView('login');
       setPassword('');
+      setResetCode('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (error) {
       if (error instanceof ApiError) {
         const details = error.data?.detail || error.data?.code?.[0] || error.message;
@@ -159,12 +182,14 @@ export default function LoginPage() {
           <h1 className="text-3xl sm:text-4xl font-black font-sans uppercase tracking-tight">
             {view === 'login' && "Welcome Back"}
             {view === 'forgot_request' && "Reset Password"}
-            {view === 'forgot_confirm' && "Confirm Reset"}
+            {view === 'forgot_verify' && "Verify Code"}
+            {view === 'forgot_reset_password' && "Set Password"}
           </h1>
           <p className="text-sm text-purple-100 mt-2 font-semibold">
             {view === 'login' && "Log in to manage your bookings and access exclusive deals"}
             {view === 'forgot_request' && "Enter your registered email to request a reset code"}
-            {view === 'forgot_confirm' && "Enter verification code and set your new password"}
+            {view === 'forgot_verify' && "Enter the 6-digit verification code sent to your email"}
+            {view === 'forgot_reset_password' && "Enter and confirm your new password"}
           </p>
         </div>
 
@@ -304,29 +329,18 @@ export default function LoginPage() {
               </form>
             )}
 
-            {view === 'forgot_confirm' && (
-              <form onSubmit={handleForgotPasswordConfirm} className="space-y-4">
+            {view === 'forgot_verify' && (
+              <form onSubmit={handleVerifyCode} className="space-y-4">
                 <div>
                   <label className="block text-slate-500 font-bold text-xs mb-1.5">Reset Verification Code</label>
                   <input
                     type="text"
                     required
+                    maxLength={6}
                     placeholder="6-digit code"
                     value={resetCode}
                     onChange={(e) => setResetCode(e.target.value)}
                     className="w-full bg-purple-50/20 border border-slate-200 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold text-xs text-center tracking-widest focus:outline-none font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-500 font-bold text-xs mb-1.5">New Password</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-purple-50/20 border border-slate-200 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold text-xs focus:outline-none"
                   />
                 </div>
 
@@ -340,8 +354,61 @@ export default function LoginPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isLoading}
-                    className="w-2/3 bg-brand-orange hover:bg-brand-purple text-white font-black py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none flex items-center justify-center disabled:opacity-50"
+                    className="w-2/3 bg-brand-orange hover:bg-brand-purple text-white font-black py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none flex items-center justify-center"
+                  >
+                    Verify Code
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {view === 'forgot_reset_password' && (
+              <form onSubmit={handleForgotPasswordConfirm} className="space-y-4">
+                <div>
+                  <label className="block text-slate-500 font-bold text-xs mb-1.5">New Password</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-purple-50/20 border border-slate-200 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-500 font-bold text-xs mb-1.5">Confirm Password</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full border input-focus-effect rounded-xl p-3 font-semibold text-xs focus:outline-none transition-all ${
+                      isPasswordMismatched 
+                        ? 'bg-red-50/10 border-red-400 focus:border-red-550 text-red-900' 
+                        : 'bg-purple-50/20 border-slate-200 text-brand-purple'
+                    }`}
+                  />
+                  {isPasswordMismatched && (
+                    <p className="text-red-500 font-bold text-[10px] mt-1.5 uppercase tracking-wider">
+                      Passwords do not match
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setView('forgot_verify')}
+                    className="w-1/3 border border-slate-200 hover:border-slate-300 font-bold py-4 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || isPasswordMismatched || !newPassword || !confirmPassword}
+                    className="w-2/3 bg-brand-orange hover:bg-brand-purple text-white font-black py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
