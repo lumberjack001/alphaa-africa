@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ApiError } from '../lib/api';
 import { hotelService } from '@/services/hotelService';
+import { carService } from '@/services/carService';
 
 interface BillingModalProps {
   isOpen: boolean;
@@ -36,9 +37,9 @@ export default function BillingModal({
     checkTotalAmount()
     if (paystackUrl) {
       setIsPaidPressed(true);
-      // Open Paystack portal in a new tab
-      window.open(paystackUrl, '_blank');
-      triggerToast("Paystack billing authorization portal loaded in a new tab.");
+      // Redirect to Paystack portal in same tab
+      window.location.href = paystackUrl;
+      triggerToast("Redirecting to Paystack billing authorization portal...");
     } else {
       // Mock Fallback
       setIsLoading(true);
@@ -71,7 +72,10 @@ export default function BillingModal({
     setLoaderText("Verifying Paystack payment reference with backend API...");
 
     try {
-      const verifyData = await hotelService.verifyBooking(paymentRef);
+      const isCarBooking = !!(bookingResponse?.booking?.pickup_location || bookingResponse?.booking?.num_hours);
+      const verifyData = isCarBooking 
+        ? await carService.verifyBooking(paymentRef)
+        : await hotelService.verifyBooking(paymentRef);
 
       // Verification returns booking status (confirmed, pending, failed)
       // Usually matching: status = 'confirmed'

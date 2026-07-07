@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ApiError, getStoredUser } from '../lib/api';
 import { hotelService } from '@/services/hotelService';
 import { packageService } from '@/services/packageService';
+import { carService } from '@/services/carService';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ interface CheckoutModalProps {
       check_in?: string;
       check_out?: string;
       num_guests?: number;
+      vehicle_id?: number | string;
+      pickup_date?: string;
+      hours?: number | string;
     } 
   } | null;
   onDismiss: () => void;
@@ -52,6 +56,13 @@ export default function CheckoutModal({
   const [numChildren, setNumChildren] = useState(0);
   const [enquiryMessage, setEnquiryMessage] = useState('Interested in booking this curated holiday packages safari trip.');
 
+  // Vehicle specific fields
+  const [pickupLocation, setPickupLocation] = useState('');
+  const [dropoffLocation, setDropoffLocation] = useState('');
+  const [pickupDate, setPickupDate] = useState('2026-07-20');
+  const [pickupTime, setPickupTime] = useState('09:00');
+  const [carHours, setCarHours] = useState(5);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -76,6 +87,14 @@ export default function CheckoutModal({
           if (payload.num_guests) setNumGuests(payload.num_guests);
         }
       }
+
+      if (selectedProduct && (selectedProduct.type === 'vehicle' || selectedProduct.type === 'vehicle hire')) {
+        const payload = selectedProduct.payload;
+        if (payload) {
+          if (payload.pickup_date) setPickupDate(payload.pickup_date);
+          if (payload.hours) setCarHours(Number(payload.hours));
+        }
+      }
     }
   }, [isOpen, selectedProduct]);
 
@@ -83,6 +102,7 @@ export default function CheckoutModal({
 
   const isHotel = selectedProduct.type === 'hotel';
   const isPackage = selectedProduct.type === 'package' || selectedProduct.type === 'holiday safari' || selectedProduct.type === 'holiday';
+  const isVehicle = selectedProduct.type === 'vehicle' || selectedProduct.type === 'vehicle hire';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,10 +125,30 @@ export default function CheckoutModal({
           num_guests: Number(numGuests),
           guest_name: `${firstName} ${lastName}`,
           guest_email: email,
-          guest_phone: phone
+          guest_phone: phone,
+          callback_url: `${window.location.origin}/api/payments/callback/`
         });
 
         // Booking successful -> proceed to billing modal with api transaction response details
+        onProceed({ firstName, lastName, email, phone }, bookingData, false);
+      } else if (isVehicle) {
+        // Run car booking API endpoint
+        const payload = selectedProduct.payload;
+        const vehicleId = payload?.vehicle_id || 1;
+        const formattedDateTime = `${pickupDate}T${pickupTime}:00Z`;
+
+        const bookingData = await carService.createBooking({
+          vehicle_id: Number(vehicleId),
+          pickup_location: pickupLocation,
+          dropoff_location: dropoffLocation,
+          pickup_datetime: formattedDateTime,
+          num_hours: Number(carHours),
+          guest_name: `${firstName} ${lastName}`,
+          guest_email: email,
+          guest_phone: phone,
+          callback_url: `${window.location.origin}/api/payments/callback/?type=car`
+        });
+
         onProceed({ firstName, lastName, email, phone }, bookingData, false);
       } else if (isPackage) {
         // Resolve package slug
@@ -178,7 +218,9 @@ export default function CheckoutModal({
           const nightsCount = calculateNights();
           const displayCost = isHotel 
             ? selectedProduct.price * nightsCount * Number(numRooms) 
-            : selectedProduct.price;
+            : isVehicle
+              ? selectedProduct.price * Number(carHours)
+              : selectedProduct.price;
 
           return (
             <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100 mb-6">
@@ -187,7 +229,7 @@ export default function CheckoutModal({
               <p className="text-xs text-slate-500 mt-1">Primary Segment: {selectedProduct.type.toUpperCase()}</p>
               <div className="flex items-center justify-between border-t border-purple-100 mt-3 pt-3 text-xs">
                 <span className="text-slate-500 font-semibold">
-                  {isHotel ? `Total Estimate (${nightsCount} Night${nightsCount > 1 ? 's' : ''}, ${numRooms} Room${Number(numRooms) > 1 ? 's' : ''}):` : 'Price Estimate:'}
+                  {isHotel ? `Total Estimate (${nightsCount} Night${nightsCount > 1 ? 's' : ''}, ${numRooms} Room${Number(numRooms) > 1 ? 's' : ''}):` : isVehicle ? `Total Estimate (${carHours} Hour${carHours > 1 ? 's' : ''}):` : 'Price Estimate:'}
                 </span>
                 <strong className="text-brand-orange font-black text-base">
                   ₦{displayCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -304,6 +346,73 @@ export default function CheckoutModal({
                     required
                     value={numGuests}
                     onChange={(e) => setNumGuests(Number(e.target.value))}
+                    className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Vehicle Specific Inputs */}
+          {isVehicle && (
+            <div className="p-4 border border-purple-50 bg-slate-50/30 rounded-2xl space-y-4">
+              <span className="text-[9px] text-brand-orange uppercase font-extrabold block">Vehicle Rental Specifics</span>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Pick-Up Location (Address / Hub)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Murtala Muhammed Airport, Lagos"
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Drop-Off Location (Destination Address)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Eko Hotel, Victoria Island"
+                    value={dropoffLocation}
+                    onChange={(e) => setDropoffLocation(e.target.value)}
+                    className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="block text-slate-500 font-bold mb-1">Pick-Up Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={pickupDate}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                    className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Pick-Up Time</label>
+                  <input
+                    type="time"
+                    required
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                    className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 font-bold mb-1">Duration (Hours)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="72"
+                    required
+                    value={carHours}
+                    onChange={(e) => setCarHours(Math.max(1, Number(e.target.value)))}
                     className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
                   />
                 </div>

@@ -16,6 +16,7 @@ interface SearchWidgetProps {
     date: string;
     checkoutDate?: string;
     cabin: string;
+    hours?: number;
   }) => void;
 }
 
@@ -36,6 +37,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
 
   // Travellers Popover states
   const [adultsCount, setAdultsCount] = useState(1);
+  const [rentalHours, setRentalHours] = useState(5);
   const [childrenCount, setChildrenCount] = useState(0);
   const [infantsCount, setInfantsCount] = useState(0);
 
@@ -73,7 +75,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
     } else if (activeTab === 'cars') {
       setOrigin('LOS');
       setDestination('LOS');
-      setCabinClass('SUV');
+      setCabinClass('sedan_executive');
     }
   }, [activeTab]);
 
@@ -105,6 +107,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
         date,
         checkoutDate: activeTab === 'hotels' ? checkoutDate : undefined,
         cabin: cabinClass,
+        hours: activeTab === 'cars' ? rentalHours : undefined,
       });
     }
   };
@@ -176,9 +179,12 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
             { value: "VI", label: "Victoria Island Center" },
           ],
           options4: [
-            { value: "Sedan", label: "Sedan (Automatic)" },
-            { value: "SUV", label: "Land Cruiser Prado SUV" },
-            { value: "Bus", label: "Coaster Luxury Bus" },
+            { value: "sedan_executive", label: "Sedan Executive" },
+            { value: "suv_executive", label: "SUV Executive" },
+            { value: "sedan_normal", label: "Sedan Normal" },
+            { value: "suv_normal", label: "SUV Normal" },
+            { value: "coaster", label: "Coaster" },
+            { value: "others", label: "Others" },
           ]
         };
       case 'flights':
@@ -679,7 +685,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
         ) : (
           /* STANDARD OTHER MODULES (Hotels, Packages, Car Rentals) */
           <>
-            <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === 'hotels' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 ${activeTab === 'hotels' || activeTab === 'cars' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
 
               {/* INPUT UNIT 1: Source / Region */}
               {activeTab === 'hotels' ? (
@@ -758,6 +764,36 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                   onChange={setCheckoutDate}
                   alignRight={false}
                 />
+              )}
+              
+              {/* INPUT UNIT 3C: Rental Hours (Cars only) */}
+              {activeTab === 'cars' && (
+                <div className="custom-picker-container relative bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange focus-within:border-brand-orange transition-all duration-300 flex flex-col justify-center">
+                  <label className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Rental Duration (Hours)</label>
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <select
+                      value={rentalHours}
+                      onChange={(e) => setRentalHours(Number(e.target.value))}
+                      className="bg-transparent text-brand-purple font-extrabold text-sm focus:outline-none border-none p-0 outline-none cursor-pointer pr-1"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 8, 10, 12, 24].map((hr) => (
+                        <option key={hr} value={hr}>{hr} hr{hr > 1 ? 's' : ''}</option>
+                      ))}
+                    </select>
+                    <span className="text-slate-300 text-xs">|</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={72}
+                      value={rentalHours}
+                      onChange={(e) => setRentalHours(Math.max(1, Number(e.target.value)))}
+                      className="w-12 bg-transparent text-brand-purple font-extrabold text-sm focus:outline-none border-none p-0 outline-none text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
               )}
 
               {/* INPUT UNIT 4: Selections classes */}
