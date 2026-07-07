@@ -13,11 +13,11 @@ function HotelsQueryPageContent() {
   const router = useRouter();
 
   // Search parameters from URL
-  const destinationParam = searchParams.get('destination') || 'Lagos';
-  const checkInParam = searchParams.get('check_in') || '2026-07-20';
-  const checkOutParam = searchParams.get('check_out') || '2026-07-27';
-  const guestsParam = searchParams.get('guests') || '2 Guests';
-  const starsParam = searchParams.get('stars') || '5 Stars';
+  const destinationParam = searchParams.get('destination') || '';
+  const checkInParam = searchParams.get('check_in') || '';
+  const checkOutParam = searchParams.get('check_out') || '';
+  const guestsParam = searchParams.get('guests') || '';
+  const starsParam = searchParams.get('stars') || '';
 
   // Local Search state
   const [searchQuery, setSearchQuery] = useState({
@@ -154,7 +154,7 @@ function HotelsQueryPageContent() {
             activeTab="hotels"
             isVisible={true}
             isLoading={isLoading}
-            onReset={() => router.push('/')}
+            onReset={() => router.push('/hotels')}
             onBook={() => {}}
             origin={searchQuery.destination}
             destination={searchQuery.guests}

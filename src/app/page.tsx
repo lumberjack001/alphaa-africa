@@ -37,6 +37,7 @@ function HomeContent() {
     checkOut?: string;
     guests?: string;
     stars?: string;
+    hours?: number;
   }>({
     origin: 'LOS',
     destination: 'ABV',
@@ -99,6 +100,7 @@ function HomeContent() {
     date: string;
     checkoutDate?: string;
     cabin: string;
+    hours?: number;
   }) => {
     if (params.tab === 'hotels') {
       window.location.href = `/hotels?destination=${encodeURIComponent(params.origin)}&check_in=${params.date}&check_out=${params.checkoutDate || ''}&guests=${params.destination}&stars=${params.cabin}`;
@@ -112,6 +114,10 @@ function HomeContent() {
       window.location.href = '/packages';
       return;
     }
+    if (params.tab === 'cars') {
+      window.location.href = `/cars?vehicle_type=${encodeURIComponent(params.cabin)}&hours=${params.hours || ''}&date=${params.date || ''}&pickup=${encodeURIComponent(params.origin)}&dropoff=${encodeURIComponent(params.destination)}`;
+      return;
+    }
     setLocalSearchParams({
       origin: params.origin,
       destination: params.destination,
@@ -119,6 +125,7 @@ function HomeContent() {
       checkOut: params.checkoutDate,
       guests: params.destination,
       stars: params.cabin,
+      hours: params.hours,
     });
     setIsSearchVisible(true);
     setIsSearchLoading(true);
@@ -277,7 +284,7 @@ function HomeContent() {
               onSearch={handleSearch}
             />
 
-            <Listings
+             <Listings
               activeTab={activeTab}
               isVisible={isSearchVisible}
               isLoading={isSearchLoading}
@@ -289,6 +296,7 @@ function HomeContent() {
               checkOutDate={localSearchParams.checkOut}
               guests={localSearchParams.guests}
               stars={localSearchParams.stars}
+              hours={localSearchParams.hours}
             />
 
             <ToursShowcase onBook={handleBookProduct} />

@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   AIR_OFFERS_MOCK,
-  CAR_OFFERS_MOCK,
   AIRPORT_REGISTRY
 } from '../constants/mockData';
 import { hotelService, type HotelCard, type HotelDetails } from '@/services/hotelService';
+import { carService, type CarCard, type CarDetails } from '@/services/carService';
 import FlightListingCard from './FlightListingCard';
 import HotelListingCard from './HotelListingCard';
 import CarListingCard from './CarListingCard';
@@ -24,6 +24,7 @@ interface ListingsProps {
   guests?: string;
   stars?: string;
   onHotelClick?: (slug: string) => void;
+  hours?: number;
 }
 
 export default function Listings({
@@ -38,14 +39,18 @@ export default function Listings({
   checkOutDate,
   guests,
   stars,
-  onHotelClick
+  onHotelClick,
+  hours
 }: ListingsProps) {
   const [hotels, setHotels] = useState<HotelCard[]>([]);
   const [fetchingHotels, setFetchingHotels] = useState(false);
+  const [cars, setCars] = useState<CarCard[]>([]);
+  const [fetchingCars, setFetchingCars] = useState(false);
 
   // Detail view state for modal (fallback when onHotelClick is not active)
   const [selectedHotel, setSelectedHotel] = useState<HotelDetails | null>(null);
   const [selectedFlight, setSelectedFlight] = useState<any | null>(null);
+  const [selectedCar, setSelectedCar] = useState<CarDetails | null>(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
 
   // Load dynamic hotels when tab is hotels
@@ -55,19 +60,24 @@ export default function Listings({
         setFetchingHotels(true);
         try {
           // Map origin codes (LOS -> Lagos, etc.)
-          let queryDest = origin;
-          if (origin === 'LOS') queryDest = 'Lagos';
-          else if (origin === 'ABV') queryDest = 'Abuja';
-          else if (origin === 'ZNZ') queryDest = 'Zanzibar';
+          let queryDest = undefined;
+          if (origin) {
+            if (origin === 'LOS') queryDest = 'Lagos';
+            else if (origin === 'ABV') queryDest = 'Abuja';
+            else if (origin === 'ZNZ') queryDest = 'Zanzibar';
+            else queryDest = origin;
+          }
 
-          let guestsVal = 2;
+          let guestsVal = undefined;
           if (guests) {
+            guestsVal = 2;
             if (guests.includes('1')) guestsVal = 1;
             else if (guests.toLowerCase().includes('family')) guestsVal = 4;
           }
 
-          let minStarsVal = 3;
+          let minStarsVal = undefined;
           if (stars) {
+            minStarsVal = 3;
             if (stars.includes('5')) minStarsVal = 5;
             else if (stars.includes('4')) minStarsVal = 4;
           }
@@ -76,8 +86,8 @@ export default function Listings({
             destination: queryDest,
             guests: guestsVal,
             min_stars: minStarsVal,
-            check_in: checkInDate,
-            check_out: checkOutDate
+            check_in: checkInDate || undefined,
+            check_out: checkOutDate || undefined
           });
           setHotels(results);
         } catch (error) {
@@ -90,6 +100,27 @@ export default function Listings({
       fetchList();
     }
   }, [activeTab, isVisible, origin, checkInDate, checkOutDate, guests, stars]);
+
+  // Load dynamic cars when tab is cars
+  useEffect(() => {
+    if (activeTab === 'cars' && isVisible) {
+      const fetchCars = async () => {
+        setFetchingCars(true);
+        try {
+          const results = await carService.searchCars({
+            vehicle_type: stars || undefined,
+          });
+          setCars(results);
+        } catch (error) {
+          console.error("API error fetching cars:", error);
+          setCars([]);
+        } finally {
+          setFetchingCars(false);
+        }
+      };
+      fetchCars();
+    }
+  }, [activeTab, isVisible, stars]);
 
   if (!isVisible) return null;
 
@@ -126,7 +157,25 @@ export default function Listings({
     }
   };
 
-  const isLoading = propLoading || fetchingHotels;
+  const handleOpenCarDetails = async (carCard: CarCard) => {
+    setFetchingDetails(true);
+    try {
+      const slug = carCard.slug || carCard.id.toString();
+      const data = await carService.getCarDetails(slug);
+      setSelectedCar(data);
+    } catch (e) {
+      console.error("Could not fetch car details from API:", e);
+      setSelectedCar(null);
+    } finally {
+      setFetchingDetails(false);
+    }
+  };
+
+  const handleSelectCarCard = (carCard: CarCard) => {
+    handleOpenCarDetails(carCard);
+  };
+
+  const isLoading = propLoading || fetchingHotels || fetchingCars;
 
   return (
     <section id="listings-viewports" className="max-w-7xl mx-auto py-12 px-4 sm:px-8 text-left relative">
@@ -197,12 +246,20 @@ export default function Listings({
 
           {/* Vehicle Hire Listings */}
           {activeTab === 'cars' &&
-            CAR_OFFERS_MOCK.map((car) => (
-              <CarListingCard
-                key={car.id}
-                car={car}
-                onBook={onBook}
-              />
+            (cars.length === 0 ? (
+              <p className="text-center text-slate-400 font-bold py-12">No active vehicle hire options currently listed for this search criteria.</p>
+            ) : (
+              cars.map((car) => (
+                <CarListingCard
+                  key={car.id}
+                  car={car}
+                  onBook={(item) => onBook({
+                    ...item,
+                    payload: { ...item.payload, pickup_date: checkInDate, hours: hours }
+                  })}
+                  onSelect={handleSelectCarCard}
+                />
+              ))
             ))}
 
         </div>
@@ -381,7 +438,93 @@ export default function Listings({
           </div>
         </div>
       )}
+      {/* Car details selector modal */}
+      {selectedCar && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white text-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-purple-100 shadow-2xl overflow-y-auto max-h-[90vh] text-left">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-purple-50">
+              <div>
+                <span className="text-brand-orange text-[10px] uppercase font-black tracking-widest block font-sans">🚗 {selectedCar.vehicle_type_display}</span>
+                <h3 className="text-2xl font-black text-brand-purple font-sans">{selectedCar.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedCar(null)}
+                className="text-slate-400 hover:text-brand-orange text-xl font-bold p-1 cursor-pointer border-none bg-transparent"
+              >
+                ✕
+              </button>
+            </div>
 
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <img src={selectedCar.main_image} alt={selectedCar.name} className="w-full h-56 rounded-2xl object-cover border border-purple-100" />
+                <div className="space-y-4 text-xs font-semibold text-slate-600">
+                  <p className="leading-relaxed text-slate-500 font-normal">
+                    {selectedCar.description || "Premium chauffeur vehicle hire with driver. Alphaa Africa certified security and routing standard."}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 bg-purple-50/30 p-4 rounded-xl border border-purple-100/50">
+                    <div>
+                      <span className="text-slate-400 block uppercase font-bold text-[8px]">Capacity</span>
+                      <strong className="text-slate-900 text-sm font-black">{selectedCar.capacity} Passengers</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block uppercase font-bold text-[8px]">City</span>
+                      <strong className="text-slate-900 text-sm font-black">{selectedCar.city}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed specs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white rounded-2xl p-4 border border-purple-50 space-y-3">
+                  <h4 className="font-extrabold text-brand-purple text-xs uppercase tracking-wider">Vehicle Specifications</h4>
+                  <ul className="text-xs space-y-2 font-semibold text-slate-600">
+                    <li>🛡️ <span className="text-slate-400">Driver:</span> Certified professional included</li>
+                    <li>⛽ <span className="text-slate-400">Fuel:</span> Full tank start option</li>
+                    <li>❄️ <span className="text-slate-400">Air Conditioning:</span> Dual-zone climate control</li>
+                    <li>🚭 <span className="text-slate-400">Policy:</span> Non-smoking cabin</li>
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 border border-purple-50 space-y-3">
+                  <h4 className="font-extrabold text-brand-purple text-xs uppercase tracking-wider">Features & Inclusions</h4>
+                  <ul className="text-xs space-y-2 font-semibold text-slate-600">
+                    <li>📶 <span className="text-slate-400">WiFi:</span> High-speed onboard WiFi</li>
+                    <li>🥛 <span className="text-slate-400">Refreshments:</span> Cold water & newspapers</li>
+                    <li>⚡ <span className="text-slate-400">Charging:</span> USB & type-C ports</li>
+                    <li>🗺️ <span className="text-slate-400">Routing:</span> Live GPS route optimizations</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Booking Actions */}
+              <div className="border-t border-purple-50 pt-6 flex items-center justify-between">
+                <div>
+                  <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Hourly price from</span>
+                  <strong className="text-2xl font-black text-brand-purple">₦{Number(selectedCar.hourly_rate).toLocaleString()}/hr</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onBook({ 
+                      type: 'vehicle', 
+                      name: selectedCar.name, 
+                      price: Number(selectedCar.hourly_rate),
+                      payload: { vehicle_id: selectedCar.id, slug: selectedCar.slug, pickup_date: checkInDate, hours: hours }
+                    });
+                    setSelectedCar(null);
+                  }}
+                  className="bg-brand-orange hover:bg-brand-purple text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer border-none shadow-md"
+                >
+                  Book Vehicle Hire
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
