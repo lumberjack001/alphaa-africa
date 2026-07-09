@@ -14,12 +14,12 @@ import Toast from '@/components/Toast';
 
 // Below-the-fold: code-split, reduces initial JS bundle
 const ToursShowcase = dynamic(() => import('@/components/ToursShowcase'), { ssr: false });
-const WhyChooseUs   = dynamic(() => import('@/components/WhyChooseUs'),   { ssr: false });
-const Footer        = dynamic(() => import('@/components/Footer'),         { ssr: false });
+const WhyChooseUs = dynamic(() => import('@/components/WhyChooseUs'), { ssr: false });
+const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 
 // Only needed on user interaction — never ship to initial render
-const CheckoutModal = dynamic(() => import('@/components/CheckoutModal'),  { ssr: false });
-const BillingModal  = dynamic(() => import('@/components/BillingModal'),   { ssr: false });
+const CheckoutModal = dynamic(() => import('@/components/CheckoutModal'), { ssr: false });
+const BillingModal = dynamic(() => import('@/components/BillingModal'), { ssr: false });
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -300,9 +300,6 @@ function HomeContent() {
                 onSearch={handleSearch}
               />
             </div>
-
-            {/* Desktop-only spacer (only needed when SearchWidget is absolute overlaying the bottom edge) */}
-            <div className="hidden lg:block lg:h-36"></div>
 
             <Listings
               activeTab={activeTab}

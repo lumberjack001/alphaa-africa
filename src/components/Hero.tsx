@@ -100,7 +100,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
       })}
 
       {/* Rich dark purple/blue gradient overlay for premium contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#2E1238]/85 via-[#4C1D5C]/60 to-[#FAF8F5] z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#4f1758]/85 via-[#3f1758]/60 to-[#FAF8F5] z-10 pointer-events-none"></div>
 
       {/* Giant Triplio-style Background Text */}
       <div
@@ -116,7 +116,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
         <div className="text-left max-w-4xl mb-10 space-y-4">
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight uppercase font-sans">
+          <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase font-sans">
             Travel Beyond <span className="text-brand-orange">Borders</span>
           </h1>
 
@@ -171,7 +171,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
         </div>
 
         {/* Absolutely positioned Search Widget overlay for desktop screens. */}
-        <div className="hidden lg:block absolute bottom-0 left-0 w-full translate-y-150 z-20 px-4 sm:px-8">
+        <div className="hidden lg:block absolute bottom-0 left-0 w-full translate-y-110 z-20 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto">
             <SearchWidget activeTab={activeTab} onSwitchTab={onSwitchTab} onSearch={onSearch} />
           </div>

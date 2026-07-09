@@ -16,6 +16,7 @@ interface NavbarProps {
 export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,15 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
   // Load user from local storage
   useEffect(() => {
     setUser(getStoredUser());
+  }, []);
+
+  // Track scroll position to toggle transparent ↔ solid navbar
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 10);
+    // Set initial state in case page loads mid-scroll
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   // Close profile dropdown on outside click
@@ -57,7 +67,11 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
     : '';
 
   return (
-    <header className="relative sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-purple-100 py-3.5 px-4 sm:px-8 shadow-sm">
+    <header className={`fixed top-0 left-0 right-0 z-40 py-3.5 px-4 sm:px-8 transition-all duration-300 ${
+      isScrolled
+        ? 'bg-white/95 backdrop-blur-md border-b border-purple-100 shadow-sm'
+        : 'bg-transparent border-b border-transparent'
+    }`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
 
         {/* Brand Logo */}
@@ -71,7 +85,9 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
             className="object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
           />
           <div>
-            <span className="text-lg font-black tracking-tight block text-brand-purple leading-none uppercase font-heading">ALPHAA<span className="text-brand-orange">.</span>AFRICA</span>
+            <span className={`text-lg font-black tracking-tight block leading-none uppercase font-heading transition-colors duration-300 ${
+              isScrolled ? 'text-brand-purple' : 'text-white'
+            }`}>ALPHAA<span className="text-brand-orange">.</span>AFRICA</span>
             <span className="text-[9px] font-bold tracking-[0.25em] text-brand-orange block mt-0.5 uppercase">Travel & Tours</span>
           </div>
         </button>
@@ -92,10 +108,15 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className={`${activeTab === tab.id
-                ? 'text-brand-purple hover:text-brand-orange font-extrabold border-b border-brand-orange pb-1'
-                : 'text-slate-500 hover:text-brand-purple'
-                } transition-colors`}
+              className={`transition-colors ${
+                activeTab === tab.id
+                  ? isScrolled
+                    ? 'text-brand-purple hover:text-brand-orange font-extrabold border-b border-brand-orange pb-1'
+                    : 'text-white font-extrabold border-b border-brand-orange pb-1'
+                  : isScrolled
+                    ? 'text-slate-500 hover:text-brand-purple'
+                    : 'text-white/80 hover:text-white'
+              }`}
             >
               {tab.label}
             </a>
@@ -117,13 +138,19 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
                   {userInitials}
                 </div>
                 <div className="text-left">
-                  <span className="text-[11px] font-black text-brand-purple block leading-none group-hover:text-brand-orange transition-colors">
+                  <span className={`text-[11px] font-black block leading-none group-hover:text-brand-orange transition-colors ${
+                    isScrolled ? 'text-brand-purple' : 'text-white'
+                  }`}>
                     {user.first_name} {user.last_name}
                   </span>
-                  <span className="text-[9px] text-slate-400 font-bold block mt-0.5 truncate max-w-28">{user.email}</span>
+                  <span className={`text-[9px] font-bold block mt-0.5 truncate max-w-28 ${
+                    isScrolled ? 'text-slate-400' : 'text-white/60'
+                  }`}>{user.email}</span>
                 </div>
                 {/* Chevron */}
-                <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''} ${
+                  isScrolled ? 'text-slate-400' : 'text-white/70'
+                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -168,7 +195,9 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
               </Link>
               <Link
                 href="/login"
-                className="text-slate-500 hover:text-brand-purple text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors text-center inline-block"
+                className={`text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors text-center inline-block ${
+                  isScrolled ? 'text-slate-500 hover:text-brand-purple' : 'text-white/90 hover:text-white'
+                }`}
               >
                 Login
               </Link>
@@ -179,7 +208,9 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
         {/* Hamburger (Mobile) */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 text-brand-purple hover:text-brand-orange focus:outline-none transition-colors cursor-pointer"
+          className={`md:hidden p-2 focus:outline-none transition-colors cursor-pointer ${
+            isScrolled ? 'text-brand-purple hover:text-brand-orange' : 'text-white hover:text-white/70'
+          }`}
           aria-label="Toggle menu"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
