@@ -178,7 +178,7 @@ function CallbackContent() {
         activeTab={navActiveTab}
       />
 
-      <main className="flex-grow flex items-center justify-center p-4 sm:p-8">
+      <main className="flex-grow flex items-center justify-center p-4 sm:p-8 navbar-offset">
         {isLoading && (
           <div className="max-w-md w-full bg-white border border-purple-100 p-8 sm:p-12 rounded-[2.5rem] shadow-xl text-center space-y-6">
             <div className="relative w-16 h-16 mx-auto">

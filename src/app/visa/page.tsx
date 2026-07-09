@@ -414,7 +414,7 @@ export default function VisaPage() {
         activeTab="visa"
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow navbar-offset">
         <Suspense fallback={
           <div className="min-h-[50vh] flex items-center justify-center">
             <div className="w-10 h-10 border-4 border-brand-purple border-t-transparent rounded-full animate-spin"></div>

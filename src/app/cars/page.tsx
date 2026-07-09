@@ -214,7 +214,7 @@ function CarsQueryPageContent() {
         activeTab="cars"
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow navbar-offset">
         {confirmedTicket ? (
           <BoardingPass
             confirmedTicket={confirmedTicket}

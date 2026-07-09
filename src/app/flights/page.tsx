@@ -194,7 +194,7 @@ function FlightsQueryPageContent() {
         activeTab="flights"
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow navbar-offset">
         
         {confirmedTicket ? (
           <div className="py-12">

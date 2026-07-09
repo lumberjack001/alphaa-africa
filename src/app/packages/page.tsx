@@ -158,7 +158,7 @@ function PackagesPageContent() {
         activeTab="tours"
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow navbar-offset">
         
         {/* Banner Section */}
         <div className="bg-gradient-to-br from-[#4C1D5C] to-[#2E1238] text-white pt-16 pb-28 px-4 text-center">

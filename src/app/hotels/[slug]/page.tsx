@@ -207,7 +207,7 @@ function HotelDetailPageContent() {
         activeTab="hotels"
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow navbar-offset">
         {confirmedTicket ? (
           <div className="py-12">
             <BoardingPass

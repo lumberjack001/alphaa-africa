@@ -38,6 +38,11 @@ h6,
   font-family: var(--font-montserrat), sans-serif !important;
 }
 
+/* Offset for pages whose content sits below the fixed transparent navbar */
+.navbar-offset {
+  padding-top: 73px;
+}
+
 @media (max-width: 379px) {
   .search-tabs-grid {
     display: grid !important;

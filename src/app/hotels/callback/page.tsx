@@ -179,7 +179,7 @@ export default function HotelsCallbackPage() {
         activeTab="hotels"
       />
 
-      <main className="flex-grow">
+      <main className="flex-grow navbar-offset">
         <Suspense fallback={
           <div className="flex-grow flex items-center justify-center p-8 min-h-[60vh]">
             <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
