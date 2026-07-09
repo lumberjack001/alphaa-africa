@@ -1,18 +1,25 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
+
+// Above-the-fold: load eagerly
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Listings from '@/components/Listings';
 import SearchWidget from '@/components/SearchWidget';
-import ToursShowcase from '@/components/ToursShowcase';
-import WhyChooseUs from '@/components/WhyChooseUs';
-import CheckoutModal from '@/components/CheckoutModal';
-import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
-import Footer from '@/components/Footer';
 import Toast from '@/components/Toast';
+
+// Below-the-fold: code-split, reduces initial JS bundle
+const ToursShowcase = dynamic(() => import('@/components/ToursShowcase'), { ssr: false });
+const WhyChooseUs   = dynamic(() => import('@/components/WhyChooseUs'),   { ssr: false });
+const Footer        = dynamic(() => import('@/components/Footer'),         { ssr: false });
+
+// Only needed on user interaction — never ship to initial render
+const CheckoutModal = dynamic(() => import('@/components/CheckoutModal'),  { ssr: false });
+const BillingModal  = dynamic(() => import('@/components/BillingModal'),   { ssr: false });
 
 function HomeContent() {
   const searchParams = useSearchParams();
