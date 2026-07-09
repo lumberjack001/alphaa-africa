@@ -24,6 +24,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
     { id: 'flights', label: 'Flights' },
     { id: 'hotels', label: 'Hotels' },
     { id: 'tours', label: 'Packages' },
+    { id: 'visa', label: 'Visa' },
     // { id: 'booking', label: 'Manage Booking' },
   ];
 
@@ -79,9 +80,9 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           {tabs.map(tab => (
             <a
               key={tab.id}
-              href={tab.id === 'tours' ? '/packages' : `/?tab=${tab.id}#booking-engine`}
+              href={tab.id === 'tours' ? '/packages' : (tab.id === 'visa' ? '/visa' : `/?tab=${tab.id}#booking-engine`)}
               onClick={(e) => {
-                if (tab.id === 'tours') {
+                if (tab.id === 'tours' || tab.id === 'visa') {
                   return;
                 }
                 if (typeof window !== 'undefined' && window.location.pathname === '/') {
@@ -198,9 +199,9 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           {tabs.map(tab => (
             <a
               key={tab.id}
-              href={tab.id === 'tours' ? '/packages' : `/?tab=${tab.id}#booking-engine`}
+              href={tab.id === 'tours' ? '/packages' : (tab.id === 'visa' ? '/visa' : `/?tab=${tab.id}#booking-engine`)}
               onClick={(e) => {
-                if (tab.id === 'tours') {
+                if (tab.id === 'tours' || tab.id === 'visa') {
                   setIsOpen(false);
                   return;
                 }
