@@ -84,13 +84,10 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
 
       {/* Giant Triplio-style Background Text */}
       <div
-        className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10vw] font-black text-white/5 uppercase tracking-[0.1em] pointer-events-none select-none z-10 transition-all duration-1000 ease-out ${
-          isLoaded ? 'top-1/2 opacity-100' : 'top-[55%] opacity-0'
-        }`}
+        className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10vw] font-black text-white/5 uppercase tracking-[0.1em] pointer-events-none select-none z-10 transition-all duration-1000 ease-out ${isLoaded ? 'top-1/2 opacity-100' : 'top-[55%] opacity-0'
+          }`}
       >
         ALPHAA
-        <br />
-        AFRICA
       </div>
 
       <div className="relative z-20 max-w-7xl mx-auto w-full flex flex-col justify-between h-full">
@@ -153,9 +150,11 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
 
         </div>
 
-        {/* Floating Search Widget */}
-        <div className="w-full z-20">
-          <SearchWidget activeTab={activeTab} onSwitchTab={onSwitchTab} onSearch={onSearch} />
+        {/* Absolutely positioned Search Widget overlay for desktop screens. */}
+        <div className="hidden lg:block absolute bottom-0 left-0 w-full translate-y-150 z-20 px-4 sm:px-8">
+          <div className="max-w-7xl mx-auto">
+            <SearchWidget activeTab={activeTab} onSwitchTab={onSwitchTab} onSearch={onSearch} />
+          </div>
         </div>
 
       </div>

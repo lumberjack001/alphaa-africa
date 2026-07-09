@@ -225,7 +225,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
     <div id="booking-engine" className="w-full mt-12 bg-white rounded-3xl p-4 md:p-6 shadow-xl border border-purple-100 text-left scroll-mt-70">
 
       {/* Module Tabs navigation */}
-      <div className="flex flex-wrap gap-2 mb-6 border-b border-purple-50 pb-5">
+      <div className="flex flex-wrap gap-2 mb-6 border-b border-purple-50 pb-5 search-tabs-grid">
         <button
           type="button"
           onClick={() => onSwitchTab('flights')}
