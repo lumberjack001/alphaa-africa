@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '../lib/api';
 import { useScrollEntrance } from '@/hooks/useScrollEntrance';
@@ -80,8 +81,11 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
 
 
 
-  // Fetch all destinations on mount
+  // Fetch destinations only once the section is visible in the viewport.
+  // This removes it from the initial-page network waterfall (PageSpeed: network dependency tree).
   useEffect(() => {
+    if (!isVisible) return;
+
     const fetchDestinations = async () => {
       setLoadingDestinations(true);
       try {
@@ -96,7 +100,7 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
       }
     };
     fetchDestinations();
-  }, []);
+  }, [isVisible]);
 
   // Fetch packages when a destination is selected
   const handleSelectDestination = async (destination: any) => {
@@ -128,6 +132,7 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
       ref={sectionRef}
       className={`bg-white py-20 px-4 sm:px-8 border-t border-purple-50/80 text-left transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
         }`}
+      style={{ willChange: 'transform, opacity' }}
     >
 
 
@@ -191,10 +196,13 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
                     onClick={() => handleSelectDestination(dest)}
                     className="flex-shrink-0 w-[260px] sm:w-[320px] h-[360px] sm:h-[400px] snap-start bg-slate-900 rounded-3xl overflow-hidden relative group shadow-md hover:shadow-xl transition-all duration-500 cursor-pointer"
                   >
-                    <img
+                    <Image
                       src={dest.main_image}
                       alt={dest.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 absolute inset-0"
+                      fill
+                      sizes="(max-width: 640px) 260px, 320px"
+                      className="object-cover group-hover:scale-105 transition-all duration-700"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent transition-opacity duration-300"></div>
 
