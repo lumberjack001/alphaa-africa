@@ -5,8 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Listings from '@/components/Listings';
+import SearchWidget from '@/components/SearchWidget';
 import ToursShowcase from '@/components/ToursShowcase';
-import SecurityStatement from '@/components/SecurityStatement';
+import WhyChooseUs from '@/components/WhyChooseUs';
 import CheckoutModal from '@/components/CheckoutModal';
 import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
@@ -26,7 +27,7 @@ function HomeContent() {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
-  
+
   // Search state
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
@@ -44,9 +45,9 @@ function HomeContent() {
   });
 
   // Modal / Checkout flow state
-  const [selectedProduct, setSelectedProduct] = useState<{ 
-    type: string; 
-    name: string; 
+  const [selectedProduct, setSelectedProduct] = useState<{
+    type: string;
+    name: string;
     price: number;
     payload?: any;
   } | null>(null);
@@ -258,7 +259,7 @@ function HomeContent() {
 
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
-      
+
       <Navbar
         onSwitchTab={handleSwitchTab}
         onReset={handleResetNavigation}
@@ -267,7 +268,7 @@ function HomeContent() {
       />
 
       <main className="flex-grow">
-        
+
         {/* Render Boarding Pass success page or Hero Booking portal */}
         {confirmedTicket ? (
           <BoardingPass
@@ -284,7 +285,19 @@ function HomeContent() {
               onSearch={handleSearch}
             />
 
-             <Listings
+            {/* Mobile-only SearchWidget (inflow below Hero) */}
+            <div className="block lg:hidden px-4 sm:px-8 mt-6 mb-8 relative z-20">
+              <SearchWidget
+                activeTab={activeTab}
+                onSwitchTab={handleSwitchTab}
+                onSearch={handleSearch}
+              />
+            </div>
+
+            {/* Desktop-only spacer (only needed when SearchWidget is absolute overlaying the bottom edge) */}
+            <div className="hidden lg:block lg:h-36"></div>
+
+            <Listings
               activeTab={activeTab}
               isVisible={isSearchVisible}
               isLoading={isSearchLoading}
@@ -301,7 +314,7 @@ function HomeContent() {
 
             <ToursShowcase onBook={handleBookProduct} />
 
-            <SecurityStatement />
+            <WhyChooseUs />
           </>
         )}
 

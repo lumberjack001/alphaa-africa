@@ -31,6 +31,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${montserrat.variable} ${outfit.variable} h-full antialiased scroll-smooth`}
+      data-scroll-behavior="smooth"
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col overflow-x-hidden">{children}</body>
     </html>

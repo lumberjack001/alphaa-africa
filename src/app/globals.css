@@ -12,11 +12,12 @@
   --font-heading: var(--font-montserrat);
   --color-brand-purple: #4f1758;
   --color-brand-orange: #ff6736;
+  --color-brand-dark-bg: #0f0f1a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0f0f1a;
     --foreground: #ededed;
   }
 }
@@ -35,4 +36,20 @@ h5,
 h6,
 .font-heading {
   font-family: var(--font-montserrat), sans-serif !important;
+}
+
+@media (max-width: 379px) {
+  .search-tabs-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .search-tabs-grid > button,
+  .search-tabs-grid > a {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 10px 6px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+  }
 }
