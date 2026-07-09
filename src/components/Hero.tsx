@@ -25,10 +25,10 @@ const CAROUSEL_SLIDES = [
     image: '/zanzibar_beach.webp',
     label: 'Zanzibar Beaches, Tanzania',
   },
-  {
-    image: '/serengeti_safari.webp',
-    label: 'Serengeti National Park, Tanzania',
-  },
+  // {
+  //   image: '/serengeti_safari.webp',
+  //   label: 'Serengeti National Park, Tanzania',
+  // },
   {
     image: '/lagos_nigeria.webp',
     label: 'Lagos, Nigeria',
