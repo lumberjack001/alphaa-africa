@@ -8,6 +8,7 @@ import Toast from '@/components/Toast';
 import BoardingPass from '@/components/BoardingPass';
 import { hotelService } from '@/services/hotelService';
 import { carService } from '@/services/carService';
+import { visaService } from '@/services/visaService';
 import { ApiError } from '@/lib/api';
 
 function CallbackContent() {
@@ -18,6 +19,13 @@ function CallbackContent() {
   const reference = searchParams.get('reference') || searchParams.get('trxref');
   const typeParam = searchParams.get('type');
   const isCar = typeParam === 'car';
+  const isVisa = typeParam === 'visa';
+
+  const [navActiveTab, setNavActiveTab] = useState<string>(() => {
+    if (typeParam === 'visa') return 'visa';
+    if (typeParam === 'car') return 'tours';
+    return 'hotels';
+  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<'confirmed' | 'pending' | 'failed' | null>(null);
@@ -46,37 +54,73 @@ function CallbackContent() {
       try {
         setIsLoading(true);
         let verifyData: any = null;
-        let bookingType: 'hotel' | 'car' = isCar ? 'car' : 'hotel';
+        let bookingType: 'hotel' | 'car' | 'visa' = isVisa ? 'visa' : (isCar ? 'car' : 'hotel');
 
-        try {
-          if (isCar) {
-            verifyData = await carService.verifyBooking(reference);
-          } else {
-            verifyData = await hotelService.verifyBooking(reference);
-          }
-        } catch (firstError) {
-          // If first attempt fails with 404, fall back to the other service
-          if (firstError instanceof ApiError && firstError.status === 404) {
-            try {
-              if (isCar) {
-                verifyData = await hotelService.verifyBooking(reference);
-                bookingType = 'hotel';
-              } else {
-                verifyData = await carService.verifyBooking(reference);
-                bookingType = 'car';
-              }
-            } catch (secondError) {
-              throw secondError;
+        const tryVisa = async () => {
+          verifyData = await visaService.verifyPayment(reference);
+          bookingType = 'visa';
+        };
+
+        const tryCar = async () => {
+          verifyData = await carService.verifyBooking(reference);
+          bookingType = 'car';
+        };
+
+        const tryHotel = async () => {
+          verifyData = await hotelService.verifyBooking(reference);
+          bookingType = 'hotel';
+        };
+
+        // Order the verification attempts based on detected URL query parameters
+        let attemptQueue: Array<() => Promise<void>> = [];
+        if (isVisa) {
+          attemptQueue = [tryVisa, tryHotel, tryCar];
+        } else if (isCar) {
+          attemptQueue = [tryCar, tryHotel, tryVisa];
+        } else {
+          attemptQueue = [tryHotel, tryCar, tryVisa];
+        }
+
+        let lastError: any = null;
+        for (const attempt of attemptQueue) {
+          try {
+            await attempt();
+            lastError = null;
+            break; // Succeeded, exit loop
+          } catch (err) {
+            lastError = err;
+            if (err instanceof ApiError && err.status === 404) {
+              continue; // 404 mismatch, try next service
             }
-          } else {
-            throw firstError;
+            throw err; // Real error (e.g. 500, network loss), propagate immediately
           }
         }
+
+        if (lastError) {
+          throw lastError;
+        }
         
-        setStatus(verifyData.status);
-        if (verifyData.status === 'confirmed') {
+        const isSuccess = verifyData.status === 'confirmed' || verifyData.status === 'paid';
+        const isFailed = verifyData.status === 'failed';
+        setStatus(isSuccess ? 'confirmed' : (isFailed ? 'failed' : 'pending'));
+
+        if (isSuccess) {
           // Construct ticket structure for BoardingPass component
-          if (bookingType === 'car') {
+          if (bookingType === 'visa') {
+            setNavActiveTab('visa');
+            setConfirmedTicket({
+              passenger: verifyData.full_name || 'Valued Guest',
+              cabin: 'Visa Consultation Assistance',
+              hash: `#TX-${verifyData.reference}`,
+              pnr: verifyData.reference,
+              details: {
+                name: verifyData.country?.name ? `Visa Assistance: ${verifyData.country.name}` : 'Visa Assistance Service',
+                carrier: verifyData.country?.name ? `Visa Assistance: ${verifyData.country.name}` : 'Visa Assistance Service',
+              },
+              type: 'visa',
+            });
+          } else if (bookingType === 'car') {
+            setNavActiveTab('tours');
             setConfirmedTicket({
               passenger: verifyData.guest_name || 'Valued Guest',
               cabin: verifyData.vehicle?.vehicle_type_display || 'Chauffeur Vehicle Rental',
@@ -89,6 +133,7 @@ function CallbackContent() {
               type: 'vehicle',
             });
           } else {
+            setNavActiveTab('hotels');
             setConfirmedTicket({
               passenger: verifyData.guest_name || 'Valued Guest',
               cabin: verifyData.room_type?.name || 'Hotel Lodging Reservation',
@@ -102,14 +147,14 @@ function CallbackContent() {
             });
           }
           triggerToast("Transaction reference verified successfully!");
-        } else if (verifyData.status === 'failed') {
+        } else if (isFailed) {
           setErrorMsg('The payment processor reported that this transaction failed.');
           triggerToast("Payment failed or was cancelled.");
         } else {
           setErrorMsg('This payment verification is still pending. Please refresh this page to try again.');
           triggerToast("Payment is still pending.");
         }
-      } catch (error) {
+      } catch (error) { 
         setStatus('failed');
         if (error instanceof ApiError) {
           setErrorMsg(`Verification failed: ${error.message}`);
@@ -130,7 +175,7 @@ function CallbackContent() {
       <Navbar
         onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)}
         onReset={() => router.push('/')}
-        activeTab="hotels"
+        activeTab={navActiveTab}
       />
 
       <main className="flex-grow flex items-center justify-center p-4 sm:p-8">
