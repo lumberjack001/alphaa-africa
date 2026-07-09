@@ -10,6 +10,11 @@ const nextConfig = {
         hostname: 'api.alphaaafrica.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
