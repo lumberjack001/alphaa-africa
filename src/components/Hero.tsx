@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import SearchWidget from './SearchWidget';
 
 interface HeroProps {
@@ -17,27 +18,27 @@ interface HeroProps {
 
 const CAROUSEL_SLIDES = [
   {
-    image: '/kilimanjaro_hero_bg.png',
+    image: '/kilimanjaro_hero_bg.webp',
     label: 'Mount Kilimanjaro, Tanzania',
   },
   {
-    image: '/zanzibar_beach.png',
+    image: '/zanzibar_beach.webp',
     label: 'Zanzibar Beaches, Tanzania',
   },
   {
-    image: '/serengeti_safari.png',
+    image: '/serengeti_safari.webp',
     label: 'Serengeti National Park, Tanzania',
   },
   {
-    image: '/lagos_nigeria.png',
+    image: '/lagos_nigeria.webp',
     label: 'Lagos, Nigeria',
   },
   {
-    image: '/abuja_aso_rock.png',
+    image: '/abuja_aso_rock.webp',
     label: 'Abuja, Nigeria',
   },
   {
-    image: '/cape_town.png',
+    image: '/cape_town.webp',
     label: 'Cape Town, South Africa',
   },
 ];
@@ -59,25 +60,44 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Only mount current slide + the next one (for a seamless pre-load).
+  // All others are excluded from the DOM entirely to avoid parallel image fetches.
+  const nextSlide = (currentSlide + 1) % CAROUSEL_SLIDES.length;
+  const mountedSlides = new Set([0, currentSlide, nextSlide]); // always keep slide 0 mounted (it's the LCP)
+
   return (
     <section
       className="relative bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
     >
       {/* Carousel background layers - cross-fade */}
-      {CAROUSEL_SLIDES.map((slide, idx) => (
-        <div
-          key={slide.image}
-          aria-hidden="true"
-          className="absolute inset-0 bg-center bg-cover bg-no-repeat"
-          style={{
-            backgroundImage: `url('${slide.image}')`,
-            opacity: idx === currentSlide ? 1 : 0,
-            transition: 'opacity 1.2s ease-in-out',
-            zIndex: idx === currentSlide ? 1 : 0,
-            pointerEvents: 'none',
-          }}
-        />
-      ))}
+      {CAROUSEL_SLIDES.map((slide, idx) => {
+        if (!mountedSlides.has(idx)) return null;
+        const isActive = idx === currentSlide;
+        const isFirst = idx === 0;
+
+        return (
+          <div
+            key={slide.image}
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transition: 'opacity 1.2s ease-in-out',
+              zIndex: isActive ? 1 : 0,
+            }}
+          >
+            <Image
+              src={slide.image}
+              alt={slide.label}
+              fill
+              sizes="100vw"
+              className="object-cover object-center"
+              priority={isFirst}
+              quality={85}
+            />
+          </div>
+        );
+      })}
 
       {/* Rich dark purple/blue gradient overlay for premium contrast */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#2E1238]/85 via-[#4C1D5C]/60 to-[#FAF8F5] z-10 pointer-events-none"></div>
@@ -161,3 +181,4 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
     </section>
   );
 }
+
