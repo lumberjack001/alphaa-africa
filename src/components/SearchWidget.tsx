@@ -5,6 +5,7 @@ import Link from 'next/link';
 import CustomSelect from './CustomSelect';
 import CustomDatePicker from './CustomDatePicker';
 import TravellersSelect from './TravellersSelect';
+import AutocompleteInput from './AutocompleteInput';
 
 interface SearchWidgetProps {
   activeTab: string;
@@ -21,18 +22,18 @@ interface SearchWidgetProps {
 }
 
 export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: SearchWidgetProps) {
-  const [origin, setOrigin] = useState('LOS');
-  const [destination, setDestination] = useState('ABV');
-  const [date, setDate] = useState('2026-07-20');
-  const [checkoutDate, setCheckoutDate] = useState('2026-07-27');
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [date, setDate] = useState('');
+  const [checkoutDate, setCheckoutDate] = useState('');
   const [cabinClass, setCabinClass] = useState('Economy');
 
   // Flight tab states
   const [tripType, setTripType] = useState<'round-trip' | 'one-way' | 'multi-city'>('round-trip');
-  const [flightOrigin, setFlightOrigin] = useState('LOS');
-  const [flightDestination, setFlightDestination] = useState('ABV');
-  const [departureDate, setDepartureDate] = useState('2026-07-20');
-  const [returnDate, setReturnDate] = useState('2026-07-27');
+  const [flightOrigin, setFlightOrigin] = useState('');
+  const [flightDestination, setFlightDestination] = useState('');
+  const [departureDate, setDepartureDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
   const [flightCabinClass, setFlightCabinClass] = useState('Economy');
 
   // Travellers Popover states
@@ -43,8 +44,8 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
 
   // Multi-city states
   const [multiCityFlights, setMultiCityFlights] = useState([
-    { origin: 'LOS', destination: 'ABV', date: '2026-07-20', cabinClass: 'Economy' },
-    { origin: 'ABV', destination: 'DXB', date: '2026-07-27', cabinClass: 'Economy' },
+    { origin: '', destination: '', date: '', cabinClass: 'Economy' },
+    { origin: '', destination: '', date: '', cabinClass: 'Economy' },
   ]);
 
   const flightAirports = [
@@ -63,18 +64,18 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
       setDestination(flightDestination);
       setCabinClass(flightCabinClass);
     } else if (activeTab === 'hotels') {
-      setOrigin('LOS');
+      setOrigin('');
       setDestination('2 Guests');
-      setDate('2026-07-20');
-      setCheckoutDate('2026-07-27');
+      setDate('');
+      setCheckoutDate('');
       setCabinClass('5 Stars');
     } else if (activeTab === 'tours') {
-      setOrigin('ZNZ');
+      setOrigin('');
       setDestination('6 Days');
       setCabinClass('VIP Guide');
     } else if (activeTab === 'cars') {
-      setOrigin('LOS');
-      setDestination('LOS');
+      setOrigin('');
+      setDestination('');
       setCabinClass('sedan_executive');
     }
   }, [activeTab]);
@@ -308,7 +309,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     </div>
 
                     {/* FROM */}
-                    <CustomSelect
+                    <AutocompleteInput
                       id={`mc-origin-${idx}`}
                       label="FROM"
                       value={flight.origin}
@@ -318,6 +319,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                         newFlights[idx].origin = val;
                         setMultiCityFlights(newFlights);
                       }}
+                      placeholder="Departure City"
                       icon={
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -348,7 +350,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     </div>
 
                     {/* TO */}
-                    <CustomSelect
+                    <AutocompleteInput
                       id={`mc-destination-${idx}`}
                       label="TO"
                       value={flight.destination}
@@ -358,6 +360,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                         newFlights[idx].destination = val;
                         setMultiCityFlights(newFlights);
                       }}
+                      placeholder="Arrival City"
                       icon={
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -447,12 +450,13 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     </button>
                   </div>
 
-                  <CustomSelect
+                  <AutocompleteInput
                     id="flight-origin"
                     label="FROM"
                     value={flightOrigin}
                     options={flightAirports}
                     onChange={setFlightOrigin}
+                    placeholder="Enter departure city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -479,12 +483,13 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     </button>
                   </div>
 
-                  <CustomSelect
+                  <AutocompleteInput
                     id="flight-destination"
                     label="TO"
                     value={flightDestination}
                     options={flightAirports}
                     onChange={setFlightDestination}
+                    placeholder="Enter arrival city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -542,12 +547,13 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     </button>
                   </div>
 
-                  <CustomSelect
+                  <AutocompleteInput
                     id="flight-origin"
                     label="FROM"
                     value={flightOrigin}
                     options={flightAirports}
                     onChange={setFlightOrigin}
+                    placeholder="Enter departure city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -574,12 +580,13 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     </button>
                   </div>
 
-                  <CustomSelect
+                  <AutocompleteInput
                     id="flight-destination"
                     label="TO"
                     value={flightDestination}
                     options={flightAirports}
                     onChange={setFlightDestination}
+                    placeholder="Enter arrival city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
