@@ -71,12 +71,6 @@ function VisaContent() {
     try {
       const details = await visaService.getCountryDetails(country.slug);
       setSelectedCountry(details);
-      
-      // Auto scroll to application form
-      setTimeout(() => {
-        const el = document.getElementById('visa-application-form');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
     } catch (err) {
       console.error("Error fetching country details:", err);
       // Fallback: mock detail using existing info
@@ -84,10 +78,6 @@ function VisaContent() {
         ...country,
         description: `Apply for visa consultation assistance for ${country.name}. Our dedicated team of visa specialists will review your application requirements, documentation, and guide you through the process.`
       });
-      setTimeout(() => {
-        const el = document.getElementById('visa-application-form');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
     } finally {
       setIsLoadingDetails(false);
     }
@@ -228,175 +218,195 @@ function VisaContent() {
         )}
       </section>
 
-      {/* Detail Section & Form */}
+      {/* Detail Section & Form Modal */}
       {selectedCountry && (
-        <section id="visa-application-form" className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start scroll-mt-24 animate-fadeIn">
-          {/* Detail card */}
-          <div className="lg:col-span-1 bg-white rounded-3xl p-6 border border-purple-100 shadow-md space-y-5">
-            <h3 className="text-base font-black text-brand-purple font-sans uppercase tracking-wider border-b border-purple-50 pb-3">
-              Selected Country Info
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fadeIn">
+          {/* Backdrop Closer */}
+          <div className="fixed inset-0" onClick={() => setSelectedCountry(null)} />
+          
+          {/* Modal Container */}
+          <div className="relative bg-[#FAF8F5] rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl z-10 border border-purple-100 flex flex-col p-6 sm:p-8 space-y-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-purple-200 [&::-webkit-scrollbar-thumb]:rounded-full">
             
-            <div className="relative h-40 rounded-2xl overflow-hidden bg-slate-100">
-              <img 
-                src={selectedCountry.flag_image} 
-                alt={selectedCountry.name} 
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center">
-                <span className="text-white text-lg font-black uppercase font-sans tracking-wide">
-                  {selectedCountry.name}
-                </span>
-              </div>
-            </div>
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedCountry(null)}
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 rounded-full bg-purple-50 hover:bg-brand-orange hover:text-white text-brand-purple flex items-center justify-center transition-all cursor-pointer border-none z-20 font-bold shadow-sm"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
 
-            <div className="space-y-3 text-xs leading-relaxed text-slate-500 font-medium">
-              <p>{selectedCountry.description}</p>
-              <div className="bg-purple-50/50 p-4 rounded-xl space-y-2 border border-purple-100/30">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase">Consultation Cost:</span>
-                  <strong className="text-brand-purple font-black">₦{Number(selectedCountry.consultation_fee).toLocaleString()}</strong>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase">Estimated Wait:</span>
-                  <strong className="text-brand-orange font-black">{selectedCountry.processing_time}</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Form */}
-          <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-purple-100 shadow-md space-y-6">
-            <h3 className="text-base font-black text-brand-purple font-sans uppercase tracking-wider border-b border-purple-50 pb-3">
-              2. Applicant &amp; Travel Form
-            </h3>
-
-            {errorMessage && (
-              <div className="bg-red-50 text-red-600 text-xs font-semibold p-4 rounded-2xl border border-red-100 leading-relaxed">
-                ⚠️ {errorMessage}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col space-y-1 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
+            {/* Modal Body: Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start pt-4 text-left">
+              {/* Detail card */}
+              <div className="lg:col-span-1 bg-white rounded-3xl p-6 border border-purple-100 shadow-md space-y-5">
+                <h3 className="text-base font-black text-brand-purple font-sans uppercase tracking-wider border-b border-purple-50 pb-3">
+                  Selected Country Info
+                </h3>
+                
+                <div className="relative h-40 rounded-2xl overflow-hidden bg-slate-100">
+                  <img 
+                    src={selectedCountry.flag_image} 
+                    alt={selectedCountry.name} 
+                    className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center">
+                    <span className="text-white text-lg font-black uppercase font-sans tracking-wide">
+                      {selectedCountry.name}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col space-y-1 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col space-y-1 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Phone Number</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="e.g. +2348012345678"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
-                  />
-                </div>
-                <div className="flex flex-col space-y-1 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Number of Applicants</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    required
-                    value={numApplicants}
-                    onChange={(e) => setNumApplicants(Number(e.target.value))}
-                    className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
-                  />
+                <div className="space-y-3 text-xs leading-relaxed text-slate-500 font-medium">
+                  <p>{selectedCountry.description}</p>
+                  <div className="bg-purple-50/50 p-4 rounded-xl space-y-2 border border-purple-100/30">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase">Consultation Cost:</span>
+                      <strong className="text-brand-purple font-black">₦{Number(selectedCountry.consultation_fee).toLocaleString()}</strong>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase">Estimated Wait:</span>
+                      <strong className="text-brand-orange font-black">{selectedCountry.processing_time}</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <CustomSelect
-                  id="visa-travel-purpose"
-                  label="Purpose of Travel"
-                  value={travelPurpose}
-                  options={[
-                    { value: "tourism", label: "Tourism / Holiday" },
-                    { value: "business", label: "Business Travel" },
-                    { value: "study", label: "Educational Study" },
-                    { value: "work", label: "Work / Employment" },
-                    { value: "medical", label: "Medical Treatment" },
-                    { value: "family", label: "Family Reunion" },
-                    { value: "other", label: "Other Reasons" },
-                  ]}
-                  onChange={setTravelPurpose}
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-.778.099-1.533.284-2.253" />
-                    </svg>
-                  }
-                  className="w-full"
-                />
+              {/* Form */}
+              <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-purple-100 shadow-md space-y-6">
+                <h3 className="text-base font-black text-brand-purple font-sans uppercase tracking-wider border-b border-purple-50 pb-3">
+                  2. Applicant &amp; Travel Form
+                </h3>
 
-                <CustomDatePicker
-                  id="visa-preferred-date"
-                  label="Preferred Travel Date"
-                  value={preferredDate}
-                  onChange={setPreferredDate}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="flex flex-col space-y-1 text-left">
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Additional Message / Context</label>
-                <textarea
-                  placeholder="Details about your travel plans, visa history, or guidance requests..."
-                  rows={4}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold resize-none"
-                />
-              </div>
-
-              <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100 flex items-start space-x-3 text-slate-600 text-[10px] leading-relaxed font-semibold">
-                <span className="text-base text-amber-600 select-none">ℹ️</span>
-                <div>
-                  <strong className="text-amber-800 block mb-0.5 uppercase tracking-wide">Visa Disclaimer Notice</strong>
-                  Consultation fees are non-refundable. Embassy visa application fees are managed separately from this consultation. While our specialists assist with documentation audit reviews, actual visa decisions are at the sole discretion of the respective foreign embassy.
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-[#FA6432] hover:bg-[#4C1D5C] text-white font-extrabold py-4 rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none disabled:bg-slate-300 disabled:shadow-none"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Connecting to Paystack Checkout...</span>
-                  </>
-                ) : (
-                  <span>🔒 Submit &amp; Pay Consultation Fee (₦{Number(selectedCountry.consultation_fee).toLocaleString()})</span>
+                {errorMessage && (
+                  <div className="bg-red-50 text-red-600 text-xs font-semibold p-4 rounded-2xl border border-red-100 leading-relaxed">
+                    ⚠️ {errorMessage}
+                  </div>
                 )}
-              </button>
-            </form>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col space-y-1 text-left">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1 text-left">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col space-y-1 text-left">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Phone Number</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. +2348012345678"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1 text-left">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Number of Applicants</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        required
+                        value={numApplicants}
+                        onChange={(e) => setNumApplicants(Number(e.target.value))}
+                        className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <CustomSelect
+                      id="visa-travel-purpose"
+                      label="Purpose of Travel"
+                      value={travelPurpose}
+                      options={[
+                        { value: "tourism", label: "Tourism / Holiday" },
+                        { value: "business", label: "Business Travel" },
+                        { value: "study", label: "Educational Study" },
+                        { value: "work", label: "Work / Employment" },
+                        { value: "medical", label: "Medical Treatment" },
+                        { value: "family", label: "Family Reunion" },
+                        { value: "other", label: "Other Reasons" },
+                      ]}
+                      onChange={setTravelPurpose}
+                      icon={
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-.778.099-1.533.284-2.253" />
+                        </svg>
+                      }
+                      className="w-full"
+                    />
+
+                    <CustomDatePicker
+                      id="visa-preferred-date"
+                      label="Preferred Travel Date"
+                      value={preferredDate}
+                      onChange={setPreferredDate}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="flex flex-col space-y-1 text-left">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Additional Message / Context</label>
+                    <textarea
+                      placeholder="Details about your travel plans, visa history, or guidance requests..."
+                      rows={4}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 focus:outline-none focus:border-brand-orange text-xs text-slate-800 font-bold resize-none"
+                    />
+                  </div>
+
+                  <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100 flex items-start space-x-3 text-slate-600 text-[10px] leading-relaxed font-semibold">
+                    <span className="text-base text-amber-600 select-none">ℹ️</span>
+                    <div>
+                      <strong className="text-amber-800 block mb-0.5 uppercase tracking-wide">Visa Disclaimer Notice</strong>
+                      Consultation fees are non-refundable. Embassy visa application fees are managed separately from this consultation. While our specialists assist with documentation audit reviews, actual visa decisions are at the sole discretion of the respective foreign embassy.
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#FA6432] hover:bg-[#4C1D5C] text-white font-extrabold py-4 rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none disabled:bg-slate-300 disabled:shadow-none"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Connecting to Paystack Checkout...</span>
+                      </>
+                    ) : (
+                      <span>🔒 Submit &amp; Pay Consultation Fee (₦{Number(selectedCountry.consultation_fee).toLocaleString()})</span>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+
           </div>
-        </section>
+        </div>
       )}
 
       {/* Toast notifications */}
