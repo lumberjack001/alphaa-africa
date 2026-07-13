@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Partner {
   name: string;
@@ -8,7 +8,9 @@ interface Partner {
 }
 
 export default function Partners() {
-  const partners: Partner[] = [
+  const [logos, setLogos] = useState<{ name: string; url: string }[]>([]);
+
+  const fallbackPartners: Partner[] = [
     {
       name: "Civil Aviation Authority",
       logo: (
@@ -127,6 +129,32 @@ export default function Partners() {
     }
   ];
 
+  // Fetch dynamic partner logos on mount
+  useEffect(() => {
+    const fetchLogos = async () => {
+      try {
+        const res = await fetch('/api/partner-logos');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map((item: string) => {
+              const baseName = item.split('/').pop() || '';
+              const nameWithoutExt = baseName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+              return {
+                name: nameWithoutExt.toUpperCase(),
+                url: item
+              };
+            });
+            setLogos(mapped);
+          }
+        }
+      } catch (err) {
+        console.error("Could not fetch dynamic partner logos:", err);
+      }
+    };
+    fetchLogos();
+  }, []);
+
   return (
     <section className="py-16 px-4 sm:px-8 bg-[#FAF8F5] overflow-hidden border-t border-slate-100">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -151,28 +179,60 @@ export default function Partners() {
           <div className="flex w-max flex-nowrap items-center">
             {/* Track 1 */}
             <div className="flex items-center gap-16 sm:gap-24 px-8 shrink-0 animate-infinite-scroll">
-              {partners.map((partner, idx) => (
-                <div
-                  key={`track1-${idx}`}
-                  className="flex items-center justify-center text-slate-400/80 hover:text-slate-600 transition-colors duration-300"
-                  title={partner.name}
-                >
-                  {partner.logo}
-                </div>
-              ))}
+              {logos.length > 0 ? (
+                logos.map((logo, idx) => (
+                  <div
+                    key={`logo1-${idx}`}
+                    className="flex items-center justify-center text-slate-400/80 hover:text-slate-600 transition-colors duration-300"
+                    title={logo.name}
+                  >
+                    <img
+                      src={logo.url}
+                      alt={logo.name}
+                      className="h-7 w-auto object-contain max-w-[120px] opacity-60 hover:opacity-100 transition-all duration-300 filter grayscale"
+                    />
+                  </div>
+                ))
+              ) : (
+                fallbackPartners.map((partner, idx) => (
+                  <div
+                    key={`track1-${idx}`}
+                    className="flex items-center justify-center text-slate-400/80 hover:text-slate-600 transition-colors duration-300"
+                    title={partner.name}
+                  >
+                    {partner.logo}
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Track 2 (Identical loop track) */}
             <div className="flex items-center gap-16 sm:gap-24 px-8 shrink-0 animate-infinite-scroll" aria-hidden="true">
-              {partners.map((partner, idx) => (
-                <div
-                  key={`track2-${idx}`}
-                  className="flex items-center justify-center text-slate-400/80 hover:text-slate-600 transition-colors duration-300"
-                  title={partner.name}
-                >
-                  {partner.logo}
-                </div>
-              ))}
+              {logos.length > 0 ? (
+                logos.map((logo, idx) => (
+                  <div
+                    key={`logo2-${idx}`}
+                    className="flex items-center justify-center text-slate-400/80 hover:text-slate-600 transition-colors duration-300"
+                    title={logo.name}
+                  >
+                    <img
+                      src={logo.url}
+                      alt={logo.name}
+                      className="h-7 w-auto object-contain max-w-[120px] opacity-60 hover:opacity-100 transition-all duration-300 filter grayscale"
+                    />
+                  </div>
+                ))
+              ) : (
+                fallbackPartners.map((partner, idx) => (
+                  <div
+                    key={`track2-${idx}`}
+                    className="flex items-center justify-center text-slate-400/80 hover:text-slate-600 transition-colors duration-300"
+                    title={partner.name}
+                  >
+                    {partner.logo}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

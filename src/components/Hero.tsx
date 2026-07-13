@@ -16,7 +16,7 @@ interface HeroProps {
   }) => void;
 }
 
-const CAROUSEL_SLIDES = [
+const DEFAULT_SLIDES = [
   {
     image: '/kilimanjaro_hero_bg.webp',
     label: 'Mount Kilimanjaro, Tanzania',
@@ -25,10 +25,6 @@ const CAROUSEL_SLIDES = [
     image: '/zanzibar_beach.webp',
     label: 'Zanzibar Beaches, Tanzania',
   },
-  // {
-  //   image: '/serengeti_safari.webp',
-  //   label: 'Serengeti National Park, Tanzania',
-  // },
   {
     image: '/lagos_nigeria.webp',
     label: 'Lagos, Nigeria',
@@ -45,24 +41,57 @@ const CAROUSEL_SLIDES = [
 
 const SLIDE_DURATION = 5000; // ms per slide
 
+// Format dynamic labels from file names (e.g. abuja_aso_rock.webp -> Abuja Aso Rock)
+const formatLabel = (filePath: string) => {
+  const baseName = filePath.split('/').pop() || '';
+  const nameWithoutExt = baseName.replace(/\.[^/.]+$/, "");
+  return nameWithoutExt
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState<{ image: string; label: string }[]>(DEFAULT_SLIDES);
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
+  // Fetch dynamic slide images on mount
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const res = await fetch('/api/hero-images');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map(item => ({
+              image: item,
+              label: formatLabel(item)
+            }));
+            setSlides(mapped);
+          }
+        }
+      } catch (err) {
+        console.error("Could not fetch dynamic hero images:", err);
+      }
+    };
+    fetchSlides();
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, SLIDE_DURATION);
     return () => clearInterval(interval);
-  }, []);
+  }, [slides.length]);
 
   // Only mount current slide + the next one (for a seamless pre-load).
   // All others are excluded from the DOM entirely to avoid parallel image fetches.
-  const nextSlide = (currentSlide + 1) % CAROUSEL_SLIDES.length;
+  const nextSlide = (currentSlide + 1) % slides.length;
   const mountedSlides = new Set([0, currentSlide, nextSlide]); // always keep slide 0 mounted (it's the LCP)
 
   return (
@@ -70,7 +99,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
       className="relative bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
     >
       {/* Carousel background layers - cross-fade */}
-      {CAROUSEL_SLIDES.map((slide, idx) => {
+      {slides.map((slide, idx) => {
         if (!mountedSlides.has(idx)) return null;
         const isActive = idx === currentSlide;
         const isFirst = idx === 0;
@@ -99,8 +128,8 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
         );
       })}
 
-      {/* Rich dark purple/blue gradient overlay for premium contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#4f1758]/85 via-[#3f1758]/60 to-[#FAF8F5] z-10 pointer-events-none"></div>
+      {/* Rich dark purple overlay for premium contrast (images show through at 35% opacity) */}
+      <div className="absolute inset-0 bg-brand-purple/35 z-10 pointer-events-none"></div>
 
       {/* Giant Triplio-style Background Text */}
       <div

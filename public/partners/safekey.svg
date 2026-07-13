@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 50" fill="currentColor">
+  <g transform="translate(5, 8)">
+    <rect x="2" y="12" width="20" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="2" />
+    <path d="M7 12 V7 a5 5 0 0 1 10 0 v5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="20" r="1.5" fill="currentColor" />
+  </g>
+  <text x="35" y="24" fontSize="9" fontWeight="normal" fontFamily="sans-serif" letterSpacing="1.5" opacity="0.6">AMERICAN EXPRESS</text>
+  <text x="35" y="38" fontSize="14" fontWeight="bold" fontFamily="sans-serif" letterSpacing="0.5">SafeKey</text>
+</svg>
