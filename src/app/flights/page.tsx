@@ -102,30 +102,7 @@ function FlightsQueryPageContent() {
     checkoutDate?: string;
     cabin: string;
   }) => {
-    if (params.tab === 'tours' || params.tab === 'packages') {
-      router.push('/packages');
-      return;
-    }
-    if (params.tab === 'hotels') {
-      router.push(`/hotels?destination=${encodeURIComponent(params.origin)}&check_in=${params.date}&check_out=${params.checkoutDate || ''}&guests=${params.destination}&stars=${params.cabin}`);
-      return;
-    }
-
-    setIsLoading(true);
-    triggerToast("Searching active airline reservation systems...");
-    
-    // Update the URL parameters
-    const query = new URLSearchParams();
-    query.set('origin', params.origin);
-    query.set('destination', params.destination);
-    query.set('date', params.date);
-    query.set('cabin', params.cabin);
-
-    router.push(`/flights?${query.toString()}`);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // reset loader state
+    router.push('/coming-soon');
   };
 
   const handleSwitchTab = (tabId: string) => {

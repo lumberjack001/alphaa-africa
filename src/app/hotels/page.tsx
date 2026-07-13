@@ -71,31 +71,7 @@ function HotelsQueryPageContent() {
     checkoutDate?: string;
     cabin: string;
   }) => {
-    if (params.tab === 'tours' || params.tab === 'packages') {
-      router.push('/packages');
-      return;
-    }
-    if (params.tab === 'flights') {
-      router.push(`/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}&cabin=${encodeURIComponent(params.cabin)}`);
-      return;
-    }
-
-    setIsLoading(true);
-    triggerToast("Searching active travel database records...");
-    
-    // Update the URL parameters
-    const query = new URLSearchParams();
-    query.set('destination', params.origin);
-    query.set('check_in', params.date);
-    if (params.checkoutDate) query.set('check_out', params.checkoutDate);
-    query.set('guests', params.destination);
-    query.set('stars', params.cabin);
-
-    router.push(`/hotels?${query.toString()}`);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // reset loader state
+    router.push('/coming-soon');
   };
 
   const handleSwitchTab = (tabId: string) => {

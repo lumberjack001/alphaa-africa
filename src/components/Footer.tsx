@@ -191,12 +191,12 @@ export default function Footer({ onSwitchTab, triggerToast }: FooterProps) {
         </div>
       </footer>
 
-      {/* Floating WhatsApp Chat Now widget
+      {/* Floating WhatsApp Chat Now widget */}
       <a
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 bg-[#0f0f1a] border border-[#1ebd56]/30 p-1 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center cursor-pointer group"
+        className="fixed bottom-6 right-6 z-40 bg-[#0f0f1a] border border-[#1ebd56]/30 p-1 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center cursor-pointer group animate-bounce"
       >
         <div className="bg-[#1ebd56] group-hover:bg-[#19a34a] text-white font-black px-5 py-3 rounded-full flex items-center space-x-2 text-[10px] sm:text-xs uppercase tracking-wider transition-colors">
           <svg className="w-4.5 h-4.5 fill-current text-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -205,7 +205,6 @@ export default function Footer({ onSwitchTab, triggerToast }: FooterProps) {
           <span className="font-sans font-black">Chat Now</span>
         </div>
       </a>
-      */ }
     </>
   );
 }
