@@ -81,11 +81,8 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
 
 
 
-  // Fetch destinations only once the section is visible in the viewport.
-  // This removes it from the initial-page network waterfall (PageSpeed: network dependency tree).
+  // Fetch destinations immediately on mount to prevent loading lag
   useEffect(() => {
-    if (!isVisible) return;
-
     const fetchDestinations = async () => {
       setLoadingDestinations(true);
       try {
@@ -100,7 +97,7 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
       }
     };
     fetchDestinations();
-  }, [isVisible]);
+  }, []);
 
   // Fetch packages when a destination is selected
   const handleSelectDestination = async (destination: any) => {
@@ -157,6 +154,39 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
         )}
 
         {/* Dynamic Destinations Carousel View */}
+        {loadingDestinations && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12 items-center">
+            {/* Left Column: Explore copy and button skeleton */}
+            <div className="lg:col-span-1 space-y-6">
+              <span className="inline-block h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
+              <div className="space-y-3">
+                <span className="block h-8 w-44 bg-slate-200 rounded animate-pulse" />
+                <span className="block h-8 w-36 bg-slate-200 rounded animate-pulse" />
+              </div>
+              <span className="block h-12 w-full bg-slate-100 rounded animate-pulse" />
+              <div className="h-11 w-40 bg-slate-200 rounded-lg animate-pulse" />
+            </div>
+
+            {/* Right Column: Carousel skeleton */}
+            <div className="lg:col-span-3 relative">
+              <div className="flex gap-6 overflow-x-hidden pb-6">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="flex-shrink-0 w-[260px] sm:w-[320px] h-[360px] sm:h-[400px] bg-slate-100 rounded-3xl relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-[linear-gradient(90deg,#f1f5f9_25%,#e2e8f0_50%,#f1f5f9_75%)] bg-[length:200%_100%] animate-shimmer" />
+                    <div className="absolute bottom-6 left-6 space-y-3 w-2/3">
+                      <div className="h-5 bg-slate-200/80 rounded w-full" />
+                      <div className="h-3 bg-slate-200/80 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {showDestinationsGrid && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12 items-center">
 
