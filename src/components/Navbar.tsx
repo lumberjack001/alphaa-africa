@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { getStoredUser, clearTokens, clearStoredUser, type User } from '@/lib/api';
 
 interface NavbarProps {
@@ -15,11 +15,15 @@ interface NavbarProps {
 
 export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const isHomepage = pathname === '/';
+  const isSolid = isScrolled || !isHomepage;
 
   const tabs = [
     { id: 'flights', label: 'Flights' },
@@ -68,7 +72,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-40 py-3.5 px-4 sm:px-8 transition-all duration-300 ${
-      isScrolled
+      isSolid
         ? 'bg-white/95 backdrop-blur-md border-b border-purple-100 shadow-sm'
         : 'bg-transparent border-b border-transparent'
     }`}>
@@ -86,7 +90,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
           />
           <div>
             <span className={`text-lg font-black tracking-tight block leading-none uppercase font-heading transition-colors duration-300 ${
-              isScrolled ? 'text-brand-purple' : 'text-white'
+              isSolid ? 'text-brand-purple' : 'text-white'
             }`}>ALPHAA<span className="text-brand-orange">.</span>AFRICA</span>
             <span className="text-[9px] font-bold tracking-[0.25em] text-brand-orange block mt-0.5 uppercase">Travel & Tours</span>
           </div>
@@ -110,10 +114,10 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
               }}
               className={`transition-colors ${
                 activeTab === tab.id
-                  ? isScrolled
+                  ? isSolid
                     ? 'text-brand-purple hover:text-brand-orange font-extrabold border-b border-brand-orange pb-1'
                     : 'text-white font-extrabold border-b border-brand-orange pb-1'
-                  : isScrolled
+                  : isSolid
                     ? 'text-slate-500 hover:text-brand-purple'
                     : 'text-white/80 hover:text-white'
               }`}
@@ -139,17 +143,17 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
                 </div>
                 <div className="text-left">
                   <span className={`text-[11px] font-black block leading-none group-hover:text-brand-orange transition-colors ${
-                    isScrolled ? 'text-brand-purple' : 'text-white'
+                    isSolid ? 'text-brand-purple' : 'text-white'
                   }`}>
                     {user.first_name} {user.last_name}
                   </span>
                   <span className={`text-[9px] font-bold block mt-0.5 truncate max-w-28 ${
-                    isScrolled ? 'text-slate-400' : 'text-white/60'
+                    isSolid ? 'text-slate-400' : 'text-white/60'
                   }`}>{user.email}</span>
                 </div>
                 {/* Chevron */}
                 <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''} ${
-                  isScrolled ? 'text-slate-400' : 'text-white/70'
+                  isSolid ? 'text-slate-400' : 'text-white/70'
                 }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -196,7 +200,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
               <Link
                 href="/login"
                 className={`text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors text-center inline-block ${
-                  isScrolled ? 'text-slate-500 hover:text-brand-purple' : 'text-white/90 hover:text-white'
+                  isSolid ? 'text-slate-500 hover:text-brand-purple' : 'text-white/90 hover:text-white'
                 }`}
               >
                 Login
@@ -209,7 +213,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`md:hidden p-2 focus:outline-none transition-colors cursor-pointer ${
-            isScrolled ? 'text-brand-purple hover:text-brand-orange' : 'text-white hover:text-white/70'
+            isSolid ? 'text-brand-purple hover:text-brand-orange' : 'text-white hover:text-white/70'
           }`}
           aria-label="Toggle menu"
         >
