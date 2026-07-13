@@ -15,6 +15,8 @@ import Toast from '@/components/Toast';
 // Below-the-fold: code-split, reduces initial JS bundle
 const ToursShowcase = dynamic(() => import('@/components/ToursShowcase'), { ssr: false });
 const WhyChooseUs = dynamic(() => import('@/components/WhyChooseUs'), { ssr: false });
+const Testimonials = dynamic(() => import('@/components/Testimonials'), { ssr: false });
+const Partners = dynamic(() => import('@/components/Partners'), { ssr: false });
 const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 
 // Only needed on user interaction — never ship to initial render
@@ -319,6 +321,10 @@ function HomeContent() {
             <ToursShowcase onBook={handleBookProduct} />
 
             <WhyChooseUs />
+
+            <Testimonials />
+
+            <Partners />
           </>
         )}
 
