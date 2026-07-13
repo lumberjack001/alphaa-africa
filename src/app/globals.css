@@ -13,6 +13,26 @@
   --color-brand-purple: #4f1758;
   --color-brand-orange: #ff6736;
   --color-brand-dark-bg: #0f0f1a;
+  --animate-infinite-scroll: infinite-scroll 35s linear infinite;
+  --animate-shimmer: shimmer 2s infinite linear;
+
+  @keyframes infinite-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
