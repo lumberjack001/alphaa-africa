@@ -189,7 +189,7 @@ export default function Partners() {
                     <img
                       src={logo.url}
                       alt={logo.name}
-                      className="h-7 w-auto object-contain max-w-[120px] opacity-60 hover:opacity-100 transition-all duration-300 filter grayscale"
+                      className="h-13 w-auto object-contain max-w-[140px] opacity-60 hover:opacity-100 transition-all duration-300 filter grayscale"
                     />
                   </div>
                 ))

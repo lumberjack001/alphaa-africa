@@ -129,7 +129,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
       })}
 
       {/* Rich dark purple overlay for premium contrast (images show through at 35% opacity) */}
-      <div className="absolute inset-0 bg-brand-purple/35 z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-brand-purple/65 z-10 pointer-events-none"></div>
 
       {/* Giant Triplio-style Background Text */}
       <div
