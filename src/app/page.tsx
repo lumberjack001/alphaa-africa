@@ -294,8 +294,8 @@ function HomeContent() {
               onSearch={handleSearch}
             />
 
-            {/* Mobile-only SearchWidget (inflow below Hero) */}
-            <div className="block lg:hidden px-4 sm:px-8 mt-6 mb-8 relative z-20">
+            {/* Mobile-only SearchWidget (overlapping Hero) */}
+            <div className="block lg:hidden px-4 sm:px-8 -mt-50 max-[380px]:-mt-14 md:-mt-28 mb-8 relative z-20">
               <SearchWidget
                 activeTab={activeTab}
                 onSwitchTab={handleSwitchTab}
