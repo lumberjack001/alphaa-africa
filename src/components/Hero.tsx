@@ -108,10 +108,9 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
           <div
             key={slide.image}
             aria-hidden="true"
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none hero-slide-fade"
             style={{
               opacity: isActive ? 1 : 0,
-              transition: 'opacity 1.2s ease-in-out',
               zIndex: isActive ? 1 : 0,
             }}
           >
