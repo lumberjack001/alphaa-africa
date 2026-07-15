@@ -96,7 +96,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
 
   return (
     <section
-      className="relative bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
+      className="relative z-0 bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
     >
       {/* Carousel background layers - cross-fade */}
       {slides.map((slide, idx) => {
