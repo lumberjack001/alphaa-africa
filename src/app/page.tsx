@@ -295,7 +295,10 @@ function HomeContent() {
             />
 
             {/* Mobile-only SearchWidget (overlapping Hero) */}
-            <div className="block lg:hidden px-4 sm:px-8 -mt-50 max-[380px]:-mt-14 md:-mt-28 mb-8 relative z-20">
+            <div 
+              className="block lg:hidden px-4 sm:px-8 -mt-50 max-[380px]:-mt-14 md:-mt-28 mb-8 relative z-20"
+              style={{ transform: 'translateZ(0)' }}
+            >
               <SearchWidget
                 activeTab={activeTab}
                 onSwitchTab={handleSwitchTab}
