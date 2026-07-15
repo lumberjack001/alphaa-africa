@@ -78,3 +78,10 @@ h6,
     font-size: 10px !important;
   }
 }
+
+/* Smooth opacity transition only on desktop screens to prevent GPU rendering bugs on mobile */
+@media (min-width: 1024px) {
+  .hero-slide-fade {
+    transition: opacity 1.2s ease-in-out;
+  }
+}
