@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 
 interface BoardingPassProps {
   confirmedTicket: {
@@ -57,12 +58,14 @@ export default function BoardingPass({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b-2 border-dashed border-slate-200 pb-5 mb-5">
           <div className="flex items-center space-x-3">
             
-            {/* Logo Rebuilt reverse color */}
-            <svg className="w-10 h-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="50" r="48" fill="#F6EFF7" />
-              <path d="M52 25C37.5 25 26 36.5 26 51C26 65.5 37.5 77 52 77C58 77 64 74.5 67.5 70.5L62.5 62C57 65.5 52 65.5 52 65.5C44 65.5 38 59 38 51C38 43 44 36.5 52 36.5C59.5 39.5 63 39.5 63 39.5L67.5 35C63.5 27.5 58 25 52 25Z" fill="#4C1D5C" />
-              <path d="M68.5 77C70 75 57 41 53.5 39C50.5 39 45.5 52.5 45.5 52.5L53.5 44.5L64.5 73.5H68.5Z" fill="#FA6432" />
-            </svg>
+            {/* Logo Image */}
+            <Image
+              src="/logo.png"
+              alt="Alphaa.Africa Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain rounded-lg"
+            />
             <div>
               <span className="text-xs font-black tracking-tight block text-brand-purple uppercase font-sans">ALPHAA.AFRICA</span>
               <span className="text-[8px] font-bold text-brand-orange block tracking-widest uppercase">Travels E-Ticket System</span>
