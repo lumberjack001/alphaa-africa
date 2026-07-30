@@ -4,43 +4,66 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface Testimonial {
   id: string;
-  name: string;
-  avatar: string;
-  time: string;
-  rating: number;
+  title: string;
   text: string;
+  name: string;
+  location: string;
+  avatar: string;
+  rating: number;
 }
 
 export default function Testimonials() {
   const testimonials: Testimonial[] = [
     {
       id: "1",
-      name: "Karan",
-      avatar: "/reviewer_karan.png",
-      time: "1 week ago",
+      title: "A Truly Stress-Free Travel Experience",
+      text: "From booking our flights to arranging our hotel and airport pickup, Alphaa Africa handled everything perfectly. Their team kept us informed every step of the way, making our trip completely stress-free. I highly recommend them to anyone looking for dependable travel services.",
+      name: "Kyrian Obaigbena",
+      location: "Abuja",
+      avatar: "/customers/Kyrian.jpg.jpeg",
       rating: 5,
-      text: "My booking experience for our Kenya safari was outstanding. Every flight connection, lodging confirmation, and local transit detail was handled with care and extreme professionalism. Excellent customer support!"
     },
     {
       id: "2",
-      name: "Catherine",
-      avatar: "/reviewer_catherine.png",
-      time: "10 days ago",
+      title: "Professional and Reliable",
+      text: "I've used several travel agencies over the years, but Alphaa Africa stands out for their professionalism and prompt service. They found us the best flight options within our budget and assisted with every detail of our travel plans.",
+      name: "Mary Ifeoluwa",
+      location: "Lagos",
+      avatar: "/customers/Mary Ifeoluwa.jpg.jpeg",
       rating: 5,
-      text: "I love the ease of booking flights and hotels here. The visa assistance team responded in a timely manner with clear checklists. Everything was resolved smoothly without any cancellation issues."
     },
     {
       id: "3",
-      name: "Peter",
-      avatar: "/reviewer_peter.png",
-      time: "2 weeks ago",
+      title: "Exceptional Customer Support",
+      text: "What impressed me most was their responsiveness. Whenever I had a question about my visa application or travel itinerary, their team was available to help. Their customer service is exceptional.",
+      name: "Esther Mouka",
+      location: "Port Harcourt",
+      avatar: "/customers/Esther.jpg.jpeg",
       rating: 5,
-      text: "Visited their Lagos office to align on our group safari. The travel advisors were very experienced, showed us all flight routings, and accommodated our schedule perfectly. Extremely satisfied with the service."
-    }
+    },
+    {
+      id: "4",
+      title: "Our Corporate Travel Partner",
+      text: "Managing business travel for our executives used to be stressful until we partnered with Alphaa Africa. Their efficiency, attention to detail, and timely communication have made them our trusted travel management partner.",
+      name: "Corporate Client",
+      location: "Enterprise Partner",
+      avatar: "/customers/Grace-Moni.png",
+      rating: 5,
+    },
+    {
+      id: "5",
+      title: "Highly Recommended",
+      text: "Our family vacation was planned flawlessly. From hotel reservations to airport transfers, everything went exactly as promised. Thank you, Alphaa Africa, for making our holiday memorable.",
+      name: "Mr Michael Okpale & Family",
+      location: "Verified Family Traveler",
+      avatar: "/customers/Okpale.jpg.jpeg",
+      rating: 5,
+    },
   ];
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const [scrollPercentage, setScrollPercentage] = useState(0);
+  const isPausedRef = useRef(false);
 
   const handleScroll = () => {
     const container = carouselRef.current;
@@ -54,19 +77,42 @@ export default function Testimonials() {
     setScrollPercentage(percentage);
   };
 
+  const scroll = (direction: 'left' | 'right') => {
+    const container = carouselRef.current;
+    if (!container) return;
+    const cardWidth = 340 + 24; // card width + gap
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+
+    if (direction === 'right') {
+      if (container.scrollLeft + cardWidth >= maxScrollLeft - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    } else {
+      if (container.scrollLeft <= 10) {
+        container.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      }
+    }
+  };
+
   useEffect(() => {
     handleScroll();
     window.addEventListener('resize', handleScroll);
     return () => window.removeEventListener('resize', handleScroll);
   }, []);
 
-  const scroll = (direction: 'left' | 'right') => {
-    const container = carouselRef.current;
-    if (!container) return;
-    const cardWidth = 340 + 24; // card width + gap
-    const scrollAmount = direction === 'left' ? -cardWidth : cardWidth;
-    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  };
+  // Autoplay Effect (scrolls every 4 seconds unless hovered/touched)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isPausedRef.current) return;
+      scroll('right');
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="py-20 px-4 sm:px-8 bg-white border-t border-slate-100 text-left">
@@ -78,14 +124,14 @@ export default function Testimonials() {
             Read reviews, <br className="sm:hidden" />ride with confidence.
           </h2>
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm sm:text-base text-slate-600 font-medium">
-            <span className="font-extrabold text-slate-800">4.2/5</span>
+            <span className="font-extrabold text-slate-800">4.9/5</span>
             {/* Trustpilot Style Green Star SVG */}
             <svg className="w-5 h-5 text-brand-orange" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               <path d="M9 11l2 2 4-4" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span className="font-black text-brand-orange tracking-tight font-sans text-base">Trustpilot</span>
-            <span className="text-slate-400 font-normal">Based on 5210 reviews</span>
+            <span className="text-slate-400 font-normal">Based on 5,210 verified reviews</span>
           </div>
         </div>
 
@@ -137,19 +183,28 @@ export default function Testimonials() {
             <div
               ref={carouselRef}
               onScroll={handleScroll}
+              onMouseEnter={() => { isPausedRef.current = true; }}
+              onMouseLeave={() => { isPausedRef.current = false; }}
+              onTouchStart={() => { isPausedRef.current = true; }}
+              onTouchEnd={() => { isPausedRef.current = false; }}
               className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-6 select-none [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {testimonials.map((test) => (
                 <div
                   key={test.id}
-                  className="flex-shrink-0 w-[290px] sm:w-[340px] snap-start flex flex-col justify-between"
+                  className="flex-shrink-0 w-[300px] sm:w-[360px] snap-start flex flex-col justify-between"
                 >
                   {/* Chat Speech Bubble */}
-                  <div className="bg-[#FAF8F5] p-6 rounded-3xl shadow-sm border border-slate-100/50 relative mb-5 flex-1 flex flex-col justify-between min-h-[180px]">
-                    <p className="text-slate-600 text-sm leading-relaxed font-semibold italic">
-                      "{test.text}"
-                    </p>
+                  <div className="bg-[#FAF8F5] p-6 rounded-3xl shadow-sm border border-slate-100/50 relative mb-5 flex-1 flex flex-col justify-between min-h-[220px]">
+                    <div>
+                      <h4 className="text-brand-purple font-black text-sm uppercase tracking-tight mb-2 font-sans">
+                        {test.title}
+                      </h4>
+                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-semibold italic">
+                        "{test.text}"
+                      </p>
+                    </div>
 
                     {/* Stars and Bottom Tail */}
                     <div className="mt-4 flex items-center justify-between">
@@ -168,12 +223,12 @@ export default function Testimonials() {
 
                   {/* Reviewer Details */}
                   <div className="flex items-center gap-3 pl-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 shadow-sm shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-purple-100 shadow-sm shrink-0 bg-slate-100">
                       <img src={test.avatar} alt={test.name} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <h4 className="text-sm font-extrabold text-brand-purple leading-tight">{test.name}</h4>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{test.time}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{test.location}</span>
                     </div>
                   </div>
 
