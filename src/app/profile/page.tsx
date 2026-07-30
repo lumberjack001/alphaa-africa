@@ -16,12 +16,88 @@ import {
   type User
 } from '@/lib/api';
 
+export interface PaymentRecord {
+  id: string;
+  reference: string;
+  serviceName: string;
+  serviceType: 'hotel' | 'flight' | 'car' | 'visa' | 'package';
+  amount: number;
+  currency: string;
+  date: string;
+  status: 'successful' | 'pending' | 'failed';
+  callbackUrl: string;
+}
+
+const MOCK_PAYMENT_HISTORY: PaymentRecord[] = [
+  {
+    id: 'pay-101',
+    reference: 'HTL-REF-984210',
+    serviceName: 'Transcorp Hilton Abuja - Executive Suite',
+    serviceType: 'hotel',
+    amount: 310000,
+    currency: 'NGN',
+    date: 'Jul 28, 2026',
+    status: 'successful',
+    callbackUrl: '/hotels/callback?reference=HTL-REF-984210',
+  },
+  {
+    id: 'pay-102',
+    reference: 'FLT-REF-662301',
+    serviceName: 'Air Peace Flight (LOS → ABV)',
+    serviceType: 'flight',
+    amount: 120000,
+    currency: 'NGN',
+    date: 'Jul 25, 2026',
+    status: 'successful',
+    callbackUrl: '/hotels/callback?reference=FLT-REF-662301',
+  },
+  {
+    id: 'pay-103',
+    reference: 'VSA-REF-441092',
+    serviceName: 'Schengen Business Visa Consultation',
+    serviceType: 'visa',
+    amount: 150000,
+    currency: 'NGN',
+    date: 'Jul 20, 2026',
+    status: 'pending',
+    callbackUrl: '/hotels/callback?reference=VSA-REF-441092',
+  },
+  {
+    id: 'pay-104',
+    reference: 'CAR-REF-119283',
+    serviceName: 'Toyota Land Cruiser Prado (Chauffeur Hire)',
+    serviceType: 'car',
+    amount: 85000,
+    currency: 'NGN',
+    date: 'Jul 15, 2026',
+    status: 'failed',
+    callbackUrl: '/hotels/callback?reference=CAR-REF-119283',
+  },
+  {
+    id: 'pay-105',
+    reference: 'PKG-REF-773019',
+    serviceName: 'Zanzibar Beach & Safari Holiday Package',
+    serviceType: 'package',
+    amount: 850000,
+    currency: 'NGN',
+    date: 'Jul 02, 2026',
+    status: 'successful',
+    callbackUrl: '/hotels/callback?reference=PKG-REF-773019',
+  },
+];
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Side Panel Navigation State
+  const [activeSideTab, setActiveSideTab] = useState<'account' | 'payment'>('account');
+
+  // Payment Status Filter State
+  const [statusFilter, setStatusFilter] = useState<'all' | 'successful' | 'pending' | 'failed'>('all');
 
   // Edit fields
   const [firstName, setFirstName] = useState('');
@@ -46,7 +122,6 @@ export default function ProfilePage() {
   // Fetch fresh profile from API on mount
   useEffect(() => {
     const fetchProfile = async () => {
-      // If not logged in, redirect
       const stored = getStoredUser();
       if (!stored) {
         router.push('/login');
@@ -62,13 +137,11 @@ export default function ProfilePage() {
         setLastName(data.last_name);
         setPhone(data.phone_number || '');
       } catch (error) {
-        // If 401, tokens invalid — redirect to login
         if (error instanceof ApiError && error.status === 401) {
           clearTokens();
           clearStoredUser();
           router.push('/login');
         } else {
-          // Use cached data as fallback
           setUser(stored);
           setFirstName(stored.first_name);
           setLastName(stored.last_name);
@@ -81,7 +154,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, []);
+  }, [router]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,9 +216,33 @@ export default function ProfilePage() {
     router.push('/');
   };
 
+  const handlePaymentClick = (payment: PaymentRecord) => {
+    if (payment.status === 'failed') {
+      triggerToast("Failed payments cannot be viewed or opened.");
+      return;
+    }
+    router.push(payment.callbackUrl);
+  };
+
   const userInitials = user
     ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
     : '??';
+
+  const filteredPayments = MOCK_PAYMENT_HISTORY.filter(p => {
+    if (statusFilter === 'all') return true;
+    return p.status === statusFilter;
+  });
+
+  const getServiceIcon = (type: string) => {
+    switch (type) {
+      case 'hotel': return '🏨';
+      case 'flight': return '✈️';
+      case 'car': return '🚗';
+      case 'visa': return '📄';
+      case 'package': return '🏝️';
+      default: return '💳';
+    }
+  };
 
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
@@ -160,204 +257,430 @@ export default function ProfilePage() {
         {/* Purple Banner Header */}
         <div className="bg-gradient-to-br from-[#4C1D5C] to-[#2E1238] text-white pt-16 pb-28 px-4 text-center">
           <h1 className="text-3xl sm:text-4xl font-black font-sans uppercase tracking-tight">
-            My Profile
+            My Account Dashboard
           </h1>
           <p className="text-sm text-purple-100 mt-2 font-semibold">
-            Manage your account details and booking preferences
+            Manage your personal details, security settings, and payment history
           </p>
         </div>
 
-        {/* Profile Content Container */}
-        <div className="max-w-2xl w-full mx-auto px-4 -mt-16 mb-20 relative z-10 space-y-6">
+        {/* Side Panel + Main View Layout */}
+        <div className="max-w-6xl w-full mx-auto px-4 -mt-16 mb-20 relative z-10">
 
           {isLoading ? (
-            // Loading skeleton
-            <div className="bg-white rounded-3xl p-8 shadow-2xl border border-purple-50">
-              <div className="flex items-center gap-5 mb-8">
-                <div className="w-20 h-20 rounded-full bg-slate-100 animate-pulse"></div>
-                <div className="space-y-2">
-                  <div className="w-36 h-5 bg-slate-100 rounded animate-pulse"></div>
-                  <div className="w-48 h-3 bg-slate-50 rounded animate-pulse"></div>
+            /* Loading Skeleton matching the 2-column Side Panel layout */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Side Panel Skeleton */}
+              <div className="lg:col-span-4 bg-white rounded-3xl p-6 shadow-xl border border-purple-50 space-y-6">
+                <div className="flex items-center gap-4 pb-6 border-b border-purple-50">
+                  <div className="w-14 h-14 rounded-full bg-slate-100 animate-pulse flex-shrink-0"></div>
+                  <div className="space-y-2 flex-grow">
+                    <div className="w-28 h-4 bg-slate-100 rounded animate-pulse"></div>
+                    <div className="w-36 h-3 bg-slate-50 rounded animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="w-full h-14 bg-slate-100 rounded-2xl animate-pulse"></div>
+                  <div className="w-full h-14 bg-slate-50 rounded-2xl animate-pulse"></div>
                 </div>
               </div>
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-full h-12 bg-slate-50 rounded-xl animate-pulse"></div>
-                ))}
+
+              {/* Right Main Content Skeleton */}
+              <div className="lg:col-span-8 space-y-6">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-50 space-y-6">
+                  <div className="space-y-2 pb-4 border-b border-purple-50">
+                    <div className="w-40 h-5 bg-slate-100 rounded animate-pulse"></div>
+                    <div className="w-64 h-3 bg-slate-50 rounded animate-pulse"></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="w-full h-12 bg-slate-50 rounded-xl animate-pulse"></div>
+                    <div className="w-full h-12 bg-slate-50 rounded-xl animate-pulse"></div>
+                  </div>
+                  <div className="w-full h-12 bg-slate-50 rounded-xl animate-pulse"></div>
+                  <div className="w-full h-12 bg-slate-50 rounded-xl animate-pulse"></div>
+                  <div className="w-full h-12 bg-slate-100 rounded-xl animate-pulse"></div>
+                </div>
               </div>
             </div>
           ) : (
-            <>
-              {/* Account Header Card */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-purple-50">
-                <div className="flex items-center gap-5 pb-6 mb-6 border-b border-purple-50">
-                  {/* Avatar */}
-                  <div className="w-16 h-16 rounded-full bg-brand-purple flex items-center justify-center text-white text-xl font-black flex-shrink-0 ring-4 ring-brand-orange/20">
-                    {userInitials}
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black text-brand-purple">
-                      {user?.first_name} {user?.last_name}
-                    </h2>
-                    <p className="text-xs text-slate-400 font-semibold mt-0.5">{user?.email}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {user?.is_verified ? (
-                        <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
-                          ✓ Verified Account
-                        </span>
-                      ) : (
-                        <span className="bg-amber-50 text-amber-600 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
-                          ⚠ Unverified
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                {/* Edit Profile Form */}
-                <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
-                  <h3 className="text-sm font-extrabold text-brand-purple uppercase tracking-wider font-sans">
-                    Personal Information
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-slate-500 font-bold mb-1.5">First Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={firstName}
-                        onChange={e => setFirstName(e.target.value)}
-                        className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none focus:border-brand-orange transition-colors"
-                      />
+              {/* LEFT SIDE PANEL NAVIGATION */}
+              <div className="lg:col-span-4 space-y-4">
+                <div className="bg-white rounded-3xl p-6 shadow-xl border border-purple-50">
+                  
+                  {/* User Brief Card */}
+                  <div className="flex items-center gap-4 pb-6 mb-6 border-b border-purple-50">
+                    <div className="w-14 h-14 rounded-full bg-brand-purple flex items-center justify-center text-white text-lg font-black flex-shrink-0 ring-4 ring-brand-orange/20">
+                      {userInitials}
                     </div>
-                    <div>
-                      <label className="block text-slate-500 font-bold mb-1.5">Last Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={lastName}
-                        onChange={e => setLastName(e.target.value)}
-                        className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none focus:border-brand-orange transition-colors"
-                      />
+                    <div className="overflow-hidden">
+                      <h2 className="text-base font-black text-brand-purple truncate">
+                        {user?.first_name} {user?.last_name}
+                      </h2>
+                      <p className="text-xs text-slate-400 font-semibold truncate mt-0.5">{user?.email}</p>
+                      <div className="mt-1">
+                        {user?.is_verified ? (
+                          <span className="inline-block bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <span className="inline-block bg-amber-50 text-amber-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            ⚠ Unverified
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-500 font-bold mb-1.5">Email Address</label>
-                    <input
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-slate-400 font-semibold cursor-not-allowed"
-                    />
-                    <span className="text-[10px] text-slate-400 mt-1 block">Email address cannot be changed</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-500 font-bold mb-1.5">Phone Number</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      placeholder="+2348000000000"
-                      className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none focus:border-brand-orange transition-colors"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="w-full bg-brand-orange hover:bg-brand-purple text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none flex items-center justify-center disabled:opacity-50"
-                  >
-                    {isSaving ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </button>
-                </form>
-              </div>
-
-              {/* Security Card */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-50">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-sm font-extrabold text-brand-purple uppercase tracking-wider font-sans">Security</h3>
-                    <p className="text-[11px] text-slate-400 font-semibold mt-0.5">Update your account password</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordForm(prev => !prev)}
-                    className="text-xs font-bold text-brand-orange hover:underline cursor-pointer"
-                  >
-                    {showPasswordForm ? "Cancel" : "Change Password"}
-                  </button>
-                </div>
-
-                {showPasswordForm && (
-                  <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block text-slate-500 font-bold mb-1.5">Current Password</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••••••"
-                        value={oldPassword}
-                        onChange={e => setOldPassword(e.target.value)}
-                        className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-500 font-bold mb-1.5">New Password</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••••••"
-                        value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
-                        className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none"
-                      />
-                    </div>
+                  {/* Navigation Buttons */}
+                  <div className="space-y-2">
+                    {/* Account Tab */}
                     <button
-                      type="submit"
-                      disabled={isChangingPassword}
-                      className="w-full bg-brand-purple hover:bg-brand-orange text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer border-none flex items-center justify-center disabled:opacity-50"
+                      type="button"
+                      onClick={() => setActiveSideTab('account')}
+                      className={`w-full text-left p-3.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer border-none font-sans ${
+                        activeSideTab === 'account'
+                          ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/20'
+                          : 'bg-slate-50/80 hover:bg-purple-50/50 text-slate-700 font-bold'
+                      }`}
                     >
-                      {isChangingPassword ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        "Update Password"
-                      )}
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${
+                          activeSideTab === 'account' ? 'bg-white/20 text-white' : 'bg-purple-100/70 text-brand-purple'
+                        }`}>
+                          👤
+                        </div>
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider block">Account</span>
+                          <span className={`text-[10px] block font-semibold ${
+                            activeSideTab === 'account' ? 'text-purple-200' : 'text-slate-400'
+                          }`}>Personal & Security</span>
+                        </div>
+                      </div>
+                      <span className="text-xs">→</span>
                     </button>
-                  </form>
-                )}
-              </div>
 
-              {/* Danger Zone */}
-              <div className="bg-white rounded-3xl p-6 shadow-xl border border-red-50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-extrabold text-red-500 uppercase tracking-wider font-sans">Sign Out</h3>
-                    <p className="text-[11px] text-slate-400 font-semibold mt-0.5">End your current session on this device</p>
+                    {/* Payment Tab */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveSideTab('payment')}
+                      className={`w-full text-left p-3.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer border-none font-sans ${
+                        activeSideTab === 'payment'
+                          ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/20'
+                          : 'bg-slate-50/80 hover:bg-purple-50/50 text-slate-700 font-bold'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${
+                          activeSideTab === 'payment' ? 'bg-white/20 text-white' : 'bg-purple-100/70 text-brand-purple'
+                        }`}>
+                          💳
+                        </div>
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider block">Payment</span>
+                          <span className={`text-[10px] block font-semibold ${
+                            activeSideTab === 'payment' ? 'text-purple-200' : 'text-slate-400'
+                          }`}>History & Status</span>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                        activeSideTab === 'payment' ? 'bg-brand-orange text-white' : 'bg-purple-100 text-brand-purple'
+                      }`}>
+                        {MOCK_PAYMENT_HISTORY.length}
+                      </span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="text-xs font-black text-red-400 hover:text-red-600 border border-red-100 hover:border-red-300 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    Sign Out
-                  </button>
+
+                </div>
+
+                {/* Return to Home Link */}
+                <div className="text-center pt-2">
+                  <Link href="/" className="text-xs font-bold text-slate-400 hover:text-brand-orange underline transition-colors">
+                    ← Back to Travel Hub
+                  </Link>
                 </div>
               </div>
 
-              {/* Back link */}
-              <div className="text-center">
-                <Link href="/" className="text-xs font-bold text-slate-400 hover:text-brand-orange underline transition-colors">
-                  ← Back to Travel Hub
-                </Link>
+              {/* RIGHT MAIN CONTENT AREA */}
+              <div className="lg:col-span-8">
+
+                {/* ================= TAB 1: ACCOUNT DETAILS ================= */}
+                {activeSideTab === 'account' && (
+                  <div className="space-y-6 animate-fadeIn">
+                    
+                    {/* Personal Info Card */}
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-50">
+                      <div className="mb-6">
+                        <h3 className="text-base font-black text-brand-purple uppercase tracking-tight font-sans">
+                          Personal Details
+                        </h3>
+                        <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                          Update your official account information
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-slate-500 font-bold mb-1.5">First Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={firstName}
+                              onChange={e => setFirstName(e.target.value)}
+                              className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none focus:border-brand-orange transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-500 font-bold mb-1.5">Last Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={lastName}
+                              onChange={e => setLastName(e.target.value)}
+                              className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none focus:border-brand-orange transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-500 font-bold mb-1.5">Email Address</label>
+                          <input
+                            type="email"
+                            value={user?.email || ''}
+                            disabled
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-slate-400 font-semibold cursor-not-allowed"
+                          />
+                          <span className="text-[10px] text-slate-400 mt-1 block">Email address cannot be changed</span>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-500 font-bold mb-1.5">Phone Number</label>
+                          <input
+                            type="tel"
+                            value={phone}
+                            onChange={e => setPhone(e.target.value)}
+                            placeholder="+2348000000000"
+                            className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none focus:border-brand-orange transition-colors"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSaving}
+                          className="w-full bg-brand-orange hover:bg-brand-purple text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 cursor-pointer border-none flex items-center justify-center disabled:opacity-50"
+                        >
+                          {isSaving ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            "Save Account Changes"
+                          )}
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Security Card */}
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-50">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h3 className="text-base font-black text-brand-purple uppercase tracking-tight font-sans">
+                            Security & Password
+                          </h3>
+                          <p className="text-xs text-slate-400 font-semibold mt-0.5">Manage your credentials</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordForm(prev => !prev)}
+                          className="text-xs font-bold text-brand-orange hover:underline cursor-pointer"
+                        >
+                          {showPasswordForm ? "Cancel" : "Change Password"}
+                        </button>
+                      </div>
+
+                      {showPasswordForm && (
+                        <form onSubmit={handleChangePassword} className="space-y-4 text-xs animate-fadeIn">
+                          <div>
+                            <label className="block text-slate-500 font-bold mb-1.5">Current Password</label>
+                            <input
+                              type="password"
+                              required
+                              placeholder="••••••••••••"
+                              value={oldPassword}
+                              onChange={e => setOldPassword(e.target.value)}
+                              className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-500 font-bold mb-1.5">New Password</label>
+                            <input
+                              type="password"
+                              required
+                              placeholder="••••••••••••"
+                              value={newPassword}
+                              onChange={e => setNewPassword(e.target.value)}
+                              className="w-full bg-purple-50/20 border border-slate-200 rounded-xl p-3 text-brand-purple font-semibold focus:outline-none"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            disabled={isChangingPassword}
+                            className="w-full bg-brand-purple hover:bg-brand-orange text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer border-none flex items-center justify-center disabled:opacity-50"
+                          >
+                            {isChangingPassword ? (
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              "Update Password"
+                            )}
+                          </button>
+                        </form>
+                      )}
+                    </div>
+
+                  </div>
+                )}
+
+                {/* ================= TAB 2: PAYMENT HISTORY ================= */}
+                {activeSideTab === 'payment' && (
+                  <div className="space-y-6 animate-fadeIn">
+                    
+                    {/* Payment Header Card */}
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-50">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-purple-50">
+                        <div>
+                          <h3 className="text-base font-black text-brand-purple uppercase tracking-tight font-sans">
+                            Payment History
+                          </h3>
+                          <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                            Track all your booking transactions, receipts, and payment statuses
+                          </p>
+                        </div>
+                        <div className="bg-purple-50/80 px-4 py-2 rounded-2xl text-right">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Activity</span>
+                          <span className="text-sm font-black text-brand-purple">{MOCK_PAYMENT_HISTORY.length} Transactions</span>
+                        </div>
+                      </div>
+
+                      {/* Status Filters */}
+                      <div className="flex flex-wrap items-center gap-2 pt-6">
+                        <span className="text-xs font-bold text-slate-400 mr-2 uppercase tracking-wider">Filter:</span>
+                        
+                        {(['all', 'successful', 'pending', 'failed'] as const).map(filter => {
+                          const count = filter === 'all'
+                            ? MOCK_PAYMENT_HISTORY.length
+                            : MOCK_PAYMENT_HISTORY.filter(p => p.status === filter).length;
+
+                          const isActive = statusFilter === filter;
+                          
+                          return (
+                            <button
+                              key={filter}
+                              type="button"
+                              onClick={() => setStatusFilter(filter)}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-none flex items-center space-x-1.5 ${
+                                isActive
+                                  ? 'bg-brand-purple text-white shadow-md'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              <span>{filter.charAt(0).toUpperCase() + filter.slice(1)}</span>
+                              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                                isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                              }`}>
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Payment Cards List */}
+                    <div className="space-y-4">
+                      {filteredPayments.length === 0 ? (
+                        <div className="bg-white rounded-3xl p-12 text-center border border-purple-50 shadow-sm">
+                          <div className="text-4xl mb-3">🔍</div>
+                          <h4 className="text-sm font-black text-brand-purple uppercase">No Transactions Found</h4>
+                          <p className="text-xs text-slate-400 font-semibold mt-1">
+                            No payment records match the selected filter standard.
+                          </p>
+                        </div>
+                      ) : (
+                        filteredPayments.map(payment => {
+                          const isFailed = payment.status === 'failed';
+                          const isSuccessful = payment.status === 'successful';
+                          const isPending = payment.status === 'pending';
+
+                          return (
+                            <div
+                              key={payment.id}
+                              onClick={() => handlePaymentClick(payment)}
+                              className={`bg-white rounded-3xl p-5 sm:p-6 border transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                                isFailed
+                                  ? 'border-red-100 bg-slate-50/50 opacity-70 cursor-not-allowed'
+                                  : 'border-purple-50 hover:border-brand-orange/40 hover:shadow-xl cursor-pointer'
+                              }`}
+                            >
+                              {/* Left Info */}
+                              <div className="flex items-start space-x-4">
+                                <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-xl flex-shrink-0">
+                                  {getServiceIcon(payment.serviceType)}
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center space-x-2">
+                                    <h4 className="text-sm font-black text-brand-purple">
+                                      {payment.serviceName}
+                                    </h4>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 font-semibold">
+                                    <span className="font-mono text-purple-900/70">{payment.reference}</span>
+                                    <span>•</span>
+                                    <span>{payment.date}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Right Amount & Status Badge */}
+                              <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                                <span className="text-base font-black text-slate-900">
+                                  ₦{payment.amount.toLocaleString()}
+                                </span>
+
+                                <div className="mt-1">
+                                  {isSuccessful && (
+                                    <span className="inline-flex items-center space-x-1 bg-emerald-50 text-emerald-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                      <span>✓ Successful</span>
+                                      <span className="text-xs">→</span>
+                                    </span>
+                                  )}
+
+                                  {isPending && (
+                                    <span className="inline-flex items-center space-x-1 bg-amber-50 text-amber-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                      <span>⏳ Pending</span>
+                                      <span className="text-xs">→</span>
+                                    </span>
+                                  )}
+
+                                  {isFailed && (
+                                    <span className="inline-flex items-center space-x-1 bg-red-50 text-red-500 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                      <span>✕ Failed</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                  </div>
+                )}
+
               </div>
-            </>
+
+            </div>
           )}
 
         </div>
