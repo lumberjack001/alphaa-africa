@@ -223,7 +223,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
   const config = getTabConfig();
 
   return (
-    <div id="booking-engine" className="w-full mt-12 bg-white rounded-3xl p-4 md:p-6 shadow-xl border border-purple-100 text-left scroll-mt-70">
+    <div id="booking-engine" className="z-20 w-full bg-white rounded-3xl p-4 md:p-6 shadow-2xl shadow-purple-950/15 border border-purple-100/80 text-left scroll-mt-28">
 
       {/* Module Tabs navigation */}
       <div className="flex flex-wrap gap-2 mb-6 border-b border-purple-50 pb-5 search-tabs-grid">
@@ -773,7 +773,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                   alignRight={false}
                 />
               )}
-              
+
               {/* INPUT UNIT 3C: Rental Hours (Cars only) */}
               {activeTab === 'cars' && (
                 <div className="custom-picker-container relative bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange focus-within:border-brand-orange transition-all duration-300 flex flex-col justify-center">

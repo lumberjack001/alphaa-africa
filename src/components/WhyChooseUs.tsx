@@ -120,7 +120,7 @@ export default function WhyChooseUs() {
           {/* Right Column: Adventure card with image background */}
           <div className="relative h-[340px] rounded-[2rem] overflow-hidden shadow-2xl bg-slate-900 flex flex-col justify-between p-8 group">
             <img 
-              src="/zanzibar_beach.png" 
+              src="/zanzibar_beach.webp" 
               alt="Zanzibar Beach" 
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none" 
             />

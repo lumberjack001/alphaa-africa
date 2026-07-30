@@ -127,14 +127,14 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
 
     <section
       ref={sectionRef}
-      className={`bg-white py-20 px-4 sm:px-8 border-t border-purple-50/80 text-left transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+      className={`bg-white pt-24 pb-20 sm:pt-28 sm:pb-24 lg:pt-32 lg:pb-24 px-4 sm:px-8 border-t border-purple-50/80 text-left transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
         }`}
       style={{ willChange: 'transform, opacity' }}
     >
 
 
       {/* Spacer to prevent absolute search widget from covering content */}
-      <div className="h-8 sm:h-12 lg:h-60"></div>
+      <div className="h-8 sm:h-12 lg:h-30"></div>
 
 
 

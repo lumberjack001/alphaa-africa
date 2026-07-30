@@ -179,7 +179,7 @@ export default function Listings({
 
   return (
     <section id="listings-viewports" className="max-w-7xl mx-auto py-12 px-4 sm:px-8 text-left relative">
-      
+
       {/* Top listings navigation metadata */}
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-purple-100">
         <div>
@@ -214,7 +214,7 @@ export default function Listings({
         </div>
       ) : (
         <div id="aggregator-matches-grid" className="space-y-4">
-          
+
           {/* Flight Listings */}
           {activeTab === 'flights' &&
             AIR_OFFERS_MOCK.map((flight) => (
@@ -379,7 +379,7 @@ export default function Listings({
                   <strong className="text-2xl font-black text-brand-purple block leading-none">{selectedFlight.dep}</strong>
                   <span className="text-xs text-slate-500 font-bold uppercase mt-1.5 block">{originName}</span>
                 </div>
-                
+
                 <div className="flex-1 flex flex-col items-center px-4">
                   <span className="text-[10px] text-slate-400 font-semibold">{selectedFlight.duration}</span>
                   <div className="w-full h-0.5 bg-brand-orange/30 my-2 relative">
@@ -508,9 +508,9 @@ export default function Listings({
                 <button
                   type="button"
                   onClick={() => {
-                    onBook({ 
-                      type: 'vehicle', 
-                      name: selectedCar.name, 
+                    onBook({
+                      type: 'vehicle',
+                      name: selectedCar.name,
                       price: Number(selectedCar.hourly_rate),
                       payload: { vehicle_id: selectedCar.id, slug: selectedCar.slug, pickup_date: checkInDate, hours: hours }
                     });
