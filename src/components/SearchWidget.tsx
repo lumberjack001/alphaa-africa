@@ -6,10 +6,25 @@ import CustomSelect from './CustomSelect';
 import CustomDatePicker from './CustomDatePicker';
 import TravellersSelect from './TravellersSelect';
 import AutocompleteInput from './AutocompleteInput';
+import { flightService } from '@/services/flightService';
+
+interface InitialSearchProps {
+  origin?: string;
+  destination?: string;
+  departureDate?: string;
+  returnDate?: string;
+  tripType?: string;
+  cabin?: string;
+  adults?: number;
+  children?: number;
+  infants?: number;
+  legs?: any[];
+}
 
 interface SearchWidgetProps {
   activeTab: string;
   onSwitchTab: (tabId: string) => void;
+  initialSearch?: InitialSearchProps;
   onSearch: (searchParams: {
     tab: string;
     origin: string;
@@ -18,35 +33,70 @@ interface SearchWidgetProps {
     checkoutDate?: string;
     cabin: string;
     hours?: number;
+    trip_type?: 'one_way' | 'round_trip' | 'multi_city';
+    legs?: Array<{ origin: string; destination: string; date: string }>;
+    adults?: number;
+    children?: number;
+    infants?: number;
   }) => void;
 }
 
-export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: SearchWidgetProps) {
+export default function SearchWidget({ activeTab, onSwitchTab, onSearch, initialSearch }: SearchWidgetProps) {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState('');
   const [checkoutDate, setCheckoutDate] = useState('');
   const [cabinClass, setCabinClass] = useState('Economy');
 
-  // Flight tab states
-  const [tripType, setTripType] = useState<'round-trip' | 'one-way' | 'multi-city'>('round-trip');
-  const [flightOrigin, setFlightOrigin] = useState('');
-  const [flightDestination, setFlightDestination] = useState('');
-  const [departureDate, setDepartureDate] = useState('');
-  const [returnDate, setReturnDate] = useState('');
-  const [flightCabinClass, setFlightCabinClass] = useState('Economy');
+  // Flight tab states — seeded from initialSearch if provided
+  const resolveInitialTripType = (t?: string): 'round-trip' | 'one-way' | 'multi-city' => {
+    if (t === 'round_trip') return 'round-trip';
+    if (t === 'one_way') return 'one-way';
+    if (t === 'multi_city') return 'multi-city';
+    return 'round-trip';
+  };
+
+  const [tripType, setTripType] = useState<'round-trip' | 'one-way' | 'multi-city'>(
+    resolveInitialTripType(initialSearch?.tripType)
+  );
+  const [flightOrigin, setFlightOrigin] = useState(initialSearch?.origin ?? '');
+  const [flightDestination, setFlightDestination] = useState(initialSearch?.destination ?? '');
+  const [departureDate, setDepartureDate] = useState(initialSearch?.departureDate ?? '');
+  const [returnDate, setReturnDate] = useState(initialSearch?.returnDate ?? '');
+  const [flightCabinClass, setFlightCabinClass] = useState(initialSearch?.cabin ?? 'Economy');
 
   // Travellers Popover states
-  const [adultsCount, setAdultsCount] = useState(1);
+  const [adultsCount, setAdultsCount] = useState(initialSearch?.adults ?? 1);
   const [rentalHours, setRentalHours] = useState(5);
-  const [childrenCount, setChildrenCount] = useState(0);
-  const [infantsCount, setInfantsCount] = useState(0);
+  const [childrenCount, setChildrenCount] = useState(initialSearch?.children ?? 0);
+  const [infantsCount, setInfantsCount] = useState(initialSearch?.infants ?? 0);
+
+  // Custom Vehicle Category state
+  const [customVehicleCategory, setCustomVehicleCategory] = useState('');
+
+  const handleSearchAirportsAsync = async (query: string) => {
+    const matches = await flightService.searchAirports(query);
+    return matches.map(m => ({
+      value: m.iata_code,
+      label: `${m.city}, ${m.country_name} (${m.iata_code}) - ${m.name}`
+    }));
+  };
 
   // Multi-city states
-  const [multiCityFlights, setMultiCityFlights] = useState([
-    { origin: '', destination: '', date: '', cabinClass: 'Economy' },
-    { origin: '', destination: '', date: '', cabinClass: 'Economy' },
-  ]);
+  const [multiCityFlights, setMultiCityFlights] = useState(() => {
+    if (initialSearch?.legs && Array.isArray(initialSearch.legs) && initialSearch.legs.length > 0) {
+      return initialSearch.legs.map((l: any) => ({
+        origin: l.origin || '',
+        destination: l.destination || '',
+        date: l.date || '',
+        cabinClass: l.cabin || 'Economy',
+      }));
+    }
+    return [
+      { origin: '', destination: '', date: '', cabinClass: 'Economy' },
+      { origin: '', destination: '', date: '', cabinClass: 'Economy' },
+    ];
+  });
 
   const flightAirports = [
     { value: "LOS", label: "Lagos, Nigeria (LOS)" },
@@ -77,37 +127,76 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
       setOrigin('');
       setDestination('');
       setCabinClass('sedan_executive');
+      setCustomVehicleCategory('');
     }
   }, [activeTab]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === 'flights') {
+      console.log("🔍 [Flight Search Widget Submit]:", {
+        tripType,
+        flightOrigin,
+        flightDestination,
+        departureDate,
+        returnDate,
+        flightCabinClass,
+        adultsCount,
+        childrenCount,
+        infantsCount,
+        multiCityFlights
+      });
       if (tripType === 'multi-city') {
         onSearch({
           tab: activeTab,
+          trip_type: 'multi_city',
+          legs: multiCityFlights.map((f: any) => ({ origin: f.origin, destination: f.destination, date: f.date })),
           origin: multiCityFlights[0].origin,
           destination: multiCityFlights[0].destination,
           date: multiCityFlights[0].date,
           cabin: multiCityFlights[0].cabinClass,
+          adults: adultsCount,
+          children: childrenCount,
+          infants: infantsCount,
+        });
+      } else if (tripType === 'round-trip') {
+        onSearch({
+          tab: activeTab,
+          trip_type: 'round_trip',
+          origin: flightOrigin,
+          destination: flightDestination,
+          date: departureDate,
+          checkoutDate: returnDate,
+          cabin: flightCabinClass,
+          adults: adultsCount,
+          children: childrenCount,
+          infants: infantsCount,
         });
       } else {
         onSearch({
           tab: activeTab,
+          trip_type: 'one_way',
           origin: flightOrigin,
           destination: flightDestination,
           date: departureDate,
           cabin: flightCabinClass,
+          adults: adultsCount,
+          children: childrenCount,
+          infants: infantsCount,
         });
       }
     } else {
+      const finalCabin = (activeTab === 'cars' && cabinClass === 'others' && customVehicleCategory.trim()) 
+        ? customVehicleCategory 
+        : cabinClass;
+
       onSearch({
         tab: activeTab,
         origin,
         destination: activeTab === 'hotels' ? `${adultsCount + childrenCount + infantsCount} Guests` : destination,
         date,
         checkoutDate: activeTab === 'hotels' ? checkoutDate : undefined,
-        cabin: cabinClass,
+        cabin: finalCabin,
         hours: activeTab === 'cars' ? rentalHours : undefined,
       });
     }
@@ -211,10 +300,10 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
             { value: "ZNZ", label: "Zanzibar Airport, Tanzania (ZNZ)" },
           ],
           options4: [
-            { value: "Economy", label: "Economy Cabin Class" },
-            { value: "Premium", label: "Premium Economy" },
-            { value: "Business", label: "Business Cabin Class" },
-            { value: "First", label: "First Cabin Class" },
+            { value: "ECONOMY", label: "Economy Cabin Class" },
+            { value: "PREMIUM_ECONOMY", label: "Premium Economy" },
+            { value: "BUSINESS", label: "Business Cabin Class" },
+            { value: "FIRST", label: "First Cabin Class" },
           ]
         };
     }
@@ -297,7 +386,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
             {tripType === 'multi-city' ? (
               /* MULTI-CITY VIEW */
               <div className="space-y-4">
-                {multiCityFlights.map((flight, idx) => (
+                {multiCityFlights.map((flight: any, idx: number) => (
                   <div key={idx} className="flex flex-col lg:flex-row items-stretch gap-4 bg-purple-50/10 p-5 rounded-3xl border border-purple-100/60 relative">
 
                     {/* Index Badge */}
@@ -319,6 +408,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                         newFlights[idx].origin = val;
                         setMultiCityFlights(newFlights);
                       }}
+                      onSearchAsync={handleSearchAirportsAsync}
                       placeholder="Departure City"
                       icon={
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
@@ -360,6 +450,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                         newFlights[idx].destination = val;
                         setMultiCityFlights(newFlights);
                       }}
+                      onSearchAsync={handleSearchAirportsAsync}
                       placeholder="Arrival City"
                       icon={
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
@@ -413,7 +504,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                       <button
                         type="button"
                         onClick={() => {
-                          const newFlights = multiCityFlights.filter((_, fIdx) => fIdx !== idx);
+                          const newFlights = multiCityFlights.filter((_: any, fIdx: number) => fIdx !== idx);
                           setMultiCityFlights(newFlights);
                         }}
                         className="absolute top-3 right-3 lg:relative lg:top-auto lg:right-auto self-center p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer shrink-0"
@@ -456,6 +547,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     value={flightOrigin}
                     options={flightAirports}
                     onChange={setFlightOrigin}
+                    onSearchAsync={handleSearchAirportsAsync}
                     placeholder="Enter departure city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
@@ -467,7 +559,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                   />
 
                   {/* MOBILE SWAP BUTTON */}
-                  <div className="flex items-center justify-center -my-3 md:hidden z-10">
+                  <div className="flex items-center justify-center -my-1 md:hidden z-10">
                     <button
                       type="button"
                       onClick={() => {
@@ -489,6 +581,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     value={flightDestination}
                     options={flightAirports}
                     onChange={setFlightDestination}
+                    onSearchAsync={handleSearchAirportsAsync}
                     placeholder="Enter arrival city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
@@ -553,6 +646,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     value={flightOrigin}
                     options={flightAirports}
                     onChange={setFlightOrigin}
+                    onSearchAsync={handleSearchAirportsAsync}
                     placeholder="Enter departure city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
@@ -586,6 +680,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     value={flightDestination}
                     options={flightAirports}
                     onChange={setFlightDestination}
+                    onSearchAsync={handleSearchAirportsAsync}
                     placeholder="Enter arrival city/airport"
                     icon={
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
@@ -712,6 +807,21 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                     />
                   </div>
                 </div>
+              ) : activeTab === 'cars' ? (
+                <AutocompleteInput
+                  id="cars-origin"
+                  label={config.lbl1}
+                  value={origin}
+                  options={config.options1}
+                  onChange={setOrigin}
+                  placeholder="Search Pick-Up..."
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  }
+                />
               ) : (
                 <CustomSelect
                   id="standard-origin"
@@ -737,6 +847,21 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                   setChildrenCount={setChildrenCount}
                   infantsCount={infantsCount}
                   setInfantsCount={setInfantsCount}
+                />
+              ) : activeTab === 'cars' ? (
+                <AutocompleteInput
+                  id="cars-destination"
+                  label={config.lbl2}
+                  value={destination}
+                  options={config.options2}
+                  onChange={setDestination}
+                  placeholder="Search Drop-Off..."
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  }
                 />
               ) : (
                 <CustomSelect
@@ -804,19 +929,50 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch }: Searc
                 </div>
               )}
 
-              {/* INPUT UNIT 4: Selections classes */}
-              <CustomSelect
-                id="standard-cabin"
-                label={config.lbl4}
-                value={cabinClass}
-                options={config.options4}
-                onChange={setCabinClass}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h14.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" />
-                  </svg>
-                }
-              />
+              {/* INPUT UNIT 4: Selections classes / Custom Vehicle Category */}
+              {activeTab === 'cars' && cabinClass === 'others' ? (
+                <div className="custom-picker-container relative bg-purple-50/40 p-4 rounded-2xl border border-brand-orange/80 hover:border-brand-orange focus-within:border-brand-orange transition-all duration-300 flex flex-col justify-center">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[9px] uppercase tracking-wider text-brand-orange font-extrabold">Custom Vehicle Type</label>
+                    <button
+                      type="button"
+                      onClick={() => setCabinClass('sedan_executive')}
+                      className="text-[9px] font-bold text-slate-400 hover:text-brand-purple underline cursor-pointer"
+                      title="Choose standard category"
+                    >
+                      Presets
+                    </button>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-brand-orange shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 18.75a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="e.g. Minivan, Convertible..."
+                      value={customVehicleCategory}
+                      onChange={(e) => setCustomVehicleCategory(e.target.value)}
+                      className="w-full bg-transparent text-brand-purple font-extrabold text-sm focus:outline-none placeholder:text-slate-400 border-none p-0 outline-none truncate"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+              ) : (
+                <CustomSelect
+                  id="standard-cabin"
+                  label={config.lbl4}
+                  value={cabinClass}
+                  options={config.options4}
+                  onChange={setCabinClass}
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h14.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" />
+                    </svg>
+                  }
+                />
+              )}
 
             </div>
 

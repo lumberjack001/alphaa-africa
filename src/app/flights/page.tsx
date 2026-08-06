@@ -10,6 +10,8 @@ import Toast from '@/components/Toast';
 import CheckoutModal from '@/components/CheckoutModal';
 import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
+import { flightService } from '@/services/flightService';
+import { getStoredUser, getUserPhone } from '@/lib/api';
 
 function FlightsQueryPageContent() {
   const searchParams = useSearchParams();
@@ -19,14 +21,34 @@ function FlightsQueryPageContent() {
   const originParam = searchParams.get('origin') || 'LOS';
   const destinationParam = searchParams.get('destination') || 'ABV';
   const dateParam = searchParams.get('date') || '2026-07-20';
+  const returnDateParam = searchParams.get('return_date') || searchParams.get('checkoutDate') || '';
+  const tripTypeParam = searchParams.get('trip_type') || '';
   const cabinParam = searchParams.get('cabin') || 'Economy';
+  const adultsParam = Number(searchParams.get('adults') || 1);
+  const childrenParam = Number(searchParams.get('children') || 0);
+  const infantsParam = Number(searchParams.get('infants') || 0);
+
+  const legsParamRaw = searchParams.get('legs');
+  let legsParam: any[] = [];
+  if (legsParamRaw) {
+    try {
+      legsParam = JSON.parse(legsParamRaw);
+    } catch (e) {
+      legsParam = [];
+    }
+  }
 
   // Local Search state
   const [searchQuery, setSearchQuery] = useState({
     origin: originParam,
     destination: destinationParam,
     date: dateParam,
+    returnDate: returnDateParam,
+    tripType: tripTypeParam,
     cabin: cabinParam,
+    adults: adultsParam,
+    children: childrenParam,
+    infants: infantsParam,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +72,19 @@ function FlightsQueryPageContent() {
     email: '',
     phone: '',
   });
+
+  // Pre-fill user profile info if logged in
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user) {
+      setPassengerInfo({
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        phone: getUserPhone(user),
+      });
+    }
+  }, []);
 
   const [confirmedTicket, setConfirmedTicket] = useState<{
     passenger: string;
@@ -76,9 +111,45 @@ function FlightsQueryPageContent() {
       origin: originParam,
       destination: destinationParam,
       date: dateParam,
+      returnDate: returnDateParam,
+      tripType: tripTypeParam,
       cabin: cabinParam,
+      adults: adultsParam,
+      children: childrenParam,
+      infants: infantsParam,
     });
-  }, [originParam, destinationParam, dateParam, cabinParam]);
+  }, [originParam, destinationParam, dateParam, returnDateParam, tripTypeParam, cabinParam, adultsParam, childrenParam, infantsParam]);
+
+  // Handle Paystack payment verification from URL reference
+  useEffect(() => {
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
+    if (reference) {
+      const verify = async () => {
+        setIsLoading(true);
+        try {
+          const res = await flightService.verifyBooking(reference);
+          setConfirmedTicket({
+            passenger: res.customer_email || 'Passenger',
+            cabin: `${searchQuery.cabin} Class`,
+            hash: `#TK-${reference.substring(0, 8).toUpperCase()}`,
+            pnr: res.pnr || res.reference || reference,
+            details: {
+              carrier: 'Amadeus Airline',
+              name: 'Live Flight Ticket',
+              number: 'PNR-CONFIRMED',
+            },
+            type: 'flight',
+          });
+          triggerToast("Payment verified! Automated E-Ticket issued.");
+        } catch (e) {
+          console.error("Error verifying flight booking:", e);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      verify();
+    }
+  }, [searchParams, searchQuery.cabin]);
 
   // Smooth scroll search results into view
   useEffect(() => {
@@ -101,8 +172,21 @@ function FlightsQueryPageContent() {
     date: string;
     checkoutDate?: string;
     cabin: string;
+    trip_type?: string;
+    adults?: number;
+    children?: number;
+    infants?: number;
+    legs?: any[];
   }) => {
-    router.push('/coming-soon');
+    const returnParam = params.checkoutDate ? `&return_date=${encodeURIComponent(params.checkoutDate)}` : '';
+    const tripTypeParam = params.trip_type ? `&trip_type=${encodeURIComponent(params.trip_type)}` : '';
+    const adultsP = params.adults ? `&adults=${params.adults}` : '';
+    const childrenP = params.children !== undefined ? `&children=${params.children}` : '';
+    const infantsP = params.infants !== undefined ? `&infants=${params.infants}` : '';
+    const legsP = params.legs && params.legs.length > 0 ? `&legs=${encodeURIComponent(JSON.stringify(params.legs))}` : '';
+
+    const searchUrl = `/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${encodeURIComponent(params.date)}${returnParam}${tripTypeParam}&cabin=${encodeURIComponent(params.cabin)}${adultsP}${childrenP}${infantsP}${legsP}`;
+    router.push(searchUrl);
   };
 
   const handleSwitchTab = (tabId: string) => {
@@ -117,18 +201,60 @@ function FlightsQueryPageContent() {
     }
   };
 
-  const handleBookFlight = (product: { type: string; name: string; price: number; payload?: any }) => {
+  const handleBookFlight = async (product: { type: string; name: string; price: number; payload?: any }) => {
     setSelectedProduct(product);
-    setIsCheckoutOpen(true);
-    triggerToast(`Booking initialized for ${product.name}`);
+    if (product.payload) {
+      try {
+        sessionStorage.setItem('selectedFlightOffer', JSON.stringify(product.payload));
+        sessionStorage.setItem('flightSearchContext', JSON.stringify(searchQuery));
+        await flightService.confirmPrice(product.payload);
+      } catch (e) {
+        console.warn("Price confirmation notice:", e);
+      }
+    }
+    router.push('/flights/checkout');
   };
 
-  const handleProceedToBilling = (
+  const handleProceedToBilling = async (
     info: { firstName: string; lastName: string; email: string; phone: string },
     response?: any
   ) => {
     setPassengerInfo(info);
     setIsCheckoutOpen(false);
+
+    if (selectedProduct?.payload) {
+      try {
+        setIsLoading(true);
+        const bookingRes = await flightService.createBooking({
+          flight_offer: selectedProduct.payload,
+          contact_name: `${info.firstName} ${info.lastName}`,
+          contact_email: info.email,
+          contact_phone: info.phone,
+          travelers: [
+            {
+              first_name: info.firstName,
+              last_name: info.lastName,
+              email: info.email,
+              phone: info.phone,
+              traveler_type: 'ADULT'
+            }
+          ]
+        });
+
+        if (bookingRes.payment?.authorization_url) {
+          window.location.href = bookingRes.payment.authorization_url;
+          return;
+        }
+
+        setBookingResponse(bookingRes);
+      } catch (err: any) {
+        console.error("Booking creation error:", err);
+        triggerToast(err.message || "Failed to create flight booking");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
     if (response) {
       setBookingResponse(response);
     }
@@ -200,6 +326,18 @@ function FlightsQueryPageContent() {
                 activeTab="flights"
                 onSwitchTab={handleSwitchTab}
                 onSearch={handleSearchSubmit}
+                initialSearch={{
+                  origin: originParam,
+                  destination: destinationParam,
+                  departureDate: dateParam,
+                  returnDate: returnDateParam,
+                  tripType: tripTypeParam,
+                  cabin: cabinParam,
+                  adults: adultsParam,
+                  children: childrenParam,
+                  infants: infantsParam,
+                  legs: legsParam,
+                }}
               />
             </div>
 
@@ -214,8 +352,14 @@ function FlightsQueryPageContent() {
                 origin={searchQuery.origin}
                 destination={searchQuery.destination}
                 checkInDate={searchQuery.date}
-                guests="1"
+                checkOutDate={searchQuery.returnDate}
+                guests={`${searchQuery.adults + searchQuery.children + searchQuery.infants}`}
                 stars={searchQuery.cabin}
+                adults={searchQuery.adults}
+                children={searchQuery.children}
+                infants={searchQuery.infants}
+                tripType={searchQuery.tripType}
+                legs={legsParam}
               />
             </div>
           </>

@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  AIR_OFFERS_MOCK,
   AIRPORT_REGISTRY
 } from '../constants/mockData';
 import { hotelService, type HotelCard, type HotelDetails } from '@/services/hotelService';
 import { carService, type CarCard, type CarDetails } from '@/services/carService';
+import { flightService, type FlightOfferResult } from '@/services/flightService';
 import FlightListingCard from './FlightListingCard';
 import HotelListingCard from './HotelListingCard';
 import CarListingCard from './CarListingCard';
+import AirlineDealsMatrix from './AirlineDealsMatrix';
 
 interface ListingsProps {
   activeTab: string;
@@ -25,6 +26,11 @@ interface ListingsProps {
   stars?: string;
   onHotelClick?: (slug: string) => void;
   hours?: number;
+  adults?: number;
+  children?: number;
+  infants?: number;
+  tripType?: string;
+  legs?: any[];
 }
 
 export default function Listings({
@@ -37,21 +43,130 @@ export default function Listings({
   destination,
   checkInDate,
   checkOutDate,
-  guests,
-  stars,
+  guests = "1",
+  stars = "5 Stars",
   onHotelClick,
-  hours
+  hours = 5,
+  adults = 1,
+  children = 0,
+  infants = 0,
+  tripType,
+  legs,
 }: ListingsProps) {
   const [hotels, setHotels] = useState<HotelCard[]>([]);
   const [fetchingHotels, setFetchingHotels] = useState(false);
   const [cars, setCars] = useState<CarCard[]>([]);
   const [fetchingCars, setFetchingCars] = useState(false);
+  const [flights, setFlights] = useState<FlightOfferResult[]>([]);
+  const [fetchingFlights, setFetchingFlights] = useState(false);
+
+  // Flight matrix filter & sorting states
+  const [selectedAirlineFilter, setSelectedAirlineFilter] = useState<string | null>(null);
+  const [selectedStopsFilter, setSelectedStopsFilter] = useState<number | null>(null);
+  const [flightSortBy, setFlightSortBy] = useState<'cheapest' | 'fastest' | 'earliest'>('cheapest');
+  const [expandedAirlines, setExpandedAirlines] = useState<Record<string, boolean>>({});
+
+  // Reset matrix filters when search params change
+  useEffect(() => {
+    setSelectedAirlineFilter(null);
+    setSelectedStopsFilter(null);
+    setExpandedAirlines({});
+  }, [origin, destination, checkInDate, checkOutDate]);
 
   // Detail view state for modal (fallback when onHotelClick is not active)
   const [selectedHotel, setSelectedHotel] = useState<HotelDetails | null>(null);
   const [selectedFlight, setSelectedFlight] = useState<any | null>(null);
   const [selectedCar, setSelectedCar] = useState<CarDetails | null>(null);
   const [fetchingDetails, setFetchingDetails] = useState(false);
+
+  // Load dynamic flights when tab is flights
+  useEffect(() => {
+    if (activeTab === 'flights' && isVisible && origin && destination) {
+      const fetchFlightOffers = async () => {
+        setFetchingFlights(true);
+        try {
+          const formattedTripType = (tripType as any) || (legs && legs.length > 0 ? 'multi_city' : checkOutDate ? 'round_trip' : 'one_way');
+
+          const res = await flightService.searchFlights({
+            origin: origin,
+            destination: destination,
+            departure_date: checkInDate || new Date().toISOString().split('T')[0],
+            return_date: checkOutDate || null,
+            travel_class: stars || "ECONOMY",
+            trip_type: formattedTripType,
+            legs: legs && legs.length > 0 ? legs : undefined,
+            adults: adults,
+            children: children,
+            infants: infants,
+          });
+          setFlights(res.results || []);
+        } catch (err) {
+          console.error("Error fetching live flight offers:", err);
+          setFlights([]);
+        } finally {
+          setFetchingFlights(false);
+        }
+      };
+      fetchFlightOffers();
+    }
+  }, [activeTab, isVisible, origin, destination, checkInDate, checkOutDate, stars, adults, children, infants, tripType, JSON.stringify(legs)]);
+
+  // Filter and sort flight offers
+  const filteredAndSortedFlights = useMemo(() => {
+    if (!flights || flights.length === 0) return [];
+
+    let list = flights.filter(offer => {
+      const code = offer.airline_code || offer.airline || 'FL';
+      const stops = offer.max_stops_in_trip ?? offer.itineraries?.[0]?.stops ?? 0;
+
+      if (selectedAirlineFilter && code !== selectedAirlineFilter) return false;
+      if (selectedStopsFilter !== null) {
+        if (selectedStopsFilter === 2 && stops < 2) return false;
+        if (selectedStopsFilter < 2 && stops !== selectedStopsFilter) return false;
+      }
+      return true;
+    });
+
+    // Apply Quick-Sort
+    list.sort((a, b) => {
+      if (flightSortBy === 'cheapest') {
+        return Number(a.price) - Number(b.price);
+      }
+      if (flightSortBy === 'fastest') {
+        const durA = a.itineraries?.[0]?.duration || '99h';
+        const durB = b.itineraries?.[0]?.duration || '99h';
+        return durA.localeCompare(durB);
+      }
+      if (flightSortBy === 'earliest') {
+        const depA = a.itineraries?.[0]?.segments?.[0]?.departure?.at || '';
+        const depB = b.itineraries?.[0]?.segments?.[0]?.departure?.at || '';
+        return depA.localeCompare(depB);
+      }
+      return 0;
+    });
+
+    return list;
+  }, [flights, selectedAirlineFilter, selectedStopsFilter, flightSortBy]);
+
+  // Group filtered flights by airline
+  const groupedFlightsByAirline = useMemo(() => {
+    const map = new Map<string, {
+      airlineName: string;
+      airlineCode: string;
+      offers: FlightOfferResult[];
+    }>();
+
+    filteredAndSortedFlights.forEach(offer => {
+      const code = offer.airline_code || offer.airline || 'FL';
+      const name = offer.airline || 'Airline';
+      if (!map.has(code)) {
+        map.set(code, { airlineName: name, airlineCode: code, offers: [] });
+      }
+      map.get(code)!.offers.push(offer);
+    });
+
+    return Array.from(map.values());
+  }, [filteredAndSortedFlights]);
 
   // Load dynamic hotels when tab is hotels
   useEffect(() => {
@@ -175,7 +290,7 @@ export default function Listings({
     handleOpenCarDetails(carCard);
   };
 
-  const isLoading = propLoading || fetchingHotels || fetchingCars;
+  const isLoading = propLoading || fetchingHotels || fetchingCars || fetchingFlights;
 
   return (
     <section id="listings-viewports" className="max-w-7xl mx-auto py-12 px-4 sm:px-8 text-left relative">
@@ -216,17 +331,139 @@ export default function Listings({
         <div id="aggregator-matches-grid" className="space-y-4">
 
           {/* Flight Listings */}
-          {activeTab === 'flights' &&
-            AIR_OFFERS_MOCK.map((flight) => (
-              <FlightListingCard
-                key={flight.id}
-                flight={flight}
-                originName={originName}
-                destinationName={destinationName}
-                onBook={onBook}
-                onSelect={setSelectedFlight}
+          {activeTab === 'flights' && (
+            <div>
+              {/* Best Deals by Airline Comparison Matrix */}
+              <AirlineDealsMatrix
+                offers={flights.map(f => ({
+                  offer_id: f.offer_id,
+                  airline: f.airline,
+                  airline_code: f.airline_code,
+                  price: Number(f.price),
+                  itineraries: f.itineraries,
+                }))}
+                originCode={origin}
+                destinationCode={destination}
+                selectedAirline={selectedAirlineFilter}
+                selectedStops={selectedStopsFilter}
+                onFilterChange={(airline, stops) => {
+                  setSelectedAirlineFilter(airline);
+                  setSelectedStopsFilter(stops);
+                }}
               />
-            ))}
+
+              {/* Quick-Sort Bar & Matches Header */}
+              {flights.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 bg-purple-50/30 p-4 rounded-2xl border border-purple-100/60 font-sans">
+                  <div className="text-xs">
+                    <strong className="text-brand-purple font-black text-sm block">
+                      {filteredAndSortedFlights.length} Flight{filteredAndSortedFlights.length !== 1 ? 's' : ''} Available
+                    </strong>
+                    <span className="text-slate-400 font-semibold">Sorted by {flightSortBy.toUpperCase()} • Live Amadeus Quotes</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2 self-stretch sm:self-auto">
+                    <span className="text-slate-400 text-xs font-bold shrink-0">Sort By:</span>
+                    <div className="flex items-center bg-white p-1 rounded-xl border border-purple-100 shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => setFlightSortBy('cheapest')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer border-none ${
+                          flightSortBy === 'cheapest' ? 'bg-brand-purple text-white shadow-xs' : 'text-slate-500 hover:text-brand-purple'
+                        }`}
+                      >
+                        Cheapest
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFlightSortBy('fastest')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer border-none ${
+                          flightSortBy === 'fastest' ? 'bg-brand-purple text-white shadow-xs' : 'text-slate-500 hover:text-brand-purple'
+                        }`}
+                      >
+                        Fastest
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFlightSortBy('earliest')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer border-none ${
+                          flightSortBy === 'earliest' ? 'bg-brand-purple text-white shadow-xs' : 'text-slate-500 hover:text-brand-purple'
+                        }`}
+                      >
+                        Earliest
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Grouped Airline Results Feed */}
+              {filteredAndSortedFlights.length === 0 ? (
+                <p className="text-center text-slate-400 font-bold py-12">
+                  No active flight schedules match the selected filter criteria.
+                </p>
+              ) : (
+                <div className="space-y-6">
+                  {groupedFlightsByAirline.map(group => {
+                    const heroOffer = group.offers[0];
+                    const extraOffers = group.offers.slice(1);
+                    const isExpanded = !!expandedAirlines[group.airlineCode];
+
+                    const renderCard = (offer: FlightOfferResult) => {
+                      const segs = offer.itineraries?.[0]?.segments || [];
+                      const firstSeg = segs[0];
+                      const lastSeg = segs[segs.length - 1];
+
+                      return (
+                        <FlightListingCard
+                          key={offer.offer_id}
+                          offer={offer}
+                          originCode={firstSeg?.departure?.iataCode || origin}
+                          destinationCode={lastSeg?.arrival?.iataCode || destination}
+                          onBook={() => onBook({
+                            type: 'flight',
+                            name: offer.airline || 'Flight',
+                            price: Number(offer.price) || 0,
+                            payload: offer
+                          })}
+                        />
+                      );
+                    };
+
+                    return (
+                      <div key={group.airlineCode} className="space-y-3">
+                        {/* Primary Best Fare Card per Airline */}
+                        {renderCard(heroOffer)}
+
+                        {/* Collapsible Accordion for Extra Flights */}
+                        {extraOffers.length > 0 && (
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedAirlines(prev => ({ ...prev, [group.airlineCode]: !prev[group.airlineCode] }))}
+                              className="w-full bg-purple-50/60 hover:bg-purple-100/60 border border-purple-100 text-brand-purple font-black text-xs py-3 px-4 rounded-2xl transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-xs font-sans"
+                            >
+                              <span>
+                                {isExpanded
+                                  ? `▲ Hide ${extraOffers.length} extra ${group.airlineName} flight${extraOffers.length > 1 ? 's' : ''}`
+                                  : `▼ +${extraOffers.length} more ${group.airlineName} flight${extraOffers.length > 1 ? 's' : ''}`}
+                              </span>
+                            </button>
+
+                            {isExpanded && (
+                              <div className="mt-3 pl-2 border-l-2 border-purple-200 space-y-3 pt-1">
+                                {extraOffers.map(offer => renderCard(offer))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Hotel Listings */}
           {activeTab === 'hotels' &&
@@ -354,90 +591,7 @@ export default function Listings({
           </div>
         </div>
       )}
-      {/* Flight details selector modal */}
-      {selectedFlight && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white text-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-purple-100 shadow-2xl overflow-y-auto max-h-[90vh] text-left">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-purple-50">
-              <div>
-                <span className="text-brand-orange text-[10px] uppercase font-black tracking-widest block font-sans">✈️ Flight Information</span>
-                <h3 className="text-2xl font-black text-brand-purple font-sans">{selectedFlight.carrier} • {selectedFlight.number}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedFlight(null)}
-                className="text-slate-400 hover:text-brand-orange text-xl font-bold p-1 cursor-pointer border-none bg-transparent"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {/* Flight itinerary visualization */}
-              <div className="bg-purple-50/20 border border-purple-100/40 rounded-2xl p-6 flex justify-between items-center gap-4">
-                <div className="text-left">
-                  <strong className="text-2xl font-black text-brand-purple block leading-none">{selectedFlight.dep}</strong>
-                  <span className="text-xs text-slate-500 font-bold uppercase mt-1.5 block">{originName}</span>
-                </div>
-
-                <div className="flex-1 flex flex-col items-center px-4">
-                  <span className="text-[10px] text-slate-400 font-semibold">{selectedFlight.duration}</span>
-                  <div className="w-full h-0.5 bg-brand-orange/30 my-2 relative">
-                    <div className="w-2.5 h-2.5 rounded-full bg-brand-orange absolute top-1/2 left-1/2 -translate-y-1/2"></div>
-                  </div>
-                  <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{selectedFlight.stops}</span>
-                </div>
-
-                <div className="text-right">
-                  <strong className="text-2xl font-black text-brand-purple block leading-none">{selectedFlight.arr}</strong>
-                  <span className="text-xs text-slate-500 font-bold uppercase mt-1.5 block">{destinationName}</span>
-                </div>
-              </div>
-
-              {/* Detailed specs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl p-4 border border-purple-50 space-y-3">
-                  <h4 className="font-extrabold text-brand-purple text-xs uppercase tracking-wider">Flight Specifications</h4>
-                  <ul className="text-xs space-y-2 font-semibold text-slate-600">
-                    <li>✈️ <span className="text-slate-400">Aircraft:</span> Boeing 787-9 / E195-E2</li>
-                    <li>🛋️ <span className="text-slate-400">Cabin Class:</span> Standard Economy</li>
-                    <li>📏 <span className="text-slate-400">Seat Pitch:</span> 32 inches (Standard)</li>
-                    <li>🔄 <span className="text-slate-400">Refund Policy:</span> Changeable with fee</li>
-                  </ul>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-purple-50 space-y-3">
-                  <h4 className="font-extrabold text-brand-purple text-xs uppercase tracking-wider">Baggage & Amenities</h4>
-                  <ul className="text-xs space-y-2 font-semibold text-slate-600">
-                    <li>🧳 <span className="text-slate-400">Checked:</span> 2x 23kg Bags Included</li>
-                    <li>🎒 <span className="text-slate-400">Carry-on:</span> 1x 7kg Bag Included</li>
-                    <li>📶 <span className="text-slate-400">Onboard WiFi:</span> High-speed (paid)</li>
-                    <li>🍔 <span className="text-slate-400">Catering:</span> Hot meals & beverages</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Booking Actions */}
-              <div className="border-t border-purple-50 pt-6 flex items-center justify-between">
-                <div>
-                  <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider">Total price from</span>
-                  <strong className="text-2xl font-black text-brand-purple">₦{selectedFlight.price.toLocaleString()}</strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onBook({ type: 'flight', name: selectedFlight.carrier, price: selectedFlight.price });
-                    setSelectedFlight(null);
-                  }}
-                  className="bg-brand-orange hover:bg-brand-purple text-white font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer border-none shadow-md"
-                >
-                  Book E-Ticket
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Flight details are now expanded inline within each FlightListingCard */}
       {/* Car details selector modal */}
       {selectedCar && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
