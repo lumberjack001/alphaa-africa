@@ -44,7 +44,7 @@ export default function BoardingPass({
             ? "Your visa consultation transaction was successfully verified. Our visa advisory specialists will contact you shortly to review your application."
             : isPackage
               ? "Your enquiry has been successfully logged in our system. A travel advisor has been assigned and will follow up shortly."
-              : "The transaction webhook was successfully verified by our Django API layer. Your official boarding PNR Reference ticket has been compiled and emailed to you."}
+              : "Your official boarding PNR Reference ticket has been compiled and emailed to you."}
         </p>
       </div>
 
@@ -118,20 +118,8 @@ export default function BoardingPass({
         {/* QR codes & verification status details */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
           <div className="flex items-center space-x-3">
-            {/* SVG barcode */}
-            <svg className="w-14 h-14 bg-slate-50 p-1.5 rounded-lg text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-              <line x1="7" y1="7" x2="7" y2="7"></line>
-              <line x1="17" y1="7" x2="17" y2="7"></line>
-              <line x1="17" y1="17" x2="17" y2="17"></line>
-              <line x1="7" y1="17" x2="7" y2="17"></line>
-            </svg>
             <div>
-              <span className="text-[8px] text-slate-400 block uppercase font-bold">Boarding Gate QR</span>
-              <strong className="text-[10px] text-slate-700 font-mono block">
+              <strong className="text-[15px] text-slate-700 font-mono block">
                 {isVisa ? "VERIFIED_VISA_PAYMENT" : (isPackage ? "ENQUIRY_VETTED_DISPATCH" : "VERIFIED_PAYMENT_HOOK")}
               </strong>
             </div>

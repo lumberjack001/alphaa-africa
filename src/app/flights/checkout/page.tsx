@@ -262,8 +262,6 @@ function FlightCheckoutContent() {
           ? `${p.passportExpiryYear}-${p.passportExpiryMonth}-${p.passportExpiryDay}`
           : null;
 
-        const travelerType = p.type === 'INFANT' ? 'HELD_INFANT' : p.type;
-
         return {
           first_name: p.firstName,
           last_name: p.lastName,
@@ -275,7 +273,7 @@ function FlightCheckoutContent() {
           passport_number: p.passportNumber || undefined,
           passport_expiry: passportExpiry,
           nationality: p.nationality || 'NG',
-          traveler_type: travelerType,
+          traveler_type: p.type === 'INFANT' ? 'HELD_INFANT' : p.type,
         };
       });
 
