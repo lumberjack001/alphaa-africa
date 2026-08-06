@@ -4,7 +4,7 @@ import React from 'react';
 
 export interface PassengerFormData {
   id: string;
-  type: 'ADULT' | 'CHILD' | 'INFANT';
+  type: 'ADULT' | 'CHILD' | 'HELD_INFANT' | 'INFANT';
   label: string;
   title: string;
   firstName: string;
@@ -177,7 +177,8 @@ export default function TravellerDetailsForm({
       {/* Dynamic Passenger Forms */}
       <div className="space-y-6">
         {passengers.map((p, idx) => {
-          const yearsList = p.type === 'CHILD' ? DOB_YEARS_CHILD : p.type === 'INFANT' ? DOB_YEARS_INFANT : DOB_YEARS_ADULT;
+          const isInfant = p.type === 'HELD_INFANT' || p.type === 'INFANT';
+          const yearsList = p.type === 'CHILD' ? DOB_YEARS_CHILD : isInfant ? DOB_YEARS_INFANT : DOB_YEARS_ADULT;
 
           return (
             <div key={p.id} className="p-5 sm:p-6 rounded-2xl border border-purple-100 bg-white space-y-4 shadow-xs">
@@ -185,7 +186,7 @@ export default function TravellerDetailsForm({
                 <div className="flex items-center gap-2.5">
                   <h4 className="font-black text-brand-purple font-heading text-base">{p.label}</h4>
                   <span className="text-[11px] bg-purple-100 text-brand-purple px-2.5 py-0.5 rounded-full font-black uppercase">
-                    {p.type}
+                    {isInfant ? 'HELD INFANT' : p.type}
                   </span>
                 </div>
                 <span className="text-xs text-slate-400 font-semibold">Names must match passport / ID</span>

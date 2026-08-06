@@ -210,7 +210,7 @@ function FlightCheckoutContent() {
       for (let i = 0; i < infantCount; i++) {
         generatedPassengers.push({
           id: `infant_${i + 1}`,
-          type: 'INFANT',
+          type: 'HELD_INFANT',
           label: `Infant ${i + 1} (Under 2 yrs)`,
           title: 'Master',
           firstName: '',
@@ -262,6 +262,8 @@ function FlightCheckoutContent() {
           ? `${p.passportExpiryYear}-${p.passportExpiryMonth}-${p.passportExpiryDay}`
           : null;
 
+        const travelerType = p.type === 'INFANT' ? 'HELD_INFANT' : p.type;
+
         return {
           first_name: p.firstName,
           last_name: p.lastName,
@@ -273,7 +275,7 @@ function FlightCheckoutContent() {
           passport_number: p.passportNumber || undefined,
           passport_expiry: passportExpiry,
           nationality: p.nationality || 'NG',
-          traveler_type: p.type,
+          traveler_type: travelerType,
         };
       });
 
