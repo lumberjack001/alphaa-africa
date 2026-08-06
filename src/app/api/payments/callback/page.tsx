@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Toast from '@/components/Toast';
 import BoardingPass from '@/components/BoardingPass';
+import { flightService } from '@/services/flightService';
 import { hotelService } from '@/services/hotelService';
 import { carService } from '@/services/carService';
 import { visaService } from '@/services/visaService';
@@ -18,13 +19,15 @@ function CallbackContent() {
   // Extract reference ID and payment type from URL query parameters
   const reference = searchParams.get('reference') || searchParams.get('trxref');
   const typeParam = searchParams.get('type');
+  const isFlight = typeParam === 'flight';
   const isCar = typeParam === 'car';
   const isVisa = typeParam === 'visa';
 
   const [navActiveTab, setNavActiveTab] = useState<string>(() => {
+    if (typeParam === 'flight') return 'flights';
     if (typeParam === 'visa') return 'visa';
     if (typeParam === 'car') return 'tours';
-    return 'hotels';
+    return 'flights';
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +57,12 @@ function CallbackContent() {
       try {
         setIsLoading(true);
         let verifyData: any = null;
-        let bookingType: 'hotel' | 'car' | 'visa' = isVisa ? 'visa' : (isCar ? 'car' : 'hotel');
+        let bookingType: 'flight' | 'hotel' | 'car' | 'visa' = isFlight ? 'flight' : (isVisa ? 'visa' : (isCar ? 'car' : 'flight'));
+
+        const tryFlight = async () => {
+          verifyData = await flightService.verifyBooking(reference);
+          bookingType = 'flight';
+        };
 
         const tryVisa = async () => {
           verifyData = await visaService.verifyPayment(reference);
@@ -73,12 +81,15 @@ function CallbackContent() {
 
         // Order the verification attempts based on detected URL query parameters
         let attemptQueue: Array<() => Promise<void>> = [];
-        if (isVisa) {
-          attemptQueue = [tryVisa, tryHotel, tryCar];
+        if (isFlight) {
+          attemptQueue = [tryFlight, tryHotel, tryCar, tryVisa];
+        } else if (isVisa) {
+          attemptQueue = [tryVisa, tryFlight, tryHotel, tryCar];
         } else if (isCar) {
-          attemptQueue = [tryCar, tryHotel, tryVisa];
+          attemptQueue = [tryCar, tryFlight, tryHotel, tryVisa];
         } else {
-          attemptQueue = [tryHotel, tryCar, tryVisa];
+          // Default queue when no type query is supplied (try flight first, then hotel, car, visa)
+          attemptQueue = [tryFlight, tryHotel, tryCar, tryVisa];
         }
 
         let lastError: any = null;
@@ -100,13 +111,32 @@ function CallbackContent() {
           throw lastError;
         }
         
-        const isSuccess = verifyData.status === 'confirmed' || verifyData.status === 'paid';
-        const isFailed = verifyData.status === 'failed';
+        const rawStatus = (verifyData?.status || verifyData?.booking?.status || '').toLowerCase();
+        const isSuccess = rawStatus === 'confirmed' || rawStatus === 'paid' || rawStatus === 'successful' || rawStatus === 'success';
+        const isFailed = rawStatus === 'failed' || rawStatus === 'cancelled';
+        
         setStatus(isSuccess ? 'confirmed' : (isFailed ? 'failed' : 'pending'));
 
         if (isSuccess) {
-          // Construct ticket structure for BoardingPass component
-          if (bookingType === 'visa') {
+          // Construct ticket structure for BoardingPass component based on service type
+          if (bookingType === 'flight') {
+            setNavActiveTab('flights');
+            const pnrCode = verifyData.pnr || verifyData.reference || verifyData.booking?.pnr || verifyData.booking?.reference || reference;
+            const leadName = verifyData.contact_name || verifyData.customer_email || verifyData.booking?.contact_name || 'Passenger';
+            
+            setConfirmedTicket({
+              passenger: leadName,
+              cabin: verifyData.cabin || verifyData.booking?.cabin || 'Economy Class',
+              hash: `#TK-${reference.substring(0, 8).toUpperCase()}`,
+              pnr: pnrCode,
+              details: {
+                carrier: verifyData.airline || verifyData.booking?.airline || 'Amadeus Airline',
+                name: verifyData.route || verifyData.booking?.route || 'Flight Reservation',
+                number: verifyData.flight_number || verifyData.booking?.flight_number || 'PNR-CONFIRMED',
+              },
+              type: 'flight',
+            });
+          } else if (bookingType === 'visa') {
             setNavActiveTab('visa');
             setConfirmedTicket({
               passenger: verifyData.full_name || 'Valued Guest',
@@ -168,7 +198,7 @@ function CallbackContent() {
     };
 
     verifyTransaction();
-  }, [reference]);
+  }, [reference, isFlight, isCar, isVisa]);
 
   return (
     <div className="bg-[#FAF8F5] text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-[#FA6432] selection:text-white">
@@ -178,59 +208,59 @@ function CallbackContent() {
         activeTab={navActiveTab}
       />
 
-      <main className="flex-grow flex items-center justify-center p-4 sm:p-8 navbar-offset">
-        {isLoading && (
-          <div className="max-w-md w-full bg-white border border-purple-100 p-8 sm:p-12 rounded-[2.5rem] shadow-xl text-center space-y-6">
-            <div className="relative w-16 h-16 mx-auto">
-              <div className="w-16 h-16 border-4 border-purple-100 border-t-brand-purple rounded-full animate-spin"></div>
-              <div className="w-8 h-8 border-4 border-purple-100 border-t-brand-orange rounded-full animate-spin absolute inset-0 m-auto animation-delay-150 direction-reverse"></div>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-brand-purple uppercase tracking-tight font-sans">Verifying Transaction</h3>
-              <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-                Contacting Paystack gateway networks and updating secure GDS registry. Please do not close or reload this browser window.
-              </p>
-            </div>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 w-full">
+        {isLoading ? (
+          <div className="bg-white rounded-3xl p-12 text-center shadow-xl border border-purple-100 max-w-md mx-auto">
+            <div className="animate-spin h-10 w-10 border-4 border-brand-purple border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h2 className="text-lg font-black text-brand-purple font-heading uppercase tracking-wide">Verifying Payment</h2>
+            <p className="text-xs text-slate-500 font-medium mt-1">Checking Paystack reference with system database...</p>
           </div>
-        )}
-
-        {!isLoading && status === 'confirmed' && confirmedTicket && (
-          <BoardingPass
-            confirmedTicket={confirmedTicket}
-            onReset={() => router.push('/')}
-            origin={confirmedTicket.details.name}
-            destination={confirmedTicket.details.name}
-          />
-        )}
-
-        {!isLoading && status !== 'confirmed' && (
-          <div className="max-w-md w-full bg-white border border-purple-100 p-8 sm:p-12 rounded-[2.5rem] shadow-xl text-center space-y-6">
-            <span className="text-5xl block animate-pulse">
-              {status === 'pending' ? '⏳' : '❌'}
-            </span>
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-brand-purple uppercase tracking-tight font-sans">
-                {status === 'pending' ? 'Verification Pending' : 'Payment Failed'}
-              </h3>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                {errorMsg || 'An error occurred during payment verification process.'}
+        ) : status === 'confirmed' && confirmedTicket ? (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="text-center mb-6">
+              <span className="text-xs font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full tracking-wider">
+                Payment Verified
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-black text-brand-purple font-heading tracking-tight uppercase mt-3">
+                Booking Confirmed!
+              </h1>
+              <p className="text-xs text-slate-500 font-semibold mt-1">
+                Your transaction has been processed and your official travel document issued below.
               </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+
+            <BoardingPass
+              confirmedTicket={confirmedTicket}
+              onReset={() => router.push('/')}
+              origin={confirmedTicket.details?.origin || 'LOS'}
+              destination={confirmedTicket.details?.destination || 'LHR'}
+            />
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-purple-100 max-w-lg mx-auto animate-fadeIn">
+            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-rose-100">
+              ✕
+            </div>
+            <h2 className="text-xl font-black text-brand-purple font-heading tracking-tight uppercase">
+              {status === 'pending' ? 'Payment Pending' : 'Payment Failed'}
+            </h2>
+            <p className="text-xs text-slate-600 font-semibold mt-2 leading-relaxed">
+              {errorMsg || 'We could not verify your payment reference.'}
+            </p>
+            <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={() => router.push('/')}
-                className="w-full border border-slate-200 hover:border-slate-300 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer text-slate-500"
+                className="px-6 py-3 rounded-2xl border border-purple-100 text-xs font-black text-brand-purple hover:bg-purple-50 transition-all cursor-pointer"
               >
                 Go to Homepage
               </button>
               <button
                 type="button"
-                onClick={() => router.push('/hotels')}
-                className="w-full bg-brand-orange hover:bg-brand-purple text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border-none"
+                onClick={() => router.push('/flights')}
+                className="px-6 py-3 rounded-2xl bg-brand-orange hover:bg-brand-purple text-white text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer border-none"
               >
-                Browse Accommodations
+                Browse Flights
               </button>
             </div>
           </div>
@@ -243,11 +273,11 @@ function CallbackContent() {
   );
 }
 
-export default function PaymentsCallbackPage() {
+export default function PaymentCallbackPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
+        <div className="animate-spin h-8 w-8 text-brand-purple border-2 border-brand-purple border-t-transparent rounded-full"></div>
       </div>
     }>
       <CallbackContent />
