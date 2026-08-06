@@ -379,7 +379,7 @@ function FlightCheckoutContent() {
         </div>
 
         {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
           {/* Left Column: Booking Summary & Traveller Details */}
           <div className="lg:col-span-8">
             <FlightCheckoutSummary offer={offer} searchContext={searchContext} />
@@ -393,7 +393,7 @@ function FlightCheckoutContent() {
           </div>
 
           {/* Right Column: Sticky Pricing Sidebar */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-4 h-full">
             <CheckoutSidebar
               offer={offer}
               searchContext={searchContext}
