@@ -8,8 +8,26 @@ export interface User {
   first_name: string;
   last_name: string;
   phone_number: string;
+  phone?: string;
+  phoneNumber?: string;
   is_verified: boolean;
 }
+
+export const getUserPhone = (user: any): string => {
+  if (!user) return '';
+  if (typeof user === 'string') return user;
+  return (
+    user.phone_number ||
+    user.phone ||
+    user.phoneNumber ||
+    user.mobile ||
+    user.contact_phone ||
+    user.phone_code ||
+    user.profile?.phone_number ||
+    user.profile?.phone ||
+    ''
+  );
+};
 
 // Helpers for token storage
 export const getAccessToken = () => typeof window !== "undefined" ? localStorage.getItem("alphaa_access_token") : null;
