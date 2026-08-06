@@ -72,7 +72,7 @@ export default function TravellersSelect({
           <div className="flex items-center justify-between">
             <div className="flex flex-col text-left">
               <span className="text-xs font-extrabold text-slate-700">Adults</span>
-              <span className="text-[9px] text-slate-400 font-bold">12+ years</span>
+              <span className="text-[9px] text-slate-400 font-bold">18+ years</span>
             </div>
             <div className="flex items-center space-x-3">
               <button
@@ -97,7 +97,7 @@ export default function TravellersSelect({
           <div className="flex items-center justify-between">
             <div className="flex flex-col text-left">
               <span className="text-xs font-extrabold text-slate-700">Children</span>
-              <span className="text-[9px] text-slate-400 font-bold">2-11 years</span>
+              <span className="text-[9px] text-slate-400 font-bold">2-17 years</span>
             </div>
             <div className="flex items-center space-x-3">
               <button
@@ -122,7 +122,7 @@ export default function TravellersSelect({
           <div className="flex items-center justify-between">
             <div className="flex flex-col text-left">
               <span className="text-xs font-extrabold text-slate-700">Infants</span>
-              <span className="text-[9px] text-slate-400 font-bold">Under 2</span>
+              <span className="text-[9px] text-slate-400 font-bold">Under 2 years</span>
             </div>
             <div className="flex items-center space-x-3">
               <button
