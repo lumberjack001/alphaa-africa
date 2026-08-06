@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 
 export interface PassengerFormData {
   id: string;
@@ -121,7 +122,7 @@ export default function TravellerDetailsForm({
         <div className="mb-8 p-4 rounded-2xl bg-purple-50/60 border border-purple-100 flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-700 font-bold">
             <span className="text-base">👤</span>
-            <span>Have an account? <a href="/login" className="text-brand-orange font-black hover:underline">Log in for faster checkout</a></span>
+            <span>Have an account? <Link href="/login?next=/flights/checkout" className="text-brand-orange font-black hover:underline">Log in for faster checkout</Link></span>
           </div>
         </div>
       )}

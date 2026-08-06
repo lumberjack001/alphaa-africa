@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,8 +10,11 @@ import { apiFetch, setTokens, setStoredUser, ApiError } from '@/lib/api';
 
 type AuthView = 'login' | 'forgot_request' | 'forgot_verify' | 'forgot_reset_password';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get('next') || searchParams.get('redirect') || '/';
+
   const [view, setView] = useState<AuthView>('login');
 
   // Fields
@@ -67,9 +70,9 @@ export default function LoginPage() {
       setStoredUser(data.user);
       triggerToast(`Welcome back, ${data.user.first_name}!`);
 
-      // Redirect to home dashboard
+      // Redirect to next target URL or default home dashboard
       setTimeout(() => {
-        router.push('/');
+        router.push(redirectTarget);
       }, 1000);
 
     } catch (error) {
@@ -430,5 +433,17 @@ export default function LoginPage() {
       <Toast message={toastMessage} visible={toastVisible} />
 
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 text-brand-purple border-2 border-brand-purple border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
