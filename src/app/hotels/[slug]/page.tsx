@@ -8,7 +8,7 @@ import Toast from '@/components/Toast';
 import CheckoutModal from '@/components/CheckoutModal';
 import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
-import { ApiError } from '@/lib/api';
+import { ApiError, getStoredUser, getUserPhone } from '@/lib/api';
 import { hotelService } from '@/services/hotelService';
 
 function HotelDetailPageContent() {
@@ -18,8 +18,8 @@ function HotelDetailPageContent() {
 
   // Search parameters from URL (to prefill room choices & checkout dates)
   const checkInParam = searchParams.get('check_in') || '2026-07-20';
-  const checkOutParam = searchParams.get('check_out') || '2026-07-27';
-  const guestsParam = searchParams.get('guests') || '2 Guests';
+  const checkOutParam = searchParams.get('check_out') || '2026-07-25';
+  const guestsParam = searchParams.get('guests') ? Number(searchParams.get('guests')) : 2;
 
   // Hotel details state
   const [hotel, setHotel] = useState<any | null>(null);
@@ -42,6 +42,19 @@ function HotelDetailPageContent() {
     email: '',
     phone: '',
   });
+
+  // Pre-fill user profile info if logged in
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user) {
+      setPassengerInfo({
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        phone: getUserPhone(user),
+      });
+    }
+  }, []);
 
   const [confirmedTicket, setConfirmedTicket] = useState<{
     passenger: string;
@@ -87,11 +100,7 @@ function HotelDetailPageContent() {
   }, [slug]);
 
   const handleBookRoom = (room: any) => {
-    let guestsVal = 2;
-    if (guestsParam) {
-      if (guestsParam.includes('1')) guestsVal = 1;
-      else if (guestsParam.toLowerCase().includes('family')) guestsVal = 4;
-    }
+    const guestsVal = typeof guestsParam === 'number' ? guestsParam : 2;
 
     setSelectedProduct({
       type: 'hotel',

@@ -7,7 +7,7 @@ import CustomSelect from '@/components/CustomSelect';
 import CustomDatePicker from '@/components/CustomDatePicker';
 import Toast from '@/components/Toast';
 import { visaService, type VisaCountry, type VisaCountryDetails } from '@/services/visaService';
-import { getStoredUser, ApiError } from '@/lib/api';
+import { getStoredUser, getUserPhone, ApiError } from '@/lib/api';
 
 function VisaContent() {
   const [countries, setCountries] = useState<VisaCountry[]>([]);
@@ -60,7 +60,7 @@ function VisaContent() {
     if (storedUser) {
       setFullName(`${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim());
       setEmail(storedUser.email || '');
-      setPhone(storedUser.phone_number || '');
+      setPhone(getUserPhone(storedUser));
     }
   }, []);
 

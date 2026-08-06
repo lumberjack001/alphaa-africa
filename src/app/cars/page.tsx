@@ -10,6 +10,7 @@ import Toast from '@/components/Toast';
 import CheckoutModal from '@/components/CheckoutModal';
 import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
+import { getStoredUser, getUserPhone } from '@/lib/api';
 
 function CarsQueryPageContent() {
   const searchParams = useSearchParams();
@@ -35,10 +36,10 @@ function CarsQueryPageContent() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
 
-  // Modal checkout flow states
-  const [selectedProduct, setSelectedProduct] = useState<{
-    type: string;
-    name: string;
+  // Checkout and billing states
+  const [selectedProduct, setSelectedProduct] = useState<{ 
+    type: string; 
+    name: string; 
     price: number;
     payload?: any;
   } | null>(null);
@@ -50,6 +51,19 @@ function CarsQueryPageContent() {
     email: string;
     phone: string;
   }>({ firstName: '', lastName: '', email: '', phone: '' });
+
+  // Pre-fill user profile info if logged in
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user) {
+      setPassengerInfo({
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        phone: getUserPhone(user),
+      });
+    }
+  }, []);
   const [bookingResponse, setBookingResponse] = useState<any | null>(null);
   const [confirmedTicket, setConfirmedTicket] = useState<any | null>(null);
 

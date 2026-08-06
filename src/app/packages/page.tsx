@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Toast from '@/components/Toast';
 import { packageService, type Package, type PackageDetails } from '@/services/packageService';
-import { getStoredUser } from '@/lib/api';
+import { getStoredUser, getUserPhone } from '@/lib/api';
 
 function PackagesPageContent() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -39,11 +39,21 @@ function PackagesPageContent() {
     setTimeout(() => setToastVisible(false), 5000);
   };
 
-  // Fetch all packages and destinations on mount
+  // Fetch Packages & pre-fill logged in user info on mount
   useEffect(() => {
+    const storedUser = getStoredUser();
+    if (storedUser) {
+      setEnquiryForm(prev => ({
+        ...prev,
+        fullName: `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim(),
+        email: storedUser.email || '',
+        phone: getUserPhone(storedUser)
+      }));
+    }
+
     const loadData = async () => {
-      setIsLoading(true);
       try {
+        setIsLoading(true);
         const [pkgList, destList] = await Promise.all([
           packageService.getAllPackages(),
           packageService.getDestinations()
@@ -70,9 +80,9 @@ function PackagesPageContent() {
 
     // Reset enquiry form fields
     setEnquiryForm({
-      fullName: storedUser ? `${storedUser.first_name} ${storedUser.last_name}` : '',
-      email: storedUser ? storedUser.email : '',
-      phone: storedUser ? storedUser.phone_number : '',
+      fullName: storedUser ? `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() : '',
+      email: storedUser ? storedUser.email || '' : '',
+      phone: storedUser ? getUserPhone(storedUser) : '',
       preferredDate: '2026-07-20',
       numAdults: 1,
       numChildren: 0,

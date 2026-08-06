@@ -8,6 +8,7 @@ interface AutocompleteInputProps {
   value: string;
   options: { value: string; label: string }[];
   onChange: (val: string) => void;
+  onSearchAsync?: (query: string) => Promise<{ value: string; label: string }[]>;
   placeholder?: string;
   icon?: React.ReactNode;
   className?: string;
@@ -19,31 +20,36 @@ export default function AutocompleteInput({
   value,
   options,
   onChange,
+  onSearchAsync,
   placeholder = 'Type to search...',
   icon,
   className = ''
 }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [asyncOptions, setAsyncOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingAsync, setIsLoadingAsync] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const activeOptions = onSearchAsync && asyncOptions.length > 0 ? asyncOptions : options;
 
   // Sync searchQuery with value from parent when it changes
   useEffect(() => {
-    const selectedOpt = options.find(opt => opt.value === value);
+    const selectedOpt = activeOptions.find(opt => opt.value === value);
     if (selectedOpt) {
       setSearchQuery(selectedOpt.label);
     } else {
       setSearchQuery(value || '');
     }
-  }, [value, options]);
+  }, [value, activeOptions]);
 
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        // If user typed something but didn't select an option, reset input text to the active option label
-        const selectedOpt = options.find(opt => opt.value === value);
+        const selectedOpt = activeOptions.find(opt => opt.value === value);
         if (selectedOpt) {
           setSearchQuery(selectedOpt.label);
         } else {
@@ -53,21 +59,36 @@ export default function AutocompleteInput({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [value, options]);
+  }, [value, options, asyncOptions]);
 
-  const filteredOptions = searchQuery.trim() === ''
-    ? options
-    : options.filter(opt =>
-        opt.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        opt.value.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const filteredOptions = onSearchAsync && asyncOptions.length > 0
+    ? asyncOptions
+    : (searchQuery.trim() === ''
+        ? options
+        : options.filter(opt =>
+            opt.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            opt.value.toLowerCase().includes(searchQuery.toLowerCase())
+          ));
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const val = e.target.value;
+    setSearchQuery(val);
     setIsOpen(true);
-    // If the input is completely cleared, bubble up empty value
-    if (e.target.value.trim() === '') {
-      onChange('');
+    onChange(val);
+
+    if (onSearchAsync && val.trim().length >= 2) {
+      setIsLoadingAsync(true);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          const fetched = await onSearchAsync(val);
+          setAsyncOptions(fetched);
+        } catch (err) {
+          console.error("Async search error:", err);
+        } finally {
+          setIsLoadingAsync(false);
+        }
+      }, 300);
     }
   };
 
@@ -83,8 +104,8 @@ export default function AutocompleteInput({
       className={`custom-picker-container relative bg-purple-50/40 p-4 rounded-2xl border border-purple-100/60 hover:border-brand-orange focus-within:border-brand-orange transition-all duration-300 flex flex-col cursor-pointer select-none ${className}`}
     >
       <label className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">{label}</label>
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center space-x-2 flex-grow">
+      <div className="flex items-center justify-between w-full min-w-0">
+        <div className="flex items-center space-x-2 min-w-0 flex-1">
           {icon || (
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-slate-400 shrink-0">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -98,7 +119,7 @@ export default function AutocompleteInput({
             onChange={handleInputChange}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className="w-full bg-transparent border-none outline-none text-brand-purple font-extrabold text-sm p-0 focus:ring-0 focus:outline-none placeholder:text-slate-400 font-sans"
+            className="w-full min-w-0 bg-transparent border-none outline-none text-brand-purple font-extrabold text-sm p-0 focus:ring-0 focus:outline-none placeholder:text-slate-400 font-sans truncate"
           />
         </div>
         <svg
@@ -107,7 +128,7 @@ export default function AutocompleteInput({
           viewBox="0 0 24 24"
           strokeWidth="2.5"
           stroke="currentColor"
-          className={`w-3.5 h-3.5 text-slate-400 transition-transform cursor-pointer ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-3.5 h-3.5 text-slate-400 transition-transform cursor-pointer shrink-0 ml-1.5 ${isOpen ? 'rotate-180' : ''}`}
           onClick={() => setIsOpen(prev => !prev)}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />

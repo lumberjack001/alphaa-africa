@@ -23,6 +23,8 @@ const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 const CheckoutModal = dynamic(() => import('@/components/CheckoutModal'), { ssr: false });
 const BillingModal = dynamic(() => import('@/components/BillingModal'), { ssr: false });
 
+import { getStoredUser, getUserPhone } from '@/lib/api';
+
 function HomeContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
@@ -71,6 +73,19 @@ function HomeContent() {
     phone: '',
   });
 
+  // Pre-fill user profile info if logged in
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user) {
+      setPassengerInfo({
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        phone: getUserPhone(user),
+      });
+    }
+  }, []);
+
   // Boarding Pass state
   const [confirmedTicket, setConfirmedTicket] = useState<{
     passenger: string;
@@ -117,7 +132,12 @@ function HomeContent() {
       return;
     }
     if (params.tab === 'flights') {
-      window.location.href = `/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}&cabin=${encodeURIComponent(params.cabin)}`;
+      const returnParam = params.checkoutDate ? `&return_date=${encodeURIComponent(params.checkoutDate)}` : '';
+      const tripTypeParam = (params as any).trip_type ? `&trip_type=${encodeURIComponent((params as any).trip_type)}` : '';
+      const adultsP = (params as any).adults ? `&adults=${(params as any).adults}` : '';
+      const childrenP = (params as any).children !== undefined ? `&children=${(params as any).children}` : '';
+      const infantsP = (params as any).infants !== undefined ? `&infants=${(params as any).infants}` : '';
+      window.location.href = `/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}${returnParam}${tripTypeParam}&cabin=${encodeURIComponent(params.cabin)}${adultsP}${childrenP}${infantsP}`;
       return;
     }
     if (params.tab === 'tours') {

@@ -128,7 +128,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
       })}
 
       {/* Rich dark purple overlay for premium contrast (images show through at 35% opacity) */}
-      <div className="absolute inset-0 bg-brand-purple/65 z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-brand-purple/80 z-10 pointer-events-none"></div>
 
       {/* Giant Triplio-style Background Text */}
       <div
@@ -150,12 +150,12 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
 
           {/* Subheadline */}
           <h2 className="text-lg sm:text-2xl font-bold text-white tracking-wide font-sans leading-snug">
-            Seamless Flights. Curated Holidays. Trusted Travel Experts.
+            Get the Best Flight Deals, Best Hotels, Curated Holidays with the world's Most Trusted Travel Experts.
           </h2>
 
           {/* Description */}
           <p className="text-sm sm:text-base text-purple-100/90 max-w-3xl leading-relaxed font-semibold">
-            From local trips to global journeys, Alphaa Africa Travels and Tours delivers the best travel deals with stress-free planning and expert support every step of the way.
+            From local trips to global journeys, Alphaa Africa Travels and Tours offers the best and cheapest travels deals with stress-free planning and expert support every step of the way.
           </p>
 
           {/* Badges/Trust Row */}
