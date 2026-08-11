@@ -896,7 +896,7 @@ export default function FlightListingCard({
                 onClick={(e) => { e.stopPropagation(); onBook(); }}
                 className="bg-brand-orange hover:bg-brand-purple text-white font-black px-8 py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-md"
               >
-                Book E-Ticket
+                Book Flight
               </button>
             </div>
           </div>
