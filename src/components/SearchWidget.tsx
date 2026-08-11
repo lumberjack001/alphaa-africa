@@ -326,7 +326,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch, initial
         >
           <span>✈️</span> <span>Flights</span>
         </button>
-        <button
+        {/* <button
           type="button"
           onClick={() => onSwitchTab('hotels')}
           className={`flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${activeTab === 'hotels'
@@ -335,7 +335,7 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch, initial
             }`}
         >
           <span>🏨</span> <span>Hotels</span>
-        </button>
+        </button> */}
         <Link
           href="/packages"
           className={`flex items-center space-x-2 px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${activeTab === 'tours'

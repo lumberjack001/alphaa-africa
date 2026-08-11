@@ -27,7 +27,7 @@ export default function Navbar({ onSwitchTab, onReset, activeTab }: NavbarProps)
 
   const tabs = [
     { id: 'flights', label: 'Flights' },
-    { id: 'hotels', label: 'Hotels' },
+    // { id: 'hotels', label: 'Hotels' },
     { id: 'tours', label: 'Packages' },
     { id: 'visa', label: 'Visa' },
     // { id: 'booking', label: 'Manage Booking' },
