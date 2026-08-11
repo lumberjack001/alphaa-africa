@@ -134,7 +134,7 @@ export default function ToursShowcase({ onBook }: ToursShowcaseProps) {
 
 
       {/* Spacer to prevent absolute search widget from covering content */}
-      <div className="h-8 sm:h-12 lg:h-30"></div>
+      <div className="h-8 sm:h-12 lg:h-55 xl:h-40"></div>
 
 
 

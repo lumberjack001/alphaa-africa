@@ -96,7 +96,7 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
 
   return (
     <section
-      className="relative z-0 lg:z-30 bg-center bg-cover bg-no-repeat py-20 lg:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[90vh] flex flex-col justify-center animate-fadeIn"
+      className="hero-responsive-section relative z-0 lg:z-30 bg-center bg-cover bg-no-repeat py-16 lg:py-10 xl:py-28 px-4 sm:px-8 overflow-x-clip overflow-y-visible min-h-[85vh] lg:min-h-0 lg:max-h-[540px] xl:min-h-[90vh] xl:max-h-none flex flex-col justify-center animate-fadeIn"
     >
       {/* Carousel background layers - cross-fade */}
       {slides.map((slide, idx) => {
@@ -130,36 +130,28 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
       {/* Rich dark purple overlay for premium contrast (images show through at 35% opacity) */}
       <div className="absolute inset-0 bg-brand-purple/80 z-10 pointer-events-none"></div>
 
-      {/* Giant Triplio-style Background Text */}
-      <div
-        className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10vw] font-black text-white/5 uppercase tracking-[0.1em] pointer-events-none select-none z-10 transition-all duration-1000 ease-out ${isLoaded ? 'top-1/2 opacity-100' : 'top-[55%] opacity-0'
-          }`}
-      >
-        ALPHAA
-      </div>
-
       <div className="relative z-20 max-w-7xl mx-auto w-full flex flex-col justify-between h-full">
 
         {/* Content Row: Text Details */}
-        <div className="text-left max-w-4xl mb-10 space-y-4">
+        <div className="hero-responsive-content text-left max-w-4xl mb-4 lg:mb-3 xl:mb-10 space-y-2 lg:space-y-2 xl:space-y-4">
 
           {/* Main Headline */}
-          <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase font-sans">
+          <h1 className="text-2xl sm:text-4xl lg:text-3xl xl:text-5xl font-black text-white tracking-tight leading-tight uppercase font-sans">
             Travel Beyond <span className="text-brand-orange">Borders</span>
           </h1>
 
           {/* Subheadline */}
-          <h2 className="text-lg sm:text-2xl font-bold text-white tracking-wide font-sans leading-snug">
+          <h2 className="text-lg sm:text-xl lg:text-base xl:text-2xl font-bold text-white tracking-wide font-sans leading-snug">
             Get the Best Flight Deals, Best Hotels, Curated Holidays with the world's Most Trusted Travel Experts.
           </h2>
 
           {/* Description */}
-          <p className="text-sm sm:text-base text-purple-100/90 max-w-3xl leading-relaxed font-semibold">
+          <p className="text-sm sm:text-sm lg:text-xs xl:text-base text-purple-100/90 max-w-3xl leading-relaxed font-semibold">
             From local trips to global journeys, Alphaa Africa Travels and Tours offers the best and cheapest travels deals with stress-free planning and expert support every step of the way.
           </p>
 
           {/* Badges/Trust Row */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4 text-xs font-semibold text-white">
+          <div className="hero-responsive-badges flex flex-wrap items-center gap-x-4 lg:gap-x-4 xl:gap-x-6 gap-y-2 pt-2 lg:pt-1.5 xl:pt-4 text-xs font-semibold text-white">
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
