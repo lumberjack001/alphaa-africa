@@ -131,20 +131,90 @@ export interface FlightBookingVerifyResponse {
   [key: string]: any;
 }
 
+// Airport search cache storage (in-memory + sessionStorage)
+const airportCache = new Map<string, AirportMatch[]>();
+
+const getSessionAirportCache = (key: string): AirportMatch[] | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(`alphaa_airport_cache_${key}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+};
+
+const setSessionAirportCache = (key: string, data: AirportMatch[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(`alphaa_airport_cache_${key}`, JSON.stringify(data));
+  } catch (_) {}
+};
+
+/** Find closest matching cached results if exact key misses */
+const getPrefixMatchCache = (cleanKey: string): AirportMatch[] | null => {
+  if (cleanKey.length < 2) return null;
+  for (let len = cleanKey.length - 1; len >= 2; len--) {
+    const subKey = cleanKey.substring(0, len);
+    if (airportCache.has(subKey)) {
+      const parentList = airportCache.get(subKey)!;
+      const filtered = parentList.filter((item) => {
+        const q = cleanKey;
+        return (
+          item.iata_code?.toLowerCase().includes(q) ||
+          item.name?.toLowerCase().includes(q) ||
+          item.city?.toLowerCase().includes(q) ||
+          item.country_name?.toLowerCase().includes(q)
+        );
+      });
+      if (filtered.length > 0) return filtered;
+    }
+  }
+  return null;
+};
+
 export const flightService = {
   /**
    * Search airports by code (LOS), city (Lagos), or airport name (Murtala)
    */
   async searchAirports(query: string): Promise<AirportMatch[]> {
     if (!query || query.trim().length < 2) return [];
+    const cleanKey = query.trim().toLowerCase();
+
+    // 1. Check in-memory cache (0ms)
+    if (airportCache.has(cleanKey)) {
+      return airportCache.get(cleanKey)!;
+    }
+
+    // 2. Check sessionStorage (0.01ms)
+    const stored = getSessionAirportCache(cleanKey);
+    if (stored) {
+      airportCache.set(cleanKey, stored);
+      return stored;
+    }
+
+    // 3. Fallback: Check if prefix match is available for instant response
+    const prefixMatches = getPrefixMatchCache(cleanKey);
+
     try {
-      const response = await apiFetch<AirportMatch[] | { results?: AirportMatch[] }>(
+      const fetchPromise = apiFetch<AirportMatch[] | { results?: AirportMatch[] }>(
         `/api/flights/airports/?q=${encodeURIComponent(query.trim())}`
-      );
-      return Array.isArray(response) ? response : (response.results || []);
+      ).then((res) => {
+        const results = Array.isArray(res) ? res : (res.results || []);
+        airportCache.set(cleanKey, results);
+        setSessionAirportCache(cleanKey, results);
+        return results;
+      });
+
+      if (prefixMatches && prefixMatches.length > 0) {
+        fetchPromise.catch(() => {});
+        return prefixMatches;
+      }
+
+      return await fetchPromise;
     } catch (error) {
       console.error("Error searching airports:", error);
-      return [];
+      return prefixMatches || [];
     }
   },
 
