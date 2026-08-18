@@ -15,6 +15,7 @@ import {
   ApiError,
   type User
 } from '@/lib/api';
+import { getOrderHistory, type OrderItem } from '@/services/orderService';
 
 export interface PaymentRecord {
   id: string;
@@ -96,8 +97,15 @@ export default function ProfilePage() {
   // Side Panel Navigation State
   const [activeSideTab, setActiveSideTab] = useState<'account' | 'payment'>('account');
 
-  // Payment Status Filter State
+  // Payment/Order Status Filter State
   const [statusFilter, setStatusFilter] = useState<'all' | 'successful' | 'pending' | 'failed'>('all');
+
+  // Live Orders State & Pagination
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [isOrdersLoading, setIsOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   // Edit fields
   const [firstName, setFirstName] = useState('');
@@ -119,6 +127,25 @@ export default function ProfilePage() {
     setTimeout(() => setToastVisible(false), 5000);
   };
 
+  const handleFilterChange = (filter: 'all' | 'successful' | 'pending' | 'failed') => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const fetchOrders = async () => {
+    setIsOrdersLoading(true);
+    setOrdersError(null);
+    try {
+      const res = await getOrderHistory();
+      setOrders(res.orders || []);
+    } catch (err: any) {
+      console.error("Error fetching order history:", err);
+      setOrdersError(err?.message || "Failed to load order history.");
+    } finally {
+      setIsOrdersLoading(false);
+    }
+  };
+
   // Fetch fresh profile from API on mount
   useEffect(() => {
     const fetchProfile = async () => {
@@ -136,6 +163,9 @@ export default function ProfilePage() {
         setFirstName(data.first_name);
         setLastName(data.last_name);
         setPhone(data.phone_number || '');
+        
+        // Also fetch live order history
+        fetchOrders();
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           clearTokens();
@@ -147,6 +177,7 @@ export default function ProfilePage() {
           setLastName(stored.last_name);
           setPhone(stored.phone_number || '');
           triggerToast("Using cached profile. Could not connect to server.");
+          fetchOrders();
         }
       } finally {
         setIsLoading(false);
@@ -216,25 +247,27 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  const handlePaymentClick = (payment: PaymentRecord) => {
-    if (payment.status === 'failed') {
-      triggerToast("Failed payments cannot be viewed or opened.");
-      return;
-    }
-    router.push(payment.callbackUrl);
+  const handleOrderClick = (order: OrderItem) => {
+    router.push(`/order?reference=${encodeURIComponent(order.reference)}`);
   };
 
   const userInitials = user
     ? `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
     : '??';
 
-  const filteredPayments = MOCK_PAYMENT_HISTORY.filter(p => {
+  const filteredOrders = orders.filter(o => {
     if (statusFilter === 'all') return true;
-    return p.status === statusFilter;
+    const status = (o.payment_status || '').toLowerCase();
+    if (statusFilter === 'successful') return status === 'success' || status === 'successful';
+    return status === statusFilter;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   const getServiceIcon = (type: string) => {
-    switch (type) {
+    const lowerType = (type || '').toLowerCase();
+    switch (lowerType) {
       case 'hotel': return '🏨';
       case 'flight': return '✈️';
       case 'car': return '🚗';
@@ -257,7 +290,7 @@ export default function ProfilePage() {
         {/* Purple Banner Header */}
         <div className="bg-gradient-to-br from-[#4C1D5C] to-[#2E1238] text-white pt-16 pb-28 px-4 text-center">
           <h1 className="text-3xl sm:text-4xl font-black font-sans uppercase tracking-tight">
-            My Account Dashboard
+            My Account
           </h1>
           <p className="text-sm text-purple-100 mt-2 font-semibold">
             Manage your personal details, security settings, and payment history
@@ -361,7 +394,7 @@ export default function ProfilePage() {
                       <span className="text-xs">→</span>
                     </button>
 
-                    {/* Payment Tab */}
+                    {/* My Orders Tab */}
                     <button
                       type="button"
                       onClick={() => setActiveSideTab('payment')}
@@ -375,10 +408,10 @@ export default function ProfilePage() {
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${
                           activeSideTab === 'payment' ? 'bg-white/20 text-white' : 'bg-purple-100/70 text-brand-purple'
                         }`}>
-                          💳
+                          🛍️
                         </div>
                         <div>
-                          <span className="text-xs font-black uppercase tracking-wider block">Payment</span>
+                          <span className="text-xs font-black uppercase tracking-wider block">My Orders</span>
                           <span className={`text-[10px] block font-semibold ${
                             activeSideTab === 'payment' ? 'text-purple-200' : 'text-slate-400'
                           }`}>History & Status</span>
@@ -387,7 +420,7 @@ export default function ProfilePage() {
                       <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
                         activeSideTab === 'payment' ? 'bg-brand-orange text-white' : 'bg-purple-100 text-brand-purple'
                       }`}>
-                        {MOCK_PAYMENT_HISTORY.length}
+                        {orders.length}
                       </span>
                     </button>
                   </div>
@@ -540,24 +573,24 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* ================= TAB 2: PAYMENT HISTORY ================= */}
+                {/* ================= TAB 2: MY ORDERS ================= */}
                 {activeSideTab === 'payment' && (
                   <div className="space-y-6 animate-fadeIn">
                     
-                    {/* Payment Header Card */}
+                    {/* Orders Header Card */}
                     <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-50">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-purple-50">
                         <div>
                           <h3 className="text-base font-black text-brand-purple uppercase tracking-tight font-sans">
-                            Payment History
+                            My Orders
                           </h3>
                           <p className="text-xs text-slate-400 font-semibold mt-0.5">
-                            Track all your booking transactions, receipts, and payment statuses
+                            Track all your booking transactions, receipts, and order statuses
                           </p>
                         </div>
                         <div className="bg-purple-50/80 px-4 py-2 rounded-2xl text-right">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Activity</span>
-                          <span className="text-sm font-black text-brand-purple">{MOCK_PAYMENT_HISTORY.length} Transactions</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Orders</span>
+                          <span className="text-sm font-black text-brand-purple">{orders.length} Orders</span>
                         </div>
                       </div>
 
@@ -567,16 +600,20 @@ export default function ProfilePage() {
                         
                         {(['all', 'successful', 'pending', 'failed'] as const).map(filter => {
                           const count = filter === 'all'
-                            ? MOCK_PAYMENT_HISTORY.length
-                            : MOCK_PAYMENT_HISTORY.filter(p => p.status === filter).length;
+                            ? orders.length
+                            : orders.filter(o => {
+                                const st = (o.payment_status || '').toLowerCase();
+                                if (filter === 'successful') return st === 'success' || st === 'successful';
+                                return st === filter;
+                              }).length;
 
                           const isActive = statusFilter === filter;
-                          
+
                           return (
                             <button
                               key={filter}
                               type="button"
-                              onClick={() => setStatusFilter(filter)}
+                              onClick={() => handleFilterChange(filter)}
                               className={`px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer border-none flex items-center space-x-1.5 ${
                                 isActive
                                   ? 'bg-brand-purple text-white shadow-md'
@@ -595,47 +632,73 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* Payment Cards List */}
+                    {/* Orders List */}
                     <div className="space-y-4">
-                      {filteredPayments.length === 0 ? (
+                      {isOrdersLoading ? (
+                        <div className="bg-white rounded-3xl p-8 text-center border border-purple-50 shadow-sm space-y-3">
+                          <div className="w-8 h-8 border-4 border-brand-orange border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          <p className="text-xs text-slate-400 font-semibold">Loading orders...</p>
+                        </div>
+                      ) : ordersError ? (
+                        <div className="bg-red-50/70 border border-red-200 rounded-3xl p-6 text-center text-red-600 text-xs font-bold">
+                          {ordersError}
+                        </div>
+                      ) : filteredOrders.length === 0 ? (
                         <div className="bg-white rounded-3xl p-12 text-center border border-purple-50 shadow-sm">
-                          <div className="text-4xl mb-3">🔍</div>
-                          <h4 className="text-sm font-black text-brand-purple uppercase">No Transactions Found</h4>
+                          <div className="text-4xl mb-3">🛍️</div>
+                          <h4 className="text-sm font-black text-brand-purple uppercase">No Orders Found</h4>
                           <p className="text-xs text-slate-400 font-semibold mt-1">
-                            No payment records match the selected filter standard.
+                            {orders.length === 0 ? "You haven't placed any orders yet." : "No orders match the selected filter."}
                           </p>
                         </div>
                       ) : (
-                        filteredPayments.map(payment => {
-                          const isFailed = payment.status === 'failed';
-                          const isSuccessful = payment.status === 'successful';
-                          const isPending = payment.status === 'pending';
+                        paginatedOrders.map(order => {
+                          const status = (order.payment_status || '').toLowerCase();
+                          const isSuccessful = status === 'success' || status === 'successful';
+                          const isPending = status === 'pending';
+                          const isFailed = status === 'failed';
+
+                          const formattedAmount = order.amount
+                            ? `${order.currency || 'NGN'} ${Number(order.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : '';
+
+                          const formattedDate = order.paid_at
+                            ? new Date(order.paid_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                            : order.created_at
+                            ? new Date(order.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                            : '';
 
                           return (
                             <div
-                              key={payment.id}
-                              onClick={() => handlePaymentClick(payment)}
-                              className={`bg-white rounded-3xl p-5 sm:p-6 border transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                                isFailed
-                                  ? 'border-red-100 bg-slate-50/50 opacity-70 cursor-not-allowed'
-                                  : 'border-purple-50 hover:border-brand-orange/40 hover:shadow-xl cursor-pointer'
-                              }`}
+                              key={order.reference}
+                              onClick={() => handleOrderClick(order)}
+                              className="bg-white rounded-3xl p-5 sm:p-6 border border-purple-50 hover:border-brand-orange/40 hover:shadow-xl cursor-pointer transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                             >
                               {/* Left Info */}
                               <div className="flex items-start space-x-4">
                                 <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-xl flex-shrink-0">
-                                  {getServiceIcon(payment.serviceType)}
+                                  {getServiceIcon(order.booking_type)}
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center space-x-2">
                                     <h4 className="text-sm font-black text-brand-purple">
-                                      {payment.serviceName}
+                                      {order.title || `Booking Reference: ${order.reference}`}
                                     </h4>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 font-semibold">
-                                    <span className="font-mono text-purple-900/70">{payment.reference}</span>
-                                    <span>•</span>
-                                    <span>{payment.date}</span>
+                                    <span className="font-mono text-purple-900/70">{order.reference}</span>
+                                    {formattedDate && (
+                                      <>
+                                        <span>•</span>
+                                        <span>{formattedDate}</span>
+                                      </>
+                                    )}
+                                    {order.booking_type && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="capitalize text-slate-500">{order.booking_type}</span>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -643,7 +706,7 @@ export default function ProfilePage() {
                               {/* Right Amount & Status Badge */}
                               <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
                                 <span className="text-base font-black text-slate-900">
-                                  ₦{payment.amount.toLocaleString()}
+                                  {formattedAmount}
                                 </span>
 
                                 <div className="mt-1">
@@ -664,6 +727,14 @@ export default function ProfilePage() {
                                   {isFailed && (
                                     <span className="inline-flex items-center space-x-1 bg-red-50 text-red-500 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                                       <span>✕ Failed</span>
+                                      <span className="text-xs">→</span>
+                                    </span>
+                                  )}
+
+                                  {!isSuccessful && !isPending && !isFailed && (
+                                    <span className="inline-flex items-center space-x-1 bg-slate-100 text-slate-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                      <span>{order.payment_status}</span>
+                                      <span className="text-xs">→</span>
                                     </span>
                                   )}
                                 </div>
@@ -672,6 +743,47 @@ export default function ProfilePage() {
                             </div>
                           );
                         })
+                      )}
+
+                      {/* Pagination Bar */}
+                      {totalPages > 1 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-purple-50">
+                          <span className="text-xs text-slate-400 font-semibold">
+                            Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredOrders.length)} of {filteredOrders.length} orders
+                          </span>
+                          <div className="flex items-center space-x-1">
+                            <button
+                              type="button"
+                              disabled={currentPage === 1}
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border-none cursor-pointer"
+                            >
+                              ← Prev
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                              <button
+                                key={page}
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-8 h-8 rounded-lg text-xs font-black border-none cursor-pointer transition-all ${
+                                  currentPage === page
+                                    ? 'bg-brand-purple text-white shadow-md'
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              disabled={currentPage === totalPages}
+                              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border-none cursor-pointer"
+                            >
+                              Next →
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
 
