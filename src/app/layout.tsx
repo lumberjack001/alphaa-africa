@@ -126,6 +126,8 @@ const jsonLdSchema = {
   "description": "Get the cheapest and best flight deals, luxury hotel bookings, curated holiday tours, and visa assistance anywhere in the world with Alphaa Africa."
 };
 
+import IdleTimeoutProvider from "@/components/IdleTimeoutProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -144,7 +146,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col overflow-x-hidden">
-        {children}
+        <IdleTimeoutProvider>
+          {children}
+        </IdleTimeoutProvider>
       </body>
     </html>
   );
