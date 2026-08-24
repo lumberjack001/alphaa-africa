@@ -75,6 +75,8 @@ export default function CheckoutModal({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     if (isOpen) {
       setErrorMessage('');
@@ -223,7 +225,8 @@ export default function CheckoutModal({
             passport_expiry: t.passport_expiry || null,
             nationality: t.nationality || 'NG',
             traveler_type: t.traveler_type
-          }))
+          })),
+          callback_url: `${window.location.origin}/api/payments/callback/?type=flight`
         });
 
         onProceed({ firstName, lastName, email, phone }, bookingData, false);
@@ -244,7 +247,7 @@ export default function CheckoutModal({
           guest_name: `${firstName} ${lastName}`,
           guest_email: email,
           guest_phone: phone,
-          callback_url: `${window.location.origin}/api/payments/callback/`
+          callback_url: `${window.location.origin}/api/payments/callback/?type=hotel`
         });
 
         onProceed({ firstName, lastName, email, phone }, bookingData, false);
@@ -546,6 +549,7 @@ export default function CheckoutModal({
                         </label>
                         <input
                           type="date"
+                          min={todayStr}
                           value={traveler.passport_expiry}
                           onChange={(e) => updateFlightTraveler(idx, 'passport_expiry', e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-semibold focus:outline-none"
@@ -569,6 +573,7 @@ export default function CheckoutModal({
                   <input
                     type="date"
                     required
+                    min={todayStr}
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
                     className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
@@ -579,6 +584,7 @@ export default function CheckoutModal({
                   <input
                     type="date"
                     required
+                    min={checkIn || todayStr}
                     value={checkOut}
                     onChange={(e) => setCheckOut(e.target.value)}
                     className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
@@ -649,6 +655,7 @@ export default function CheckoutModal({
                   <input
                     type="date"
                     required
+                    min={todayStr}
                     value={pickupDate}
                     onChange={(e) => setPickupDate(e.target.value)}
                     className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
@@ -690,6 +697,7 @@ export default function CheckoutModal({
                   <input
                     type="date"
                     required
+                    min={todayStr}
                     value={preferredDate}
                     onChange={(e) => setPreferredDate(e.target.value)}
                     className="w-full bg-white border border-purple-100 rounded-xl p-2.5 text-brand-purple font-semibold focus:outline-none"
