@@ -607,6 +607,8 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch, initial
                     onChange={setReturnDate}
                     className="md:col-span-1 lg:col-span-1"
                     alignRight={true}
+                    minDate={departureDate}
+                    startDate={departureDate}
                   />
 
                   <TravellersSelect
@@ -896,6 +898,8 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch, initial
                   value={checkoutDate}
                   onChange={setCheckoutDate}
                   alignRight={false}
+                  minDate={date}
+                  startDate={date}
                 />
               )}
 
