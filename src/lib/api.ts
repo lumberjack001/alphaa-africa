@@ -145,39 +145,44 @@ export async function apiFetch<T>(
   let response = await fetch(url, fetchOptions);
 
   if (response.status === 401) {
-    console.warn(`[API Fetch] 401 Unauthorized detected on ${method} ${url}. Attempting token refresh...`);
-    // Attempt token refresh
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const newAccess = await handleRefresh();
-        if (newAccess) {
-          isRefreshing = false;
-          processQueue(newAccess);
-        } else {
-          isRefreshing = false;
-          processQueue(null);
-        }
-      } catch (err) {
-        isRefreshing = false;
-        processQueue(null);
+    const isAuthEndpoint =
+      endpoint.includes('/api/auth/login') ||
+      endpoint.includes('/api/auth/token') ||
+      endpoint.includes('/api/auth/register') ||
+      endpoint.includes('/api/auth/password-reset') ||
+      endpoint.includes('/api/auth/verify');
+
+    if (!isAuthEndpoint) {
+      console.warn(`[API Fetch] 401 Unauthorized detected on ${method} ${url}. Attempting token refresh...`);
+
+      // Queue requests while refreshing
+      const retryPromise = new Promise<string | null>((resolve) => {
+        refreshQueue.push((token) => resolve(token));
+      });
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        handleRefresh()
+          .then((newAccess) => {
+            isRefreshing = false;
+            processQueue(newAccess);
+          })
+          .catch(() => {
+            isRefreshing = false;
+            processQueue(null);
+          });
       }
-    }
 
-    // Queue requests while refreshing
-    const retryPromise = new Promise<string | null>((resolve) => {
-      refreshQueue.push((token) => resolve(token));
-    });
-
-    const refreshedToken = await retryPromise;
-    if (refreshedToken) {
-      console.log(`[API Fetch] Token refreshed. Retrying ${method} request to: ${url}...`);
-      headers.set("Authorization", `Bearer ${refreshedToken}`);
-      response = await fetch(url, fetchOptions);
-    } else {
-      console.error(`[API Fetch] Token refresh failed. Ending session.`);
-      // Redirect or reject
-      throw new ApiError(401, { detail: "Authentication session expired. Please log in again." });
+      const refreshedToken = await retryPromise;
+      if (refreshedToken) {
+        console.log(`[API Fetch] Token refreshed. Retrying ${method} request to: ${url}...`);
+        headers.set("Authorization", `Bearer ${refreshedToken}`);
+        response = await fetch(url, fetchOptions);
+      } else {
+        console.error(`[API Fetch] Token refresh failed. Ending session.`);
+        // Redirect or reject
+        throw new ApiError(401, { detail: "Authentication session expired. Please log in again." });
+      }
     }
   }
 
