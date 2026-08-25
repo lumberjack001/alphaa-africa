@@ -286,6 +286,7 @@ function FlightCheckoutContent() {
         contact_email: contactInfo.email,
         contact_phone: `${contactInfo.phoneCountryCode}${contactInfo.phone}`,
         travelers: formattedTravelers,
+        callback_url: `${window.location.origin}/api/payments/callback/?type=flight`
       });
 
       if (bookingRes?.payment?.authorization_url) {

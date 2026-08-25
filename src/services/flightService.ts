@@ -103,6 +103,7 @@ export interface CreateFlightBookingPayload {
   contact_email: string;
   contact_phone: string;
   travelers: FlightTravelerInfo[];
+  callback_url?: string;
 }
 
 export interface FlightBookingCreateResponse {

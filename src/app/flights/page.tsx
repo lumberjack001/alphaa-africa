@@ -238,7 +238,8 @@ function FlightsQueryPageContent() {
               phone: info.phone,
               traveler_type: 'ADULT'
             }
-          ]
+          ],
+          callback_url: `${window.location.origin}/api/payments/callback/?type=flight`
         });
 
         if (bookingRes.payment?.authorization_url) {
