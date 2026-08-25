@@ -211,3 +211,42 @@ export async function apiFetch<T>(
     throw err;
   }
 }
+
+/**
+ * Helper to recursively extract human-readable error messages from ApiError data.
+ */
+export function formatApiErrorMessage(error: any, fallbackMessage: string = "Request failed"): string {
+  if (!(error instanceof ApiError) || !error.data) {
+    return error?.message || fallbackMessage;
+  }
+
+  const data = error.data;
+  if (typeof data === "string") return data;
+  if (data.detail && typeof data.detail === "string") return data.detail;
+
+  const messages: string[] = [];
+
+  const extractRecursive = (obj: any, prefix = "") => {
+    if (!obj) return;
+    if (typeof obj === "string") {
+      messages.push(prefix ? `${prefix}: ${obj}` : obj);
+    } else if (Array.isArray(obj)) {
+      obj.forEach((item, idx) => {
+        if (typeof item === "string") {
+          messages.push(prefix ? `${prefix}: ${item}` : item);
+        } else if (typeof item === "object" && item !== null) {
+          extractRecursive(item, prefix ? `${prefix} ${idx + 1}` : `Item ${idx + 1}`);
+        }
+      });
+    } else if (typeof obj === "object") {
+      Object.entries(obj).forEach(([key, val]) => {
+        const cleanKey = key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+        const newPrefix = prefix ? `${prefix} -> ${cleanKey}` : cleanKey;
+        extractRecursive(val, newPrefix);
+      });
+    }
+  };
+
+  extractRecursive(data);
+  return messages.length > 0 ? messages.join(" • ") : fallbackMessage;
+}

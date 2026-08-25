@@ -330,10 +330,11 @@ export const flightService = {
    * Re-validate flight offer price with Amadeus
    */
   async confirmPrice(flightOffer: any): Promise<any> {
+    const targetOffer = flightOffer?.raw_offer || flightOffer;
     return apiFetch<any>(`/api/flights/price/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ flight_offer: flightOffer })
+      body: JSON.stringify({ flight_offer: targetOffer })
     });
   },
 
