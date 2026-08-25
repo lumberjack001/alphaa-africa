@@ -32,24 +32,24 @@ export default function AutocompleteInput({
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const activeOptions = onSearchAsync && asyncOptions.length > 0 ? asyncOptions : options;
+  const allKnownOptions = [...asyncOptions, ...options];
 
   // Sync searchQuery with value from parent when it changes
   useEffect(() => {
-    const selectedOpt = activeOptions.find(opt => opt.value === value);
+    const selectedOpt = allKnownOptions.find(opt => opt.value === value);
     if (selectedOpt) {
       setSearchQuery(selectedOpt.label);
     } else {
       setSearchQuery(value || '');
     }
-  }, [value, activeOptions]);
+  }, [value, asyncOptions, options]);
 
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        const selectedOpt = activeOptions.find(opt => opt.value === value);
+        const selectedOpt = allKnownOptions.find(opt => opt.value === value);
         if (selectedOpt) {
           setSearchQuery(selectedOpt.label);
         } else {
@@ -61,7 +61,7 @@ export default function AutocompleteInput({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [value, options, asyncOptions]);
 
-  const filteredOptions = onSearchAsync && asyncOptions.length > 0
+  const filteredOptions = onSearchAsync
     ? asyncOptions
     : (searchQuery.trim() === ''
         ? options
@@ -76,19 +76,26 @@ export default function AutocompleteInput({
     setIsOpen(true);
     onChange(val);
 
-    if (onSearchAsync && val.trim().length >= 2) {
-      setIsLoadingAsync(true);
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(async () => {
-        try {
-          const fetched = await onSearchAsync(val);
-          setAsyncOptions(fetched);
-        } catch (err) {
-          console.error("Async search error:", err);
-        } finally {
-          setIsLoadingAsync(false);
-        }
-      }, 300);
+    if (onSearchAsync) {
+      if (val.trim().length === 0) {
+        setAsyncOptions([]);
+        setIsLoadingAsync(false);
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      } else {
+        setIsLoadingAsync(true);
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(async () => {
+          try {
+            const fetched = await onSearchAsync(val);
+            setAsyncOptions(fetched);
+          } catch (err) {
+            console.error("Async search error:", err);
+            setAsyncOptions([]);
+          } finally {
+            setIsLoadingAsync(false);
+          }
+        }, 300);
+      }
     }
   };
 
@@ -135,19 +142,37 @@ export default function AutocompleteInput({
         </svg>
       </div>
 
-      {isOpen && filteredOptions.length > 0 && (
+      {isOpen && (
         <div className="absolute top-[102%] left-0 w-full bg-white border border-purple-100 rounded-2xl shadow-xl z-50 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-purple-100 [&::-webkit-scrollbar-thumb]:rounded-full">
-          {filteredOptions.map((opt) => (
-            <div
-              key={opt.value}
-              onClick={() => handleSelectOption(opt)}
-              className={`px-4 py-2.5 text-xs font-bold transition-colors text-left hover:bg-purple-50 hover:text-brand-purple cursor-pointer ${
-                value === opt.value ? 'bg-purple-50 text-brand-purple font-black' : 'text-slate-600'
-              }`}
-            >
-              {opt.label}
+          {isLoadingAsync ? (
+            <div className="px-4 py-3 text-xs italic font-light text-slate-400 text-center flex items-center justify-center space-x-2">
+              <svg className="animate-spin h-3.5 w-3.5 text-brand-purple shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Searching...</span>
             </div>
-          ))}
+          ) : onSearchAsync && searchQuery.trim() === '' ? (
+            <div className="px-4 py-3 text-xs italic font-light text-slate-400 text-center">
+              Start typing to search...
+            </div>
+          ) : filteredOptions.length === 0 ? (
+            <div className="px-4 py-3 text-xs italic font-light text-slate-400 text-center">
+              No results found
+            </div>
+          ) : (
+            filteredOptions.map((opt) => (
+              <div
+                key={opt.value}
+                onClick={() => handleSelectOption(opt)}
+                className={`px-4 py-2.5 text-xs font-bold transition-colors text-left hover:bg-purple-50 hover:text-brand-purple cursor-pointer ${
+                  value === opt.value ? 'bg-purple-50 text-brand-purple font-black' : 'text-slate-600'
+                }`}
+              >
+                {opt.label}
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
