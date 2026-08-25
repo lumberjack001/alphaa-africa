@@ -17,6 +17,7 @@ const ToursShowcase = dynamic(() => import('@/components/ToursShowcase'), { ssr:
 const WhyChooseUs = dynamic(() => import('@/components/WhyChooseUs'), { ssr: false });
 const Testimonials = dynamic(() => import('@/components/Testimonials'), { ssr: false });
 const Partners = dynamic(() => import('@/components/Partners'), { ssr: false });
+const FAQSection = dynamic(() => import('@/components/FAQSection'), { ssr: false });
 const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 
 // Only needed on user interaction — never ship to initial render
@@ -345,6 +346,8 @@ function HomeContent() {
             <Testimonials />
 
             <Partners />
+
+            <FAQSection />
           </>
         )}
 
