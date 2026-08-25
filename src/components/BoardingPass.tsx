@@ -8,10 +8,15 @@ interface BoardingPassProps {
     cabin: string;
     hash: string;
     pnr: string;
+    amadeus_order_id?: string;
     details: {
       carrier?: string;
       name?: string;
       number?: string;
+      origin?: string;
+      destination?: string;
+      departureTime?: string;
+      arrivalTime?: string;
     };
     type: string;
   } | null;
@@ -28,25 +33,16 @@ export default function BoardingPass({
 }: BoardingPassProps) {
   if (!confirmedTicket) return null;
 
+  console.log("🎫 [BoardingPass Rendered PNR]:", confirmedTicket.pnr);
+  console.log("🎫 [BoardingPass Ticket Object]:", confirmedTicket);
+
   const isPackage = confirmedTicket.type === 'package';
   const isVisa = confirmedTicket.type === 'visa';
+  const displayOrigin = confirmedTicket.details?.origin || origin;
+  const displayDestination = confirmedTicket.details?.destination || destination;
 
   return (
     <section id="boarding-pass-eticket-viewport" className="max-w-2xl mx-auto py-12 px-4 sm:px-8 text-left animate-fadeIn">
-
-      <div className="text-center max-w-md mx-auto mb-8">
-        <span className="text-5xl block mb-3 animate-bounce">🎉</span>
-        <h3 className="text-2xl font-black text-brand-purple uppercase tracking-tight font-sans">
-          {isVisa ? "Consultation Booked!" : (isPackage ? "Enquiry Submitted!" : "Booking Finalized!")}
-        </h3>
-        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-          {isVisa
-            ? "Your visa consultation transaction was successfully verified. Our visa advisory specialists will contact you shortly to review your application."
-            : isPackage
-              ? "Your enquiry has been successfully logged in our system. A travel advisor has been assigned and will follow up shortly."
-              : "Your official boarding PNR Reference ticket has been compiled and emailed to you."}
-        </p>
-      </div>
 
       {/* Official Styled Boarding Ticket Pass */}
       <div id="printable-boarding-ticket" className="bg-white text-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-100 relative overflow-hidden text-left">
@@ -70,6 +66,11 @@ export default function BoardingPass({
             <strong className="text-base font-black text-slate-900 tracking-wider uppercase font-mono bg-amber-100 text-amber-950 px-2.5 py-1 rounded-lg">
               {confirmedTicket.pnr}
             </strong>
+            {confirmedTicket.amadeus_order_id && (
+              <span className="text-[8px] font-mono text-slate-400 block mt-1">
+                Order ID: {confirmedTicket.amadeus_order_id}
+              </span>
+            )}
           </div>
         </div>
 
@@ -108,7 +109,7 @@ export default function BoardingPass({
           </span>
           <h4 className="text-sm font-black text-[#4C1D5C]">{confirmedTicket.details.carrier || confirmedTicket.details.name}</h4>
           <p className="text-slate-500 mt-1 leading-relaxed">
-            {confirmedTicket.type === 'flight' && `Standard non-stop service flight reference ${confirmedTicket.details.number || 'P4-LOS90'} from ${origin} to ${destination}. Please complete check-ins 45 minutes prior.`}
+            {confirmedTicket.type === 'flight' && `Standard non-stop service flight reference ${confirmedTicket.details.number || 'P4-LOS90'} from ${displayOrigin} to ${displayDestination}. Please complete check-ins 45 minutes prior.`}
             {confirmedTicket.type === 'hotel' && `Confirmed hotel lodging reservation matching security token reference at ${confirmedTicket.details.name || confirmedTicket.details.carrier}. Check-in verification instructions dispatched to passenger email.`}
             {confirmedTicket.type === 'package' && `Holiday safari enquiry successfully received for ${confirmedTicket.details.name}. Your dedicated travel consultant will contact you via email/phone shortly to finalize travel logistics.`}
             {confirmedTicket.type === 'visa' && `Consultation fee of ₦5,000 successfully received. The visa team will follow up directly to review requirements. Please note: embassy visa fees are handled separately, and approval is at the embassy's sole discretion.`}

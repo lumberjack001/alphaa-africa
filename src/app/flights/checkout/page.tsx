@@ -11,7 +11,7 @@ import CheckoutSidebar from '@/components/checkout/CheckoutSidebar';
 import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
 import { flightService, type FlightOfferResult } from '@/services/flightService';
-import { apiFetch, getStoredUser, setStoredUser, getUserPhone, type User } from '@/lib/api';
+import { apiFetch, getStoredUser, setStoredUser, getUserPhone, formatApiErrorMessage, ApiError, type User } from '@/lib/api';
 
 function parsePhoneAndCode(rawPhone: string) {
   if (!rawPhone) return { code: '+234', phone: '' };
@@ -62,6 +62,10 @@ function FlightCheckoutContent() {
   const [toastVisible, setToastVisible] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Field validation & alert states
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [errorAlert, setErrorAlert] = useState<string>('');
+
   // Billing modal & confirmation ticket states
   const [isBillingOpen, setIsBillingOpen] = useState(false);
   const [bookingResponse, setBookingResponse] = useState<any | null>(null);
@@ -83,6 +87,16 @@ function FlightCheckoutContent() {
     setToastMessage(msg);
     setToastVisible(true);
     setTimeout(() => setToastVisible(false), 5000);
+  };
+
+  const clearFieldError = (key: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const copy = { ...prev };
+      delete copy[key];
+      return copy;
+    });
+    setErrorAlert('');
   };
 
   const handleSwitchTab = (tabId: string) => {
@@ -234,30 +248,46 @@ function FlightCheckoutContent() {
   // Proceed to Payment Handler
   const handleProceedToPay = async () => {
     if (!offer) return;
+    setErrorAlert('');
 
-    // Validation
-    if (!contactInfo.email || !contactInfo.phone) {
-      triggerToast('Please provide a valid email address and phone number for ticket delivery.');
-      return;
+    // Pre-submission Validation
+    const newFieldErrors: Record<string, string> = {};
+
+    if (!contactInfo.email || !contactInfo.email.includes('@')) {
+      newFieldErrors['contact_email'] = 'Please enter a valid email address';
     }
-
+    if (!contactInfo.phone || !contactInfo.phone.trim()) {
+      newFieldErrors['contact_phone'] = 'Please enter a phone number for ticket delivery';
+    }
     if (!contactInfo.termsAgreed) {
-      triggerToast('Please accept the Terms & Conditions to proceed.');
-      return;
+      newFieldErrors['terms_agreed'] = 'Please accept the Terms & Conditions to proceed';
     }
 
-    for (let p of passengers) {
-      if (!p.firstName.trim() || !p.lastName.trim()) {
-        triggerToast(`Please enter the complete name for ${p.label}.`);
-        return;
+    passengers.forEach((p, idx) => {
+      if (!p.firstName.trim()) {
+        newFieldErrors[`passenger_${idx}_firstName`] = 'First name is required';
       }
+      if (!p.lastName.trim()) {
+        newFieldErrors[`passenger_${idx}_lastName`] = 'Last name is required';
+      }
+      if (!p.dobYear || !p.dobMonth || !p.dobDay) {
+        newFieldErrors[`passenger_${idx}_dob`] = 'Date of birth is required';
+      }
+    });
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      const msg = 'Please fix the highlighted errors on the form before proceeding.';
+      setErrorAlert(msg);
+      triggerToast(msg);
+      return;
     }
 
     setIsLoading(true);
 
     try {
       const formattedTravelers = passengers.map((p) => {
-        const dob = (p.dobYear && p.dobMonth && p.dobDay) ? `${p.dobYear}-${p.dobMonth}-${p.dobDay}` : undefined;
+        const dob = `${p.dobYear}-${p.dobMonth}-${p.dobDay}`;
         const passportExpiry = (p.passportExpiryYear && p.passportExpiryMonth && p.passportExpiryDay)
           ? `${p.passportExpiryYear}-${p.passportExpiryMonth}-${p.passportExpiryDay}`
           : null;
@@ -299,7 +329,29 @@ function FlightCheckoutContent() {
 
     } catch (err: any) {
       console.error('Booking error:', err);
-      triggerToast(err.message || 'Failed to initialize booking. Please try again.');
+      if (err instanceof ApiError && err.data) {
+        const d = err.data;
+        const backendErrors: Record<string, string> = {};
+        if (Array.isArray(d.travelers)) {
+          d.travelers.forEach((tErr: any, idx: number) => {
+            if (tErr && typeof tErr === 'object') {
+              if (tErr.first_name) backendErrors[`passenger_${idx}_firstName`] = Array.isArray(tErr.first_name) ? tErr.first_name.join(', ') : String(tErr.first_name);
+              if (tErr.last_name) backendErrors[`passenger_${idx}_lastName`] = Array.isArray(tErr.last_name) ? tErr.last_name.join(', ') : String(tErr.last_name);
+              if (tErr.date_of_birth) backendErrors[`passenger_${idx}_dob`] = Array.isArray(tErr.date_of_birth) ? tErr.date_of_birth.join(', ') : String(tErr.date_of_birth);
+            }
+          });
+        }
+        if (d.contact_email) backendErrors['contact_email'] = Array.isArray(d.contact_email) ? d.contact_email.join(', ') : String(d.contact_email);
+        if (d.contact_phone) backendErrors['contact_phone'] = Array.isArray(d.contact_phone) ? d.contact_phone.join(', ') : String(d.contact_phone);
+
+        if (Object.keys(backendErrors).length > 0) {
+          setFieldErrors((prev) => ({ ...prev, ...backendErrors }));
+        }
+      }
+
+      const friendlyMsg = formatApiErrorMessage(err, 'Failed to initialize booking. Please check passenger details.');
+      setErrorAlert(friendlyMsg);
+      triggerToast(friendlyMsg);
     } finally {
       setIsLoading(false);
     }
@@ -352,6 +404,21 @@ function FlightCheckoutContent() {
 
   const numericTotal = extractTotalPrice(offer);
 
+  const isFormValid =
+    !!contactInfo.email &&
+    contactInfo.email.includes('@') &&
+    !!contactInfo.phone.trim() &&
+    contactInfo.termsAgreed &&
+    passengers.length > 0 &&
+    passengers.every(
+      (p) =>
+        !!p.firstName.trim() &&
+        !!p.lastName.trim() &&
+        !!p.dobDay &&
+        !!p.dobMonth &&
+        !!p.dobYear
+    );
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
       <Navbar
@@ -383,6 +450,18 @@ function FlightCheckoutContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
           {/* Left Column: Booking Summary & Traveller Details */}
           <div className="lg:col-span-8">
+            {errorAlert && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl flex items-start space-x-3 mb-6 animate-fadeIn">
+                <svg className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1 text-xs">
+                  <span className="font-extrabold text-sm block mb-1">Booking Error</span>
+                  <span>{errorAlert}</span>
+                </div>
+              </div>
+            )}
+
             <FlightCheckoutSummary offer={offer} searchContext={searchContext} />
             <TravellerDetailsForm
               contactInfo={contactInfo}
@@ -390,6 +469,8 @@ function FlightCheckoutContent() {
               passengers={passengers}
               setPassengers={setPassengers}
               isLoggedIn={isLoggedIn}
+              fieldErrors={fieldErrors}
+              clearFieldError={clearFieldError}
             />
           </div>
 
@@ -400,7 +481,7 @@ function FlightCheckoutContent() {
               searchContext={searchContext}
               onProceedToPay={handleProceedToPay}
               isLoading={isLoading}
-              canProceed={contactInfo.termsAgreed && !!contactInfo.email && !!contactInfo.phone}
+              canProceed={isFormValid}
             />
           </div>
         </div>

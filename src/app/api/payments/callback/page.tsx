@@ -12,6 +12,8 @@ import { carService } from '@/services/carService';
 import { visaService } from '@/services/visaService';
 import { ApiError } from '@/lib/api';
 
+import { lookupOrder } from '@/services/orderService';
+
 function CallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -59,81 +61,134 @@ function CallbackContent() {
         let verifyData: any = null;
         let bookingType: 'flight' | 'hotel' | 'car' | 'visa' = isFlight ? 'flight' : (isVisa ? 'visa' : (isCar ? 'car' : 'flight'));
 
-        const tryFlight = async () => {
-          verifyData = await flightService.verifyBooking(reference);
-          bookingType = 'flight';
-        };
+        // 1. Primary endpoint: GET /api/payments/order/<reference>/
+        try {
+          verifyData = await lookupOrder(reference);
+          if (verifyData?.booking_type) {
+            const bt = String(verifyData.booking_type).toLowerCase();
+            if (bt.includes('flight')) bookingType = 'flight';
+            else if (bt.includes('hotel') || bt.includes('lodging')) bookingType = 'hotel';
+            else if (bt.includes('car') || bt.includes('vehicle')) bookingType = 'car';
+            else if (bt.includes('visa')) bookingType = 'visa';
+          }
+        } catch (_) {
+          // 2. Fallback to service verify endpoints if order lookup fails or returns 404
+          const tryFlight = async () => {
+            verifyData = await flightService.verifyBooking(reference);
+            bookingType = 'flight';
+          };
 
-        const tryVisa = async () => {
-          verifyData = await visaService.verifyPayment(reference);
-          bookingType = 'visa';
-        };
+          const tryVisa = async () => {
+            verifyData = await visaService.verifyPayment(reference);
+            bookingType = 'visa';
+          };
 
-        const tryCar = async () => {
-          verifyData = await carService.verifyBooking(reference);
-          bookingType = 'car';
-        };
+          const tryCar = async () => {
+            verifyData = await carService.verifyBooking(reference);
+            bookingType = 'car';
+          };
 
-        const tryHotel = async () => {
-          verifyData = await hotelService.verifyBooking(reference);
-          bookingType = 'hotel';
-        };
+          const tryHotel = async () => {
+            verifyData = await hotelService.verifyBooking(reference);
+            bookingType = 'hotel';
+          };
 
-        // Order the verification attempts based on detected URL query parameters
-        let attemptQueue: Array<() => Promise<void>> = [];
-        if (isFlight) {
-          attemptQueue = [tryFlight, tryHotel, tryCar, tryVisa];
-        } else if (isVisa) {
-          attemptQueue = [tryVisa, tryFlight, tryHotel, tryCar];
-        } else if (isCar) {
-          attemptQueue = [tryCar, tryFlight, tryHotel, tryVisa];
-        } else {
-          // Default queue when no type query is supplied (try flight first, then hotel, car, visa)
-          attemptQueue = [tryFlight, tryHotel, tryCar, tryVisa];
-        }
+          let attemptQueue: Array<() => Promise<void>> = [];
+          if (isFlight) {
+            attemptQueue = [tryFlight, tryHotel, tryCar, tryVisa];
+          } else if (isVisa) {
+            attemptQueue = [tryVisa, tryFlight, tryHotel, tryCar];
+          } else if (isCar) {
+            attemptQueue = [tryCar, tryFlight, tryHotel, tryVisa];
+          } else {
+            attemptQueue = [tryFlight, tryHotel, tryCar, tryVisa];
+          }
 
-        let lastError: any = null;
-        for (const attempt of attemptQueue) {
-          try {
-            await attempt();
-            lastError = null;
-            break; // Succeeded, exit loop
-          } catch (err) {
-            lastError = err;
-            if (err instanceof ApiError && err.status === 404) {
-              continue; // 404 mismatch, try next service
+          let lastError: any = null;
+          for (const attempt of attemptQueue) {
+            try {
+              await attempt();
+              lastError = null;
+              break;
+            } catch (err) {
+              lastError = err;
+              if (err instanceof ApiError && err.status === 404) {
+                continue;
+              }
+              throw err;
             }
-            throw err; // Real error (e.g. 500, network loss), propagate immediately
+          }
+
+          if (lastError) {
+            throw lastError;
           }
         }
 
-        if (lastError) {
-          throw lastError;
+        // 3. Retry once if status is pending/paid (webhook/PNR generation in progress)
+        let rawStatus = (verifyData?.status || verifyData?.payment_status || verifyData?.booking?.status || '').toLowerCase();
+        if (rawStatus === 'pending' || rawStatus === 'paid') {
+          await new Promise(r => setTimeout(r, 2500));
+          try {
+            const retryData = await lookupOrder(reference);
+            if (retryData) {
+              verifyData = retryData;
+              rawStatus = (verifyData?.status || verifyData?.payment_status || verifyData?.booking?.status || '').toLowerCase();
+            }
+          } catch (_) {
+            // Single retry attempt finished
+          }
         }
-        
-        const rawStatus = (verifyData?.status || verifyData?.booking?.status || '').toLowerCase();
+
         const isSuccess = rawStatus === 'confirmed' || rawStatus === 'paid' || rawStatus === 'successful' || rawStatus === 'success';
         const isFailed = rawStatus === 'failed' || rawStatus === 'cancelled';
         
         setStatus(isSuccess ? 'confirmed' : (isFailed ? 'failed' : 'pending'));
 
         if (isSuccess) {
-          // Construct ticket structure for BoardingPass component based on service type
+          // Construct ticket structure for BoardingPass component
           if (bookingType === 'flight') {
             setNavActiveTab('flights');
-            const pnrCode = verifyData.pnr || verifyData.reference || verifyData.booking?.pnr || verifyData.booking?.reference || reference;
-            const leadName = verifyData.contact_name || verifyData.customer_email || verifyData.booking?.contact_name || 'Passenger';
+            console.log("🎫 [Callback API Order Payload]:", verifyData);
+            const pnrCode =
+              verifyData.pnr ||
+              verifyData.pnr_code ||
+              verifyData.amadeus_pnr ||
+              verifyData.booking?.pnr ||
+              verifyData.booking?.pnr_code ||
+              verifyData.booking?.amadeus_pnr ||
+              verifyData.order?.pnr ||
+              verifyData.reference ||
+              reference;
+
+            console.log("🎫 [Extracted PNR Code]:", pnrCode);
+            console.log("🎫 [Extracted Amadeus Order ID]:", verifyData.amadeus_order_id || verifyData.order_id || verifyData.booking?.amadeus_order_id);
+
+            const leadTraveler = verifyData.travelers?.[0];
+            const leadName = leadTraveler 
+              ? `${leadTraveler.first_name || ''} ${leadTraveler.last_name || ''}`.trim()
+              : (verifyData.contact_name || verifyData.customer_email || verifyData.booking?.contact_name || 'Passenger');
             
+            const flightDetails = verifyData.flight_details || verifyData.booking?.flight_details || {};
+            const itinerary = flightDetails.itineraries?.[0];
+            const segment = itinerary?.segments?.[0];
+
             setConfirmedTicket({
               passenger: leadName,
-              cabin: verifyData.cabin || verifyData.booking?.cabin || 'Economy Class',
-              hash: `#TK-${reference.substring(0, 8).toUpperCase()}`,
+              cabin: flightDetails.cabin || verifyData.cabin || verifyData.booking?.cabin || 'Economy Class',
+              hash: `#TK-${(verifyData.reference || reference).substring(0, 8).toUpperCase()}`,
               pnr: pnrCode,
+              amadeus_order_id: verifyData.amadeus_order_id || verifyData.order_id || verifyData.booking?.amadeus_order_id,
               details: {
-                carrier: verifyData.airline || verifyData.booking?.airline || 'Amadeus Airline',
-                name: verifyData.route || verifyData.booking?.route || 'Flight Reservation',
-                number: verifyData.flight_number || verifyData.booking?.flight_number || 'PNR-CONFIRMED',
+                carrier: flightDetails.airline_code || verifyData.airline || 'Amadeus Airline',
+                name: segment ? `${segment.from || ''} → ${segment.to || ''}` : (verifyData.route || 'Flight Reservation'),
+                number: segment?.flight_number || verifyData.flight_number || 'PNR-CONFIRMED',
+                origin: segment?.from,
+                destination: segment?.to,
+                departureTime: segment?.depart_at,
+                arrivalTime: segment?.arrive_at,
               },
+              flight_details: flightDetails,
+              travelers: verifyData.travelers || [],
               type: 'flight',
             });
           } else if (bookingType === 'visa') {
@@ -141,8 +196,8 @@ function CallbackContent() {
             setConfirmedTicket({
               passenger: verifyData.full_name || 'Valued Guest',
               cabin: 'Visa Consultation Assistance',
-              hash: `#TX-${verifyData.reference}`,
-              pnr: verifyData.reference,
+              hash: `#TX-${verifyData.reference || reference}`,
+              pnr: verifyData.reference || reference,
               details: {
                 name: verifyData.country?.name ? `Visa Assistance: ${verifyData.country.name}` : 'Visa Assistance Service',
                 carrier: verifyData.country?.name ? `Visa Assistance: ${verifyData.country.name}` : 'Visa Assistance Service',
@@ -154,8 +209,8 @@ function CallbackContent() {
             setConfirmedTicket({
               passenger: verifyData.guest_name || 'Valued Guest',
               cabin: verifyData.vehicle?.vehicle_type_display || 'Chauffeur Vehicle Rental',
-              hash: `#TX-${verifyData.reference}`,
-              pnr: verifyData.reference,
+              hash: `#TX-${verifyData.reference || reference}`,
+              pnr: verifyData.reference || reference,
               details: {
                 name: verifyData.vehicle?.name || 'Alphaa Fleet',
                 carrier: verifyData.vehicle?.name || 'Alphaa Fleet',
@@ -167,8 +222,8 @@ function CallbackContent() {
             setConfirmedTicket({
               passenger: verifyData.guest_name || 'Valued Guest',
               cabin: verifyData.room_type?.name || 'Hotel Lodging Reservation',
-              hash: `#TX-${verifyData.reference}`,
-              pnr: verifyData.reference,
+              hash: `#TX-${verifyData.reference || reference}`,
+              pnr: verifyData.reference || reference,
               details: {
                 name: verifyData.hotel?.name || 'Hotel Lodging',
                 carrier: verifyData.hotel?.name || 'Hotel Lodging',
@@ -181,8 +236,8 @@ function CallbackContent() {
           setErrorMsg('The payment processor reported that this transaction failed.');
           triggerToast("Payment failed or was cancelled.");
         } else {
-          setErrorMsg('This payment verification is still pending. Please refresh this page to try again.');
-          triggerToast("Payment is still pending.");
+          setErrorMsg('This payment verification is still finalizing. An email notification will be sent once completed.');
+          triggerToast("Payment is still processing.");
         }
       } catch (error) { 
         setStatus('failed');

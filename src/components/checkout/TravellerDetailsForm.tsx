@@ -37,6 +37,8 @@ interface TravellerDetailsFormProps {
   setPassengers: React.Dispatch<React.SetStateAction<PassengerFormData[]>>;
   isInternational?: boolean;
   isLoggedIn?: boolean;
+  fieldErrors?: Record<string, string>;
+  clearFieldError?: (key: string) => void;
 }
 
 const COUNTRY_CODES = [
@@ -94,6 +96,8 @@ export default function TravellerDetailsForm({
   setPassengers,
   isInternational = true,
   isLoggedIn = false,
+  fieldErrors = {},
+  clearFieldError
 }: TravellerDetailsFormProps) {
 
   const updatePassenger = (index: number, field: keyof PassengerFormData, value: string) => {
@@ -102,6 +106,12 @@ export default function TravellerDetailsForm({
       copy[index] = { ...copy[index], [field]: value };
       return copy;
     });
+
+    if (clearFieldError) {
+      if (field === 'firstName') clearFieldError(`passenger_${index}_firstName`);
+      if (field === 'lastName') clearFieldError(`passenger_${index}_lastName`);
+      if (field === 'dobDay' || field === 'dobMonth' || field === 'dobYear') clearFieldError(`passenger_${index}_dob`);
+    }
   };
 
   return (
@@ -141,18 +151,33 @@ export default function TravellerDetailsForm({
               type="email"
               placeholder="you@example.com"
               value={contactInfo.email}
-              onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
-              className="w-full px-4 py-3 rounded-2xl border border-purple-100 text-sm font-medium focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all outline-none bg-white"
+              onChange={(e) => {
+                setContactInfo({ ...contactInfo, email: e.target.value });
+                if (clearFieldError) clearFieldError('contact_email');
+              }}
+              className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition-all outline-none bg-white ${
+                fieldErrors['contact_email']
+                  ? 'border-rose-500 bg-rose-50/20 text-rose-900 ring-1 ring-rose-500'
+                  : 'border-purple-100 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple'
+              }`}
               required
             />
+            {fieldErrors['contact_email'] && (
+              <span className="text-[11px] font-bold text-rose-500 mt-1 block">
+                {fieldErrors['contact_email']}
+              </span>
+            )}
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Phone Number <span className="text-rose-500">*</span>
             </label>
-            {/* Unified phone container to prevent layout overflow */}
-            <div className="flex rounded-2xl border border-purple-100 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-brand-purple/20 focus-within:border-brand-purple">
+            <div className={`flex rounded-2xl border bg-white overflow-hidden ${
+              fieldErrors['contact_phone']
+                ? 'border-rose-500 ring-1 ring-rose-500'
+                : 'border-purple-100 focus-within:ring-2 focus-within:ring-brand-purple/20 focus-within:border-brand-purple'
+            }`}>
               <select
                 value={contactInfo.phoneCountryCode}
                 onChange={(e) => setContactInfo({ ...contactInfo, phoneCountryCode: e.target.value })}
@@ -166,11 +191,19 @@ export default function TravellerDetailsForm({
                 type="tel"
                 placeholder="800 000 0000"
                 value={contactInfo.phone}
-                onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+                onChange={(e) => {
+                  setContactInfo({ ...contactInfo, phone: e.target.value });
+                  if (clearFieldError) clearFieldError('contact_phone');
+                }}
                 className="w-full min-w-0 px-4 py-3 text-sm font-medium outline-none bg-transparent"
                 required
               />
             </div>
+            {fieldErrors['contact_phone'] && (
+              <span className="text-[11px] font-bold text-rose-500 mt-1 block">
+                {fieldErrors['contact_phone']}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -180,6 +213,9 @@ export default function TravellerDetailsForm({
         {passengers.map((p, idx) => {
           const isInfant = p.type === 'HELD_INFANT' || p.type === 'INFANT';
           const yearsList = p.type === 'CHILD' ? DOB_YEARS_CHILD : isInfant ? DOB_YEARS_INFANT : DOB_YEARS_ADULT;
+          const firstNameErr = fieldErrors[`passenger_${idx}_firstName`];
+          const lastNameErr = fieldErrors[`passenger_${idx}_lastName`];
+          const dobErr = fieldErrors[`passenger_${idx}_dob`];
 
           return (
             <div key={p.id} className="p-5 sm:p-6 rounded-2xl border border-purple-100 bg-white space-y-4 shadow-xs">
@@ -220,9 +256,18 @@ export default function TravellerDetailsForm({
                     placeholder="As on passport / ID"
                     value={p.firstName}
                     onChange={(e) => updatePassenger(idx, 'firstName', e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-2xl border border-purple-100 text-sm font-medium focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple outline-none"
+                    className={`w-full px-3.5 py-3 rounded-2xl border text-sm font-medium transition-all outline-none ${
+                      firstNameErr
+                        ? 'border-rose-500 bg-rose-50/20 text-rose-900 ring-1 ring-rose-500'
+                        : 'border-purple-100 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple'
+                    }`}
                     required
                   />
+                  {firstNameErr && (
+                    <span className="text-[11px] font-bold text-rose-500 mt-1 block">
+                      {firstNameErr}
+                    </span>
+                  )}
                 </div>
 
                 {/* Last Name */}
@@ -235,9 +280,18 @@ export default function TravellerDetailsForm({
                     placeholder="As on passport / ID"
                     value={p.lastName}
                     onChange={(e) => updatePassenger(idx, 'lastName', e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-2xl border border-purple-100 text-sm font-medium focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple outline-none"
+                    className={`w-full px-3.5 py-3 rounded-2xl border text-sm font-medium transition-all outline-none ${
+                      lastNameErr
+                        ? 'border-rose-500 bg-rose-50/20 text-rose-900 ring-1 ring-rose-500'
+                        : 'border-purple-100 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple'
+                    }`}
                     required
                   />
+                  {lastNameErr && (
+                    <span className="text-[11px] font-bold text-rose-500 mt-1 block">
+                      {lastNameErr}
+                    </span>
+                  )}
                 </div>
 
                 {/* Middle Name */}
@@ -262,11 +316,15 @@ export default function TravellerDetailsForm({
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Date of Birth <span className="text-rose-500">*</span>
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-2xl border ${
+                    dobErr
+                      ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500'
+                      : 'border-transparent'
+                  }`}>
                     <select
                       value={p.dobDay}
                       onChange={(e) => updatePassenger(idx, 'dobDay', e.target.value)}
-                      className="px-2 py-3 rounded-2xl border border-purple-100 text-xs font-bold bg-purple-50/30 outline-none"
+                      className="px-2 py-3 rounded-xl border border-purple-100 text-xs font-bold bg-purple-50/30 outline-none"
                     >
                       <option value="">Day</option>
                       {DAYS.map((d) => (
@@ -276,7 +334,7 @@ export default function TravellerDetailsForm({
                     <select
                       value={p.dobMonth}
                       onChange={(e) => updatePassenger(idx, 'dobMonth', e.target.value)}
-                      className="px-2 py-3 rounded-2xl border border-purple-100 text-xs font-bold bg-purple-50/30 outline-none"
+                      className="px-2 py-3 rounded-xl border border-purple-100 text-xs font-bold bg-purple-50/30 outline-none"
                     >
                       <option value="">Month</option>
                       {MONTHS.map((m) => (
@@ -286,7 +344,7 @@ export default function TravellerDetailsForm({
                     <select
                       value={p.dobYear}
                       onChange={(e) => updatePassenger(idx, 'dobYear', e.target.value)}
-                      className="px-2 py-3 rounded-2xl border border-purple-100 text-xs font-bold bg-purple-50/30 outline-none"
+                      className="px-2 py-3 rounded-xl border border-purple-100 text-xs font-bold bg-purple-50/30 outline-none"
                     >
                       <option value="">Year</option>
                       {yearsList.map((y) => (
@@ -294,6 +352,11 @@ export default function TravellerDetailsForm({
                       ))}
                     </select>
                   </div>
+                  {dobErr && (
+                    <span className="text-[11px] font-bold text-rose-500 mt-1 block">
+                      {dobErr}
+                    </span>
+                  )}
                 </div>
 
                 {/* Gender Pills */}
@@ -415,19 +478,29 @@ export default function TravellerDetailsForm({
       )}
 
       {/* Terms & Privacy Consent */}
-      <div className="mt-4 flex items-start gap-3">
-        <input
-          type="checkbox"
-          id="termsAgreed"
-          checked={contactInfo.termsAgreed}
-          onChange={(e) => setContactInfo({ ...contactInfo, termsAgreed: e.target.checked })}
-          className="mt-0.5 w-4 h-4 text-brand-purple rounded border-purple-300 focus:ring-brand-purple cursor-pointer"
-        />
-        <label htmlFor="termsAgreed" className="text-xs text-slate-600 font-medium cursor-pointer">
-          By proceeding, you agree that you have read and accepted our{' '}
-          <a href="#" className="text-brand-purple font-bold hover:underline">Terms & Conditions</a> and{' '}
-          <a href="#" className="text-brand-purple font-bold hover:underline">Privacy Policy</a>.
-        </label>
+      <div className="mt-4">
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="termsAgreed"
+            checked={contactInfo.termsAgreed}
+            onChange={(e) => {
+              setContactInfo({ ...contactInfo, termsAgreed: e.target.checked });
+              if (clearFieldError) clearFieldError('terms_agreed');
+            }}
+            className="mt-0.5 w-4 h-4 text-brand-purple rounded border-purple-300 focus:ring-brand-purple cursor-pointer"
+          />
+          <label htmlFor="termsAgreed" className="text-xs text-slate-600 font-medium cursor-pointer">
+            By proceeding, you agree that you have read and accepted our{' '}
+            <a href="#" className="text-brand-purple font-bold hover:underline">Terms & Conditions</a> and{' '}
+            <a href="#" className="text-brand-purple font-bold hover:underline">Privacy Policy</a>.
+          </label>
+        </div>
+        {fieldErrors['terms_agreed'] && (
+          <span className="text-[11px] font-bold text-rose-500 mt-1 block ml-7">
+            {fieldErrors['terms_agreed']}
+          </span>
+        )}
       </div>
     </div>
   );

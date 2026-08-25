@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ApiError, getStoredUser, getUserPhone } from '../lib/api';
+import { ApiError, formatApiErrorMessage, getStoredUser, getUserPhone } from '../lib/api';
 import { hotelService } from '@/services/hotelService';
 import { packageService } from '@/services/packageService';
 import { carService } from '@/services/carService';
@@ -209,7 +209,7 @@ export default function CheckoutModal({
         }
 
         const bookingData = await flightService.createBooking({
-          flight_offer: selectedProduct.payload,
+          flight_offer: selectedProduct.payload?.raw_offer || selectedProduct.payload,
           contact_name: `${firstName} ${lastName}`,
           contact_email: email,
           contact_phone: phone,
@@ -292,12 +292,8 @@ export default function CheckoutModal({
         onProceed({ firstName, lastName, email, phone }, null, false);
       }
     } catch (error) {
-      if (error instanceof ApiError) {
-        const details = error.data ? Object.entries(error.data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" | ") : error.message;
-        setErrorMessage(`Booking Failed: ${details}`);
-      } else {
-        setErrorMessage("Connection to booking server failed. Please verify passenger details.");
-      }
+      const details = formatApiErrorMessage(error, "Connection to booking server failed. Please verify details.");
+      setErrorMessage(`Booking Failed: ${details}`);
     } finally {
       setIsLoading(false);
     }
@@ -740,17 +736,29 @@ export default function CheckoutModal({
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-brand-orange hover:bg-brand-purple text-white font-black py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 mt-2 cursor-pointer border-none flex items-center justify-center disabled:opacity-50"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              isPackage ? "Submit Enquiry Info" : "Proceed to Secure Payment"
-            )}
-          </button>
+          {(() => {
+            const isModalFormValid =
+              !!firstName.trim() &&
+              !!lastName.trim() &&
+              !!email.trim() &&
+              email.includes('@') &&
+              !!phone.trim() &&
+              (!isFlight || (flightTravelers.length > 0 && flightTravelers.every(t => !!t.first_name.trim() && !!t.last_name.trim() && !!t.date_of_birth)));
+
+            return (
+              <button
+                type="submit"
+                disabled={isLoading || !isModalFormValid}
+                className="w-full bg-brand-orange hover:bg-brand-purple disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FA6432]/10 mt-2 cursor-pointer border-none flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  isPackage ? "Submit Enquiry Info" : "Proceed to Secure Payment"
+                )}
+              </button>
+            );
+          })()}
 
         </form>
 

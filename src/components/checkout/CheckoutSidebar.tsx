@@ -148,6 +148,7 @@ export default function CheckoutSidebar({
             </>
           )}
         </button>
+        
       </div>
 
       {/* Security Reassurance */}

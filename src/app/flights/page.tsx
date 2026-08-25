@@ -226,7 +226,7 @@ function FlightsQueryPageContent() {
       try {
         setIsLoading(true);
         const bookingRes = await flightService.createBooking({
-          flight_offer: selectedProduct.payload,
+          flight_offer: selectedProduct.payload?.raw_offer || selectedProduct.payload,
           contact_name: `${info.firstName} ${info.lastName}`,
           contact_email: info.email,
           contact_phone: info.phone,
