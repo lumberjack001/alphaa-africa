@@ -30,7 +30,7 @@ export interface EnquiryPayload {
   full_name: string;
   email: string;
   phone: string;
-  preferred_date: string;
+  preferred_date?: string;
   num_adults: number;
   num_children: number;
   message: string;

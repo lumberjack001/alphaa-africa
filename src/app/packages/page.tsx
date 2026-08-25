@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Toast from '@/components/Toast';
 import { packageService, type Package, type PackageDetails } from '@/services/packageService';
-import { getStoredUser, getUserPhone } from '@/lib/api';
+import { getStoredUser, getUserPhone, ApiError } from '@/lib/api';
 
 function PackagesPageContent() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -125,7 +125,7 @@ function PackagesPageContent() {
         full_name: enquiryForm.fullName,
         email: enquiryForm.email,
         phone: enquiryForm.phone,
-        preferred_date: enquiryForm.preferredDate,
+        preferred_date: enquiryForm.preferredDate || undefined,
         num_adults: Number(enquiryForm.numAdults),
         num_children: Number(enquiryForm.numChildren),
         message: enquiryForm.message
@@ -139,13 +139,16 @@ function PackagesPageContent() {
         setEnquirySuccess(false);
       }, 2000);
     } catch (error) {
-      // Simulate success if API has strict CORS or CSRF in demo environments
-      setEnquirySuccess(true);
-      triggerToast("Enquiry submitted! Our safari advisors will follow up by email.");
-      setTimeout(() => {
-        setSelectedPackage(null);
-        setEnquirySuccess(false);
-      }, 2000);
+      if (error instanceof ApiError) {
+        const details = error.data
+          ? Object.entries(error.data)
+              .map(([k, v]) => `${k.replace('_', ' ')}: ${Array.isArray(v) ? v.join(', ') : v}`)
+              .join(' | ')
+          : error.message;
+        triggerToast(`Enquiry Failed: ${details}`);
+      } else {
+        triggerToast("Failed to submit enquiry. Please check your network and try again.");
+      }
     } finally {
       setIsSubmittingEnquiry(false);
     }
@@ -410,6 +413,7 @@ function PackagesPageContent() {
                         <label className="block text-slate-500 font-bold text-[10px] uppercase mb-1">Preferred Date</label>
                         <input 
                           type="date" 
+                          min={new Date().toISOString().split('T')[0]}
                           value={enquiryForm.preferredDate}
                           onChange={(e) => setEnquiryForm(prev => ({ ...prev, preferredDate: e.target.value }))}
                           className="w-full bg-white border border-slate-200 rounded-xl p-2 text-brand-purple font-semibold text-xs focus:outline-none"
