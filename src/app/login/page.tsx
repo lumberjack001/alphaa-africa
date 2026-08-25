@@ -30,6 +30,7 @@ function LoginContent() {
 
   // UX State
   const [isLoading, setIsLoading] = useState(false);
+  const [errorAlert, setErrorAlert] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
 
@@ -43,6 +44,7 @@ function LoginContent() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorAlert('');
     if (!email || !password) {
       triggerToast("Please enter email and password.");
       return;
@@ -78,10 +80,20 @@ function LoginContent() {
     } catch (error) {
       if (error instanceof ApiError) {
         // Show validation or field messages
-        const details = error.data?.detail || error.data?.non_field_errors?.[0] || error.message;
-        triggerToast(`Login Failed: ${details}`);
+        const details =
+          error.data?.detail ||
+          error.data?.non_field_errors?.[0] ||
+          (typeof error.data === 'string' ? error.data : null) ||
+          error.message;
+        const msg = details && !details.includes('API Error 401')
+          ? details
+          : "Invalid email or password. Please check your credentials and try again.";
+        setErrorAlert(msg);
+        triggerToast(`Login Failed: Invalid email or password. Please check your credentials and try again.`);
       } else {
-        triggerToast("An unexpected error occurred during sign-in.");
+        const msg = "An unexpected error occurred during sign-in. Please try again.";
+        setErrorAlert(msg);
+        triggerToast(msg);
       }
     } finally {
       setIsLoading(false);
@@ -239,6 +251,18 @@ function LoginContent() {
 
                 {/* Login Form */}
                 <form onSubmit={handleLogin} className="space-y-4">
+                  {errorAlert && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3.5 text-xs font-semibold flex items-start gap-2.5 shadow-sm">
+                      <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <span className="font-bold block mb-0.5">Authentication Error</span>
+                        <span>{errorAlert}</span>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-slate-500 font-bold text-xs mb-1.5">Email Address</label>
                     <input
@@ -246,7 +270,10 @@ function LoginContent() {
                       required
                       placeholder="you@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrorAlert('');
+                      }}
                       className="w-full bg-purple-50/20 border border-slate-200 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold text-xs focus:outline-none"
                     />
                   </div>
@@ -267,7 +294,10 @@ function LoginContent() {
                       required
                       placeholder="••••••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setErrorAlert('');
+                      }}
                       className="w-full bg-purple-50/20 border border-slate-200 input-focus-effect rounded-xl p-3 text-brand-purple font-semibold text-xs focus:outline-none"
                     />
                   </div>
