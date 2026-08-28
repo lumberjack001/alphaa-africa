@@ -208,24 +208,33 @@ export default function CheckoutModal({
           }
         }
 
+        const modalFlightOffer = selectedProduct.payload?.raw_offer || selectedProduct.payload;
+        console.log("=== [CHECKOUT MODAL PAY] SENT flight_offer ===", modalFlightOffer);
+
         const bookingData = await flightService.createBooking({
-          flight_offer: selectedProduct.payload?.raw_offer || selectedProduct.payload,
+          flight_offer: modalFlightOffer,
           contact_name: `${firstName} ${lastName}`,
           contact_email: email,
           contact_phone: phone,
-          travelers: flightTravelers.map(t => ({
-            first_name: t.first_name,
-            last_name: t.last_name,
-            date_of_birth: t.date_of_birth,
-            gender: t.gender,
-            email: t.email || email,
-            phone_country_code: t.phone_country_code || '234',
-            phone: t.phone || phone,
-            passport_number: t.passport_number || undefined,
-            passport_expiry: t.passport_expiry || null,
-            nationality: t.nationality || 'NG',
-            traveler_type: t.traveler_type
-          })),
+          travelers: flightTravelers.map(t => {
+            const cleanCode = (t.phone_country_code || '234').replace(/^\+/, '');
+            let tType = (t.traveler_type || 'ADULT').toUpperCase();
+            if (tType === 'INFANT') tType = 'HELD_INFANT';
+
+            return {
+              first_name: t.first_name,
+              last_name: t.last_name,
+              date_of_birth: t.date_of_birth,
+              gender: t.gender,
+              email: t.email || email,
+              phone_country_code: cleanCode,
+              phone: t.phone || phone,
+              passport_number: t.passport_number ? t.passport_number.trim() : "",
+              passport_expiry: t.passport_expiry || null,
+              nationality: t.nationality || 'NG',
+              traveler_type: tType
+            };
+          }),
           callback_url: `${window.location.origin}/api/payments/callback/?type=flight`
         });
 

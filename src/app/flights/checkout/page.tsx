@@ -125,6 +125,9 @@ function FlightCheckoutContent() {
       const parsedOffer = JSON.parse(storedOffer);
       const parsedContext = storedContext ? JSON.parse(storedContext) : {};
 
+      const rawOffer = parsedOffer?.raw_offer || parsedOffer;
+      console.log("=== [CHECKOUT PAGE LOADED] STORED raw_offer ===", rawOffer);
+
       setOffer(parsedOffer);
       setSearchContext(parsedContext);
 
@@ -292,26 +295,36 @@ function FlightCheckoutContent() {
           ? `${p.passportExpiryYear}-${p.passportExpiryMonth}-${p.passportExpiryDay}`
           : null;
 
+        // Clean phone country code (e.g. "+234" -> "234")
+        const cleanCountryCode = (contactInfo.phoneCountryCode || '234').replace(/^\+/, '');
+
+        // Map traveler type to strict backend ENUM: ADULT, CHILD, HELD_INFANT
+        let travelerType = (p.type || 'ADULT').toUpperCase();
+        if (travelerType === 'INFANT') travelerType = 'HELD_INFANT';
+
         return {
           first_name: p.firstName,
           last_name: p.lastName,
           date_of_birth: dob,
           gender: p.gender,
           email: contactInfo.email,
-          phone_country_code: contactInfo.phoneCountryCode,
+          phone_country_code: cleanCountryCode,
           phone: contactInfo.phone,
-          passport_number: p.passportNumber || undefined,
-          passport_expiry: passportExpiry,
+          passport_number: p.passportNumber ? p.passportNumber.trim() : "",
+          passport_expiry: passportExpiry || null,
           nationality: p.nationality || 'NG',
-          traveler_type: p.type,
+          traveler_type: travelerType,
         };
       });
 
       const leadPassenger = passengers[0] || { firstName: 'Traveler', lastName: '' };
       const contactName = `${leadPassenger.firstName} ${leadPassenger.lastName}`.trim();
 
+      const payloadFlightOffer = offer?.raw_offer || offer;
+      console.log("=== [PAYMENT SUBMITTED TO BACKEND] SENT flight_offer ===", payloadFlightOffer);
+
       const bookingRes = await flightService.createBooking({
-        flight_offer: offer.raw_offer || offer,
+        flight_offer: payloadFlightOffer,
         contact_name: contactName || contactInfo.email,
         contact_email: contactInfo.email,
         contact_phone: `${contactInfo.phoneCountryCode}${contactInfo.phone}`,

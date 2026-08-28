@@ -204,6 +204,8 @@ function FlightsQueryPageContent() {
   const handleBookFlight = async (product: { type: string; name: string; price: number; payload?: any }) => {
     setSelectedProduct(product);
     if (product.payload) {
+      const rawOffer = product.payload?.raw_offer || product.payload;
+      console.log("=== [FLIGHT SELECTED FROM SEARCH RESULTS] raw_offer ===", rawOffer);
       try {
         sessionStorage.setItem('selectedFlightOffer', JSON.stringify(product.payload));
         sessionStorage.setItem('flightSearchContext', JSON.stringify(searchQuery));
@@ -242,10 +244,10 @@ function FlightsQueryPageContent() {
           callback_url: `${window.location.origin}/api/payments/callback/?type=flight`
         });
 
-        if (bookingRes.payment?.authorization_url) {
-          window.location.href = bookingRes.payment.authorization_url;
-          return;
-        }
+        // if (bookingRes.payment?.authorization_url) {
+        //   window.location.href = bookingRes.payment.authorization_url;
+        //   return;
+        // }
 
         setBookingResponse(bookingRes);
       } catch (err: any) {
