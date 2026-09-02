@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ApiError, formatApiErrorMessage, getStoredUser, getUserPhone } from '../lib/api';
+import { ApiError, safeFormatApiErrorMessage, safeGetStoredUser, getUserPhone, getLocalDateString } from '../lib/api';
 import { hotelService } from '@/services/hotelService';
 import { packageService } from '@/services/packageService';
 import { carService } from '@/services/carService';
@@ -54,13 +54,17 @@ export default function CheckoutModal({
   const [flightTravelers, setFlightTravelers] = useState<FlightTravelerState[]>([]);
 
   // Hotels specific fields
-  const [checkIn, setCheckIn] = useState('2026-07-15');
-  const [checkOut, setCheckOut] = useState('2026-07-18');
+  const [checkIn, setCheckIn] = useState(getLocalDateString);
+  const [checkOut, setCheckOut] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [numRooms, setNumRooms] = useState(1);
   const [numGuests, setNumGuests] = useState(2);
 
   // Packages specific fields
-  const [preferredDate, setPreferredDate] = useState('2026-08-10');
+  const [preferredDate, setPreferredDate] = useState(getLocalDateString);
   const [numAdults, setNumAdults] = useState(2);
   const [numChildren, setNumChildren] = useState(0);
   const [enquiryMessage, setEnquiryMessage] = useState('Interested in booking this curated holiday packages safari trip.');
@@ -68,21 +72,21 @@ export default function CheckoutModal({
   // Vehicle specific fields
   const [pickupLocation, setPickupLocation] = useState('');
   const [dropoffLocation, setDropoffLocation] = useState('');
-  const [pickupDate, setPickupDate] = useState('2026-07-20');
+  const [pickupDate, setPickupDate] = useState(getLocalDateString);
   const [pickupTime, setPickupTime] = useState('09:00');
   const [carHours, setCarHours] = useState(5);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
 
   useEffect(() => {
     if (isOpen) {
       setErrorMessage('');
       
       // Auto-populate logged-in user details if available
-      const storedUser = getStoredUser();
+      const storedUser = safeGetStoredUser();
       let initFirstName = '';
       let initLastName = '';
       let initEmail = '';
@@ -160,7 +164,7 @@ export default function CheckoutModal({
   if (!isOpen || !selectedProduct) return null;
 
   const isFlight = selectedProduct.type === 'flight';
-  const isHotel = selectedProduct.type === 'hotel';
+  const isHotel = selectedProduct.type === 'hotel' || selectedProduct.type === 'lodging';
   const isPackage = selectedProduct.type === 'package' || selectedProduct.type === 'holiday safari' || selectedProduct.type === 'holiday';
   const isVehicle = selectedProduct.type === 'vehicle' || selectedProduct.type === 'vehicle hire';
 
@@ -300,7 +304,7 @@ export default function CheckoutModal({
         onProceed({ firstName, lastName, email, phone }, null, false);
       }
     } catch (error) {
-      const details = formatApiErrorMessage(error, "Connection to booking server failed. Please verify details.");
+      const details = safeFormatApiErrorMessage(error, "Connection to booking server failed. Please verify details.");
       setErrorMessage(`Booking Failed: ${details}`);
     } finally {
       setIsLoading(false);

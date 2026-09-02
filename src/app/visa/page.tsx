@@ -7,15 +7,8 @@ import CustomSelect from '@/components/CustomSelect';
 import CustomDatePicker from '@/components/CustomDatePicker';
 import Toast from '@/components/Toast';
 import { visaService, type VisaCountry, type VisaCountryDetails } from '@/services/visaService';
-import { getStoredUser, getUserPhone, ApiError } from '@/lib/api';
+import { safeGetStoredUser, getUserPhone, ApiError, getLocalDateString } from '@/lib/api';
 
-const getTodayDateString = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 function VisaContent() {
   const [countries, setCountries] = useState<VisaCountry[]>([]);
@@ -31,7 +24,7 @@ function VisaContent() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [travelPurpose, setTravelPurpose] = useState('tourism');
-  const [preferredDate, setPreferredDate] = useState(getTodayDateString());
+  const [preferredDate, setPreferredDate] = useState(getLocalDateString());
   const [numApplicants, setNumApplicants] = useState(1);
   const [message, setMessage] = useState('');
 
@@ -64,7 +57,7 @@ function VisaContent() {
     fetchCountries();
 
     // Auto-populate logged-in user profile if available
-    const storedUser = getStoredUser();
+    const storedUser = safeGetStoredUser();
     if (storedUser) {
       setFullName(`${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim());
       setEmail(storedUser.email || '');
@@ -446,3 +439,4 @@ export default function VisaPage() {
     </div>
   );
 }
+

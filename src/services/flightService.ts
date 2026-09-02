@@ -230,13 +230,20 @@ export const flightService = {
       if (clean.length === 3) return clean;
       if (clean.startsWith("LAGOS")) return "LOS";
       if (clean.startsWith("ABUJA")) return "ABV";
+      // WARN: "PORT" is ambiguous — "Port Elizabeth" (ZA) would incorrectly resolve to PHC.
+      // TODO: Use full city name matching against the airport registry instead.
       if (clean.startsWith("PORT")) return "PHC";
       if (clean.startsWith("LONDON")) return "LHR";
       if (clean.startsWith("DUBAI")) return "DXB";
       if (clean.startsWith("ZANZIBAR")) return "ZNZ";
+      // WARN: Fallback truncates to 3 chars, which may not be a valid IATA code.
+      // This should only trigger if the airport autocomplete fails to match a known code.
       return clean.substring(0, 3);
     };
 
+    // WARN: sanitizeDate silently corrects past/invalid dates to 14 days from now.
+    // Callers should validate dates before passing to avoid surprising users with
+    // search results for a different date than what they selected.
     const sanitizeDate = (d?: string | null): string => {
       const today = new Date().toISOString().split('T')[0];
       if (!d || d < today) {
