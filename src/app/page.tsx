@@ -196,6 +196,11 @@ function HomeContent() {
 
   const handleBookProduct = (product: { type: string; name: string; price: number; payload?: any }) => {
     setSelectedProduct(product);
+    if (product.type === 'flight' && product.payload) {
+      try {
+        sessionStorage.setItem('selectedFlightOffer', JSON.stringify(product.payload));
+      } catch (_) {}
+    }
     setIsCheckoutOpen(true);
     triggerToast(`Checkout details registered for ${product.name}`);
   };

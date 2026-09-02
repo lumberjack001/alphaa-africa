@@ -126,7 +126,6 @@ function FlightCheckoutContent() {
       const parsedContext = storedContext ? JSON.parse(storedContext) : {};
 
       const rawOffer = parsedOffer?.raw_offer || parsedOffer;
-      console.log("=== [CHECKOUT PAGE LOADED] STORED raw_offer ===", rawOffer);
 
       setOffer(parsedOffer);
       setSearchContext(parsedContext);
@@ -177,9 +176,7 @@ function FlightCheckoutContent() {
               });
             }
           })
-          .catch((err) => {
-            console.warn("Using cached profile for checkout:", err);
-          });
+          .catch(() => {});
       }
 
       // Generate dynamic passengers array based on counts
@@ -320,17 +317,18 @@ function FlightCheckoutContent() {
       const leadPassenger = passengers[0] || { firstName: 'Traveler', lastName: '' };
       const contactName = `${leadPassenger.firstName} ${leadPassenger.lastName}`.trim();
 
-      const payloadFlightOffer = offer?.raw_offer || offer;
-      console.log("=== [PAYMENT SUBMITTED TO BACKEND] SENT flight_offer ===", payloadFlightOffer);
+      const payloadFlightOffer = offer?.raw_offer;
 
-      const bookingRes = await flightService.createBooking({
+      const flightBookingPayload = {
         flight_offer: payloadFlightOffer,
         contact_name: contactName || contactInfo.email,
         contact_email: contactInfo.email,
         contact_phone: `${contactInfo.phoneCountryCode}${contactInfo.phone}`,
         travelers: formattedTravelers,
         callback_url: `${window.location.origin}/api/payments/callback/?type=flight`
-      });
+      };
+
+      const bookingRes = await flightService.createBooking(flightBookingPayload);
 
       if (bookingRes?.payment?.authorization_url) {
         window.location.href = bookingRes.payment.authorization_url;
@@ -341,7 +339,6 @@ function FlightCheckoutContent() {
       setIsBillingOpen(true);
 
     } catch (err: any) {
-      console.error('Booking error:', err);
       if (err instanceof ApiError && err.data) {
         const d = err.data;
         const backendErrors: Record<string, string> = {};
@@ -374,19 +371,42 @@ function FlightCheckoutContent() {
     setIsBillingOpen(false);
     const leadTraveler = passengers[0];
     const leadName = leadTraveler ? `${leadTraveler.firstName} ${leadTraveler.lastName}` : contactInfo.email;
-    const itinerary = offer?.itineraries?.[0];
-    const carrier = offer?.airline || 'Airline';
+    const rawOffer = offer?.raw_offer || offer;
+    const itinerary = rawOffer?.itineraries?.[0] || offer?.itineraries?.[0];
+    const segments = itinerary?.segments || [];
+    const firstSeg = segments[0];
+    const lastSeg = segments[segments.length - 1];
+    const carrier = offer?.airline || offer?.airline_code || firstSeg?.carrierCode || 'Airline';
+
+    const originCode = searchContext?.origin || firstSeg?.departure?.iataCode || 'LOS';
+    const destCode = searchContext?.destination || lastSeg?.arrival?.iataCode || 'DEST';
 
     setConfirmedTicket({
       passenger: leadName,
-      cabin: offer?.cabin || 'Economy',
-      hash: `#TK-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      pnr: bookingResponse?.pnr || 'PNR-CONFIRMED',
+      cabin: offer?.cabin || 'Economy Class',
+      hash: `#TK-${(bookingResponse?.reference || Math.random().toString(36).substring(2, 10)).toUpperCase()}`,
+      pnr: bookingResponse?.pnr || bookingResponse?.booking?.pnr || 'PNR-CONFIRMED',
+      amadeus_order_id: bookingResponse?.amadeus_order_id || bookingResponse?.booking?.amadeus_order_id || '',
       details: {
         carrier: carrier,
-        name: `${searchContext?.origin || 'LOS'} to ${searchContext?.destination || 'LHR'}`,
-        number: itinerary?.segments?.[0]?.flight_number || 'FL-101',
+        name: `${originCode} → ${destCode}`,
+        number: firstSeg?.number || firstSeg?.flight_number || 'FL-101',
+        origin: originCode,
+        destination: destCode,
+        departureTime: firstSeg?.departure?.at,
+        arrivalTime: lastSeg?.arrival?.at,
       },
+      flight_details: {
+        airline_code: carrier,
+        cabin: offer?.cabin || 'Economy Class',
+        itineraries: itinerary ? [itinerary] : [],
+      },
+      travelers: passengers.map(p => ({
+        first_name: p.firstName,
+        last_name: p.lastName,
+        type: p.type || 'ADULT',
+        date_of_birth: `${p.dobYear}-${p.dobMonth}-${p.dobDay}`
+      })),
       type: 'flight',
     });
 

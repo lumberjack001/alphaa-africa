@@ -205,7 +205,8 @@ function FlightsQueryPageContent() {
     setSelectedProduct(product);
     if (product.payload) {
       const rawOffer = product.payload?.raw_offer || product.payload;
-      console.log("=== [FLIGHT SELECTED FROM SEARCH RESULTS] raw_offer ===", rawOffer);
+      console.warn("✈️ [BOOK FLIGHT CLICKED] Flight Offer Payload:", product.payload);
+      console.warn("✈️ [BOOK FLIGHT CLICKED] Raw Amadeus Offer:", rawOffer);
       try {
         sessionStorage.setItem('selectedFlightOffer', JSON.stringify(product.payload));
         sessionStorage.setItem('flightSearchContext', JSON.stringify(searchQuery));
