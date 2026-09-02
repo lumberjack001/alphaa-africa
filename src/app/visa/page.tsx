@@ -9,6 +9,14 @@ import Toast from '@/components/Toast';
 import { visaService, type VisaCountry, type VisaCountryDetails } from '@/services/visaService';
 import { getStoredUser, getUserPhone, ApiError } from '@/lib/api';
 
+const getTodayDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function VisaContent() {
   const [countries, setCountries] = useState<VisaCountry[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<VisaCountryDetails | null>(null);
@@ -23,7 +31,7 @@ function VisaContent() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [travelPurpose, setTravelPurpose] = useState('tourism');
-  const [preferredDate, setPreferredDate] = useState('2026-08-15');
+  const [preferredDate, setPreferredDate] = useState(getTodayDateString());
   const [numApplicants, setNumApplicants] = useState(1);
   const [message, setMessage] = useState('');
 
