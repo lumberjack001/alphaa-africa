@@ -63,6 +63,31 @@ export const clearStoredUser = () => {
   }
 };
 
+/**
+ * Safe wrapper around getStoredUser — catches JSON parse errors from corrupted localStorage.
+ * Automatically clears corrupted data and returns null.
+ */
+export const safeGetStoredUser = (): User | null => {
+  try {
+    return getStoredUser();
+  } catch {
+    clearStoredUser();
+    return null;
+  }
+};
+
+/**
+ * Returns today's date as a YYYY-MM-DD string in local time.
+ * Use instead of inline `new Date().toISOString().split('T')[0]` which returns UTC.
+ */
+export const getLocalDateString = (): string => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export class ApiError extends Error {
   status: number;
   data: any;
@@ -105,8 +130,11 @@ async function handleRefresh(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    clearTokens();
-    clearStoredUser();
+    // Do not proactively nuke tokens or stored user on refresh failure.
+    // Session termination is strictly handled by:
+    // 1. Idle timeout (14m + 1m countdown in useIdleTimer)
+    // 2. Explicit manual sign-out (Navbar)
+    // 3. Corrupted localStorage data (safeGetStoredUser)
     return null;
   }
 }
@@ -246,4 +274,16 @@ export function formatApiErrorMessage(error: any, fallbackMessage: string = "Req
 
   extractRecursive(data);
   return messages.length > 0 ? messages.join(" • ") : fallbackMessage;
+}
+
+/**
+ * Safe wrapper around formatApiErrorMessage — catches RangeError (stack overflow)
+ * from malicious or deeply-nested API error response objects.
+ */
+export function safeFormatApiErrorMessage(error: any, fallbackMessage: string = "Request failed"): string {
+  try {
+    return formatApiErrorMessage(error, fallbackMessage);
+  } catch {
+    return error?.message || fallbackMessage;
+  }
 }
