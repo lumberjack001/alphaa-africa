@@ -108,18 +108,17 @@ function CallbackContent() {
           for (const attempt of attemptQueue) {
             try {
               await attempt();
-              lastError = null;
-              break;
+              if (verifyData) {
+                lastError = null;
+                break;
+              }
             } catch (err) {
               lastError = err;
-              if (err instanceof ApiError && err.status === 404) {
-                continue;
-              }
-              throw err;
+              continue;
             }
           }
 
-          if (lastError) {
+          if (lastError && !verifyData) {
             throw lastError;
           }
         }
@@ -145,62 +144,113 @@ function CallbackContent() {
         setStatus(isSuccess ? 'confirmed' : (isFailed ? 'failed' : 'pending'));
 
         if (isSuccess) {
+          const bookingObj = verifyData?.booking || verifyData?.order || verifyData;
+
           // Construct ticket structure for BoardingPass component
           if (bookingType === 'flight') {
             setNavActiveTab('flights');
-            console.log("🎫 [Callback API Order Payload]:", verifyData);
+            
             const pnrCode =
               verifyData.pnr ||
               verifyData.pnr_code ||
               verifyData.amadeus_pnr ||
-              verifyData.booking?.pnr ||
-              verifyData.booking?.pnr_code ||
-              verifyData.booking?.amadeus_pnr ||
-              verifyData.order?.pnr ||
+              bookingObj?.pnr ||
+              bookingObj?.pnr_code ||
+              bookingObj?.amadeus_pnr ||
               verifyData.reference ||
               reference;
 
-            console.log("🎫 [Extracted PNR Code]:", pnrCode);
-            console.log("🎫 [Extracted Amadeus Order ID]:", verifyData.amadeus_order_id || verifyData.order_id || verifyData.booking?.amadeus_order_id);
+            const amadeusOrderId =
+              verifyData.amadeus_order_id ||
+              verifyData.order_id ||
+              bookingObj?.amadeus_order_id ||
+              bookingObj?.order_id ||
+              '';
 
-            const leadTraveler = verifyData.travelers?.[0];
+            const travelersList = verifyData.travelers || bookingObj?.travelers || [];
+            const leadTraveler = travelersList[0];
             const leadName = leadTraveler 
               ? `${leadTraveler.first_name || ''} ${leadTraveler.last_name || ''}`.trim()
-              : (verifyData.contact_name || verifyData.customer_email || verifyData.booking?.contact_name || 'Passenger');
+              : (bookingObj?.contact_name || verifyData.contact_name || verifyData.customer_email || 'Passenger');
             
-            const flightDetails = verifyData.flight_details || verifyData.booking?.flight_details || {};
+            const flightDetails = bookingObj?.flight_details || verifyData.flight_details || {};
             const itinerary = flightDetails.itineraries?.[0];
-            const segment = itinerary?.segments?.[0];
+            const segments = itinerary?.segments || [];
+            const firstSeg = segments[0];
+            const lastSeg = segments[segments.length - 1];
+
+            const originAirport =
+              bookingObj?.origin ||
+              flightDetails.origin ||
+              firstSeg?.departure?.iataCode ||
+              firstSeg?.departure_airport ||
+              firstSeg?.from ||
+              '';
+
+            const destinationAirport =
+              bookingObj?.destination ||
+              flightDetails.destination ||
+              lastSeg?.arrival?.iataCode ||
+              lastSeg?.arrival_airport ||
+              lastSeg?.to ||
+              '';
+
+            const carrier =
+              flightDetails.airline_code ||
+              bookingObj?.airline_code ||
+              bookingObj?.airline ||
+              firstSeg?.carrierCode ||
+              firstSeg?.carrier_code ||
+              'Amadeus Airline';
+
+            const flightNumber =
+              firstSeg?.flight_number ||
+              firstSeg?.number ||
+              bookingObj?.flight_number ||
+              'PNR-CONFIRMED';
+
+            const routeName = originAirport && destinationAirport
+              ? `${originAirport} → ${destinationAirport}`
+              : (verifyData.route || bookingObj?.route || 'Flight Reservation');
 
             setConfirmedTicket({
               passenger: leadName,
-              cabin: flightDetails.cabin || verifyData.cabin || verifyData.booking?.cabin || 'Economy Class',
+              cabin: flightDetails.cabin || bookingObj?.cabin || verifyData.cabin || 'Economy Class',
               hash: `#TK-${(verifyData.reference || reference).substring(0, 8).toUpperCase()}`,
               pnr: pnrCode,
-              amadeus_order_id: verifyData.amadeus_order_id || verifyData.order_id || verifyData.booking?.amadeus_order_id,
+              amadeus_order_id: amadeusOrderId,
               details: {
-                carrier: flightDetails.airline_code || verifyData.airline || 'Amadeus Airline',
-                name: segment ? `${segment.from || ''} → ${segment.to || ''}` : (verifyData.route || 'Flight Reservation'),
-                number: segment?.flight_number || verifyData.flight_number || 'PNR-CONFIRMED',
-                origin: segment?.from,
-                destination: segment?.to,
-                departureTime: segment?.depart_at,
-                arrivalTime: segment?.arrive_at,
+                carrier: carrier,
+                name: routeName,
+                number: flightNumber,
+                origin: originAirport,
+                destination: destinationAirport,
+                departureTime: firstSeg?.departure?.at || firstSeg?.departure_time || firstSeg?.depart_at,
+                arrivalTime: lastSeg?.arrival?.at || lastSeg?.arrival_time || lastSeg?.arrive_at,
               },
               flight_details: flightDetails,
-              travelers: verifyData.travelers || [],
+              travelers: travelersList,
               type: 'flight',
             });
           } else if (bookingType === 'visa') {
             setNavActiveTab('visa');
+            const visaApplicantName =
+              verifyData.full_name ||
+              verifyData.contact_name ||
+              bookingObj?.full_name ||
+              bookingObj?.contact_name ||
+              bookingObj?.customer_name ||
+              (bookingObj?.user ? `${bookingObj.user.first_name || ''} ${bookingObj.user.last_name || ''}`.trim() : '') ||
+              'Valued Guest';
+
             setConfirmedTicket({
-              passenger: verifyData.full_name || 'Valued Guest',
+              passenger: visaApplicantName,
               cabin: 'Visa Consultation Assistance',
               hash: `#TX-${verifyData.reference || reference}`,
               pnr: verifyData.reference || reference,
               details: {
-                name: verifyData.country?.name ? `Visa Assistance: ${verifyData.country.name}` : 'Visa Assistance Service',
-                carrier: verifyData.country?.name ? `Visa Assistance: ${verifyData.country.name}` : 'Visa Assistance Service',
+                name: verifyData.country?.name || bookingObj?.country?.name ? `Visa Assistance: ${verifyData.country?.name || bookingObj?.country?.name}` : 'Visa Assistance Service',
+                carrier: verifyData.country?.name || bookingObj?.country?.name ? `Visa Assistance: ${verifyData.country?.name || bookingObj?.country?.name}` : 'Visa Assistance Service',
               },
               type: 'visa',
             });
