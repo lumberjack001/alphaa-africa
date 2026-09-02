@@ -655,6 +655,58 @@ function FareRulesTab({
 }
 
 // ─── Main Card ────────────────────────────────────────────────────────────────
+
+/** Shared price/CTA block — extracted as a named component to prevent
+ *  re-mounting on every FlightListingCard render cycle. */
+function PriceBlock({
+  price,
+  seatsLeft,
+  seatsUrgent,
+  isBooking,
+  onBook,
+  className = '',
+}: {
+  price: number | string;
+  seatsLeft: number;
+  seatsUrgent: boolean;
+  isBooking: boolean;
+  onBook: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">All taxes incl.</span>
+      <strong className="text-xl sm:text-2xl font-black text-brand-purple block leading-tight mt-0.5">
+        ₦{Number(price).toLocaleString()}
+      </strong>
+      {seatsLeft > 0 && (
+        <span className={`text-xs font-bold block mt-1 ${seatsUrgent ? 'text-rose-500 font-black' : 'text-slate-400'}`}>
+          {seatsUrgent ? `🔥 Only ${seatsLeft} seats left!` : `${seatsLeft} seats avail.`}
+        </span>
+      )}
+      <button
+        type="button"
+        disabled={isBooking}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isBooking) return;
+          onBook();
+        }}
+        className="mt-4 w-full bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-sm disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
+      >
+        {isBooking ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Processing...</span>
+          </>
+        ) : (
+          <span>Book Flight</span>
+        )}
+      </button>
+    </div>
+  );
+}
+
 export default function FlightListingCard({
   offer,
   originCode,
@@ -702,40 +754,11 @@ export default function FlightListingCard({
     { id: 'fares' as const, label: 'Fare Rules' },
   ];
 
-  // Shared price/CTA block
-  const PriceBlock = ({ className = '' }: { className?: string }) => (
-    <div className={className}>
-      <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">All taxes incl.</span>
-      <strong className="text-xl sm:text-2xl font-black text-brand-purple block leading-tight mt-0.5">
-        ₦{Number(offer.price).toLocaleString()}
-      </strong>
-      {seatsLeft > 0 && (
-        <span className={`text-xs font-bold block mt-1 ${seatsUrgent ? 'text-rose-500 font-black' : 'text-slate-400'}`}>
-          {seatsUrgent ? `🔥 Only ${seatsLeft} seats left!` : `${seatsLeft} seats avail.`}
-        </span>
-      )}
-      <button
-        type="button"
-        disabled={isBooking}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (isBooking) return;
-          setIsBooking(true);
-          onBook();
-        }}
-        className="mt-4 w-full bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-sm disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
-      >
-        {isBooking ? (
-          <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Processing...</span>
-          </>
-        ) : (
-          <span>Book Flight</span>
-        )}
-      </button>
-    </div>
-  );
+  // Wrap onBook to set isBooking state — resetting is handled by parent via key prop
+  const handleBook = () => {
+    setIsBooking(true);
+    onBook();
+  };
 
   return (
     <div className="bg-white border border-purple-100/70 rounded-3xl overflow-hidden transition-all hover:border-brand-purple/20 hover:shadow-xl hover:shadow-purple-100/40">
@@ -821,7 +844,14 @@ export default function FlightListingCard({
         </div>
 
         {/* Right: price panel (md+) */}
-        <PriceBlock className="hidden md:flex md:flex-col md:items-end md:justify-center border-l border-purple-100 px-6 py-6 min-w-[196px] bg-purple-50/20 shrink-0 text-right" />
+        <PriceBlock
+          price={offer.price}
+          seatsLeft={seatsLeft}
+          seatsUrgent={seatsUrgent}
+          isBooking={isBooking}
+          onBook={handleBook}
+          className="hidden md:flex md:flex-col md:items-end md:justify-center border-l border-purple-100 px-6 py-6 min-w-[196px] bg-purple-50/20 shrink-0 text-right"
+        />
 
         {/* Bottom: price strip (mobile) */}
         <div className="md:hidden border-t border-purple-50 px-5 py-4 flex items-center justify-between gap-4">
@@ -842,8 +872,7 @@ export default function FlightListingCard({
             onClick={(e) => {
               e.stopPropagation();
               if (isBooking) return;
-              setIsBooking(true);
-              onBook();
+              handleBook();
             }}
             className="bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all cursor-pointer border-none shadow-sm whitespace-nowrap disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
           >
@@ -924,8 +953,7 @@ export default function FlightListingCard({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (isBooking) return;
-                  setIsBooking(true);
-                  onBook();
+                  handleBook();
                 }}
                 className="bg-brand-orange hover:bg-brand-purple text-white font-black px-8 py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-md disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
               >

@@ -27,6 +27,15 @@ export default function BillingModal({
   const [isLoading, setIsLoading] = useState(false);
   const [loaderText, setLoaderText] = useState('');
   const [isPaidPressed, setIsPaidPressed] = useState(false);
+  // Track all pending mock-flow timeout IDs so we can cancel them on unmount
+  const mockTimersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  React.useEffect(() => {
+    return () => {
+      mockTimersRef.current.forEach(clearTimeout);
+      mockTimersRef.current = [];
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -44,23 +53,27 @@ export default function BillingModal({
       setIsLoading(true);
       setLoaderText("Querying secure transaction layers with Paystack...");
 
-      setTimeout(() => {
+      const t1 = setTimeout(() => {
         setLoaderText("TX_SUCCESS verified signature received. Dispatching payload...");
         triggerToast("Paystack payment webhook verified successfully.");
 
-        setTimeout(() => {
+        const t2 = setTimeout(() => {
           setLoaderText("Locking down flight provider PNR reference credentials...");
 
-          setTimeout(() => {
+          const t3 = setTimeout(() => {
             setLoaderText("Compiling boarding PDF e-ticket with SMTP relay...");
 
-            setTimeout(() => {
+            const t4 = setTimeout(() => {
               setIsLoading(false);
               onSuccess();
             }, 1000);
+            mockTimersRef.current.push(t4);
           }, 1000);
+          mockTimersRef.current.push(t3);
         }, 1200);
+        mockTimersRef.current.push(t2);
       }, 1200);
+      mockTimersRef.current.push(t1);
     }
   };
 

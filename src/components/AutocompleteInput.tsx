@@ -44,6 +44,13 @@ export default function AutocompleteInput({
     }
   }, [value, asyncOptions, options]);
 
+  // Clear debounce timer on unmount to prevent setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
+
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
