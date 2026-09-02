@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 // Above-the-fold: load eagerly
 import Navbar from '@/components/Navbar';
@@ -24,10 +24,11 @@ const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 const CheckoutModal = dynamic(() => import('@/components/CheckoutModal'), { ssr: false });
 const BillingModal = dynamic(() => import('@/components/BillingModal'), { ssr: false });
 
-import { getStoredUser, getUserPhone } from '@/lib/api';
+import { safeGetStoredUser, getUserPhone } from '@/lib/api';
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(() => {
     return searchParams.get('tab') || 'flights';
   });
@@ -76,7 +77,7 @@ function HomeContent() {
 
   // Pre-fill user profile info if logged in
   useEffect(() => {
-    const user = getStoredUser();
+    const user = safeGetStoredUser();
     if (user) {
       setPassengerInfo({
         firstName: user.first_name || '',
@@ -105,13 +106,17 @@ function HomeContent() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
 
+  const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggerToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
     setToastVisible(true);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToastVisible(false);
     }, 5000);
   };
+  // Clear toast timer on unmount
+  useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }, []);
 
   const handleSwitchTab = (tabId: string) => {
     setActiveTab(tabId);
@@ -129,7 +134,7 @@ function HomeContent() {
     hours?: number;
   }) => {
     if (params.tab === 'hotels') {
-      window.location.href = `/hotels?destination=${encodeURIComponent(params.origin)}&check_in=${params.date}&check_out=${params.checkoutDate || ''}&guests=${params.destination}&stars=${params.cabin}`;
+      router.push(`/hotels?destination=${encodeURIComponent(params.origin)}&check_in=${params.date}&check_out=${params.checkoutDate || ''}&guests=${params.destination}&stars=${params.cabin}`);
       return;
     }
     if (params.tab === 'flights') {
@@ -138,15 +143,15 @@ function HomeContent() {
       const adultsP = (params as any).adults ? `&adults=${(params as any).adults}` : '';
       const childrenP = (params as any).children !== undefined ? `&children=${(params as any).children}` : '';
       const infantsP = (params as any).infants !== undefined ? `&infants=${(params as any).infants}` : '';
-      window.location.href = `/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}${returnParam}${tripTypeParam}&cabin=${encodeURIComponent(params.cabin)}${adultsP}${childrenP}${infantsP}`;
+      router.push(`/flights?origin=${encodeURIComponent(params.origin)}&destination=${encodeURIComponent(params.destination)}&date=${params.date}${returnParam}${tripTypeParam}&cabin=${encodeURIComponent(params.cabin)}${adultsP}${childrenP}${infantsP}`);
       return;
     }
     if (params.tab === 'tours') {
-      window.location.href = '/packages';
+      router.push('/packages');
       return;
     }
     if (params.tab === 'cars') {
-      window.location.href = `/cars?vehicle_type=${encodeURIComponent(params.cabin)}&hours=${params.hours || ''}&date=${params.date || ''}&pickup=${encodeURIComponent(params.origin)}&dropoff=${encodeURIComponent(params.destination)}`;
+      router.push(`/cars?vehicle_type=${encodeURIComponent(params.cabin)}&hours=${params.hours || ''}&date=${params.date || ''}&pickup=${encodeURIComponent(params.origin)}&dropoff=${encodeURIComponent(params.destination)}`);
       return;
     }
     setLocalSearchParams({
@@ -194,13 +199,17 @@ function HomeContent() {
     triggerToast("Booking portal navigation reset.");
   };
 
+  // Redirect flight bookings to /flights/checkout (real booking flow with real PNR).
+  // Hotel, car, and package bookings continue through CheckoutModal on this page.
   const handleBookProduct = (product: { type: string; name: string; price: number; payload?: any }) => {
-    setSelectedProduct(product);
-    if (product.type === 'flight' && product.payload) {
+    if (product.type === 'flight') {
       try {
         sessionStorage.setItem('selectedFlightOffer', JSON.stringify(product.payload));
       } catch (_) {}
+      router.push('/flights/checkout');
+      return;
     }
+    setSelectedProduct(product);
     setIsCheckoutOpen(true);
     triggerToast(`Checkout details registered for ${product.name}`);
   };

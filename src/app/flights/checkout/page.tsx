@@ -11,7 +11,7 @@ import CheckoutSidebar from '@/components/checkout/CheckoutSidebar';
 import BillingModal from '@/components/BillingModal';
 import BoardingPass from '@/components/BoardingPass';
 import { flightService, type FlightOfferResult } from '@/services/flightService';
-import { apiFetch, getStoredUser, setStoredUser, getUserPhone, formatApiErrorMessage, ApiError, type User } from '@/lib/api';
+import { apiFetch, safeGetStoredUser, setStoredUser, getUserPhone, safeFormatApiErrorMessage, ApiError, type User } from '@/lib/api';
 
 function parsePhoneAndCode(rawPhone: string) {
   if (!rawPhone) return { code: '+234', phone: '' };
@@ -83,11 +83,15 @@ function FlightCheckoutContent() {
   // Passengers list state
   const [passengers, setPassengers] = useState<PassengerFormData[]>([]);
 
+  const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggerToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
     setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 5000);
+    toastTimerRef.current = setTimeout(() => setToastVisible(false), 5000);
   };
+  // Clear toast timer on unmount
+  useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }, []);
 
   const clearFieldError = (key: string) => {
     setFieldErrors((prev) => {
@@ -113,6 +117,7 @@ function FlightCheckoutContent() {
 
   // 1. Load stored offer & context from sessionStorage on mount + fetch user profile
   useEffect(() => {
+    let isMounted = true;
     try {
       const storedOffer = sessionStorage.getItem('selectedFlightOffer');
       const storedContext = sessionStorage.getItem('flightSearchContext');
@@ -125,13 +130,11 @@ function FlightCheckoutContent() {
       const parsedOffer = JSON.parse(storedOffer);
       const parsedContext = storedContext ? JSON.parse(storedContext) : {};
 
-      const rawOffer = parsedOffer?.raw_offer || parsedOffer;
-
       setOffer(parsedOffer);
       setSearchContext(parsedContext);
 
       // Pre-fill user from localStorage
-      const user = getStoredUser();
+      const user = safeGetStoredUser();
       const initialEmail = user?.email || '';
       const initialPhone = getUserPhone(user);
       const initialFirstName = user?.first_name || '';
@@ -150,7 +153,7 @@ function FlightCheckoutContent() {
         // Asynchronously fetch fresh user profile from backend to get phone_number if missing from cached localStorage
         apiFetch<User>('/api/auth/me/')
           .then((freshUser) => {
-            if (freshUser) {
+            if (freshUser && isMounted) {
               setStoredUser(freshUser);
               const freshPhone = getUserPhone(freshUser);
               const freshParsed = parsePhoneAndCode(freshPhone);
@@ -317,7 +320,16 @@ function FlightCheckoutContent() {
       const leadPassenger = passengers[0] || { firstName: 'Traveler', lastName: '' };
       const contactName = `${leadPassenger.firstName} ${leadPassenger.lastName}`.trim();
 
-      const payloadFlightOffer = offer?.raw_offer;
+      const payloadFlightOffer = offer?.raw_offer || offer;
+
+      // Optional price confirmation check before creating booking
+      try {
+        if (offer?.raw_offer) {
+          await flightService.confirmPrice(offer);
+        }
+      } catch (confirmErr) {
+        console.warn("Price re-confirmation notice before booking:", confirmErr);
+      }
 
       const flightBookingPayload = {
         flight_offer: payloadFlightOffer,
@@ -359,7 +371,7 @@ function FlightCheckoutContent() {
         }
       }
 
-      const friendlyMsg = formatApiErrorMessage(err, 'Failed to initialize booking. Please check passenger details.');
+      const friendlyMsg = safeFormatApiErrorMessage(err, 'Failed to initialize booking. Please check passenger details.');
       setErrorAlert(friendlyMsg);
       triggerToast(friendlyMsg);
     } finally {

@@ -204,8 +204,7 @@ function FlightsQueryPageContent() {
   const handleBookFlight = async (product: { type: string; name: string; price: number; payload?: any }) => {
     setSelectedProduct(product);
     if (product.payload) {
-      const rawOffer = product.payload?.raw_offer || product.payload;
-      console.warn("✈️ [BOOK FLIGHT CLICKED] Flight Offer Payload:", product.payload);
+      const rawOffer = product.payload?.raw_offer;
       console.warn("✈️ [BOOK FLIGHT CLICKED] Raw Amadeus Offer:", rawOffer);
       try {
         sessionStorage.setItem('selectedFlightOffer', JSON.stringify(product.payload));

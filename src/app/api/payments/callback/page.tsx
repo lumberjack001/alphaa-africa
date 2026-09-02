@@ -25,12 +25,11 @@ function CallbackContent() {
   const isCar = typeParam === 'car';
   const isVisa = typeParam === 'visa';
 
-  const [navActiveTab, setNavActiveTab] = useState<string>(() => {
-    if (typeParam === 'flight') return 'flights';
-    if (typeParam === 'visa') return 'visa';
-    if (typeParam === 'car') return 'tours';
-    return 'flights';
-  });
+  // Derive active nav tab from URL type param — no state needed
+  const navActiveTab =
+    typeParam === 'flight' ? 'flights' :
+    typeParam === 'visa' ? 'visa' :
+    typeParam === 'car' ? 'tours' : 'flights';
 
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<'confirmed' | 'pending' | 'failed' | null>(null);
@@ -41,19 +40,29 @@ function CallbackContent() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
 
-  const triggerToast = (msg: string) => {
+  const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const safeTriggerToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
     setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 5000);
+    toastTimerRef.current = setTimeout(() => setToastVisible(false), 5000);
   };
+  // Clear toast timer on unmount
+  React.useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }, []);
 
   useEffect(() => {
-    if (!reference) {
+    // Validate reference format before making any API calls
+    const VALID_REF = /^[A-Za-z0-9_\-]{6,64}$/;
+    if (!reference || !VALID_REF.test(reference)) {
       setIsLoading(false);
       setStatus('failed');
-      setErrorMsg('No payment transaction reference was found in the callback URL.');
+      setErrorMsg(!reference
+        ? 'No payment transaction reference was found in the callback URL.'
+        : 'Invalid transaction reference format.');
       return;
     }
+
+    let isMounted = true;
 
     const verifyTransaction = async () => {
       try {
@@ -141,6 +150,7 @@ function CallbackContent() {
         const isSuccess = rawStatus === 'confirmed' || rawStatus === 'paid' || rawStatus === 'successful' || rawStatus === 'success';
         const isFailed = rawStatus === 'failed' || rawStatus === 'cancelled';
         
+        if (!isMounted) return;
         setStatus(isSuccess ? 'confirmed' : (isFailed ? 'failed' : 'pending'));
 
         if (isSuccess) {
@@ -148,7 +158,7 @@ function CallbackContent() {
 
           // Construct ticket structure for BoardingPass component
           if (bookingType === 'flight') {
-            setNavActiveTab('flights');
+            ;
             
             const pnrCode =
               verifyData.pnr ||
@@ -233,7 +243,7 @@ function CallbackContent() {
               type: 'flight',
             });
           } else if (bookingType === 'visa') {
-            setNavActiveTab('visa');
+            ;
             const visaApplicantName =
               verifyData.full_name ||
               verifyData.contact_name ||
@@ -255,7 +265,7 @@ function CallbackContent() {
               type: 'visa',
             });
           } else if (bookingType === 'car') {
-            setNavActiveTab('tours');
+            ;
             setConfirmedTicket({
               passenger: verifyData.guest_name || 'Valued Guest',
               cabin: verifyData.vehicle?.vehicle_type_display || 'Chauffeur Vehicle Rental',
@@ -268,7 +278,7 @@ function CallbackContent() {
               type: 'vehicle',
             });
           } else {
-            setNavActiveTab('hotels');
+            ;
             setConfirmedTicket({
               passenger: verifyData.guest_name || 'Valued Guest',
               cabin: verifyData.room_type?.name || 'Hotel Lodging Reservation',
@@ -281,28 +291,31 @@ function CallbackContent() {
               type: 'hotel',
             });
           }
-          triggerToast("Transaction reference verified successfully!");
+          if (!isMounted) return;
+          safeTriggerToast("Transaction reference verified successfully!");
         } else if (isFailed) {
           setErrorMsg('The payment processor reported that this transaction failed.');
-          triggerToast("Payment failed or was cancelled.");
+          if (isMounted) safeTriggerToast("Payment failed or was cancelled.");
         } else {
           setErrorMsg('This payment verification is still finalizing. An email notification will be sent once completed.');
-          triggerToast("Payment is still processing.");
+          if (isMounted) safeTriggerToast("Payment is still processing.");
         }
       } catch (error) { 
+        if (!isMounted) return;
         setStatus('failed');
         if (error instanceof ApiError) {
           setErrorMsg(`Verification failed: ${error.message}`);
         } else {
           setErrorMsg('Network error verifying transaction status.');
         }
-        triggerToast("Failed to verify transaction status.");
+        safeTriggerToast("Failed to verify transaction status.");
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     verifyTransaction();
+    return () => { isMounted = false; };
   }, [reference, isFlight, isCar, isVisa]);
 
   return (
@@ -372,7 +385,7 @@ function CallbackContent() {
         )}
       </main>
 
-      <Footer onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)} triggerToast={triggerToast} />
+      <Footer onSwitchTab={(tabId) => router.push(`/?tab=${tabId}`)} triggerToast={safeTriggerToast} />
       <Toast message={toastMessage} visible={toastVisible} />
     </div>
   );
@@ -389,3 +402,4 @@ export default function PaymentCallbackPage() {
     </Suspense>
   );
 }
+
