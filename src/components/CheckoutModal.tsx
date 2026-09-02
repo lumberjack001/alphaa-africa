@@ -209,7 +209,6 @@ export default function CheckoutModal({
         }
 
         const modalFlightOffer = selectedProduct.payload?.raw_offer || selectedProduct.payload;
-        console.log("=== [CHECKOUT MODAL PAY] SENT flight_offer ===", modalFlightOffer);
 
         const bookingData = await flightService.createBooking({
           flight_offer: modalFlightOffer,

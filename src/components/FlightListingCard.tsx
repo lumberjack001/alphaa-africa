@@ -663,6 +663,7 @@ export default function FlightListingCard({
 }: FlightListingCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'baggage' | 'fares'>('details');
+  const [isBooking, setIsBooking] = useState(false);
 
   const isRoundTrip = offer.itineraries.length > 1;
   const outbound = offer.itineraries[0];
@@ -715,10 +716,23 @@ export default function FlightListingCard({
       )}
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); onBook(); }}
-        className="mt-4 w-full bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-sm"
+        disabled={isBooking}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isBooking) return;
+          setIsBooking(true);
+          onBook();
+        }}
+        className="mt-4 w-full bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-sm disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
       >
-        Book Flight
+        {isBooking ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Processing...</span>
+          </>
+        ) : (
+          <span>Book Flight</span>
+        )}
       </button>
     </div>
   );
@@ -824,10 +838,23 @@ export default function FlightListingCard({
           </div>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onBook(); }}
-            className="bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all cursor-pointer border-none shadow-sm whitespace-nowrap"
+            disabled={isBooking}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isBooking) return;
+              setIsBooking(true);
+              onBook();
+            }}
+            className="bg-brand-orange hover:bg-brand-purple text-white font-black px-5 py-3 rounded-xl text-sm uppercase tracking-wider transition-all cursor-pointer border-none shadow-sm whitespace-nowrap disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
           >
-            Book Flight
+            {isBooking ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Processing...</span>
+              </>
+            ) : (
+              <span>Book Flight</span>
+            )}
           </button>
         </div>
       </div>
@@ -893,10 +920,23 @@ export default function FlightListingCard({
               </div>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onBook(); }}
-                className="bg-brand-orange hover:bg-brand-purple text-white font-black px-8 py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-md"
+                disabled={isBooking}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isBooking) return;
+                  setIsBooking(true);
+                  onBook();
+                }}
+                className="bg-brand-orange hover:bg-brand-purple text-white font-black px-8 py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all hover:-translate-y-0.5 cursor-pointer border-none shadow-md disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-brand-orange flex items-center justify-center space-x-2"
               >
-                Book Flight
+                {isBooking ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <span>Book Flight</span>
+                )}
               </button>
             </div>
           </div>

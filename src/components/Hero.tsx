@@ -172,15 +172,6 @@ export default function Hero({ activeTab, onSwitchTab, onSearch }: HeroProps) {
 
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 11 2 2 4-4" />
-              </svg>
-              <span><span className="tracking-[0.1em]">IATA</span> certified</span>
-            </div>
-            <span className="hidden sm:inline text-purple-400/50">•</span>
-
-            <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="14" rx="2" x="2" y="5" />
                 <line x1="2" x2="22" y1="10" y2="10" />
               </svg>

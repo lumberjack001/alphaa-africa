@@ -134,18 +134,6 @@ export default function SearchWidget({ activeTab, onSwitchTab, onSearch, initial
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === 'flights') {
-      console.log("🔍 [Flight Search Widget Submit]:", {
-        tripType,
-        flightOrigin,
-        flightDestination,
-        departureDate,
-        returnDate,
-        flightCabinClass,
-        adultsCount,
-        childrenCount,
-        infantsCount,
-        multiCityFlights
-      });
       if (tripType === 'multi-city') {
         onSearch({
           tab: activeTab,

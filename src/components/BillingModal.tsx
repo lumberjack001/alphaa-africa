@@ -34,7 +34,6 @@ export default function BillingModal({
   const paystackUrl = bookingResponse?.payment?.authorization_url;
 
   const handleStartPayment = () => {
-    checkTotalAmount()
     if (paystackUrl) {
       setIsPaidPressed(true);
       // Redirect to Paystack portal in same tab
@@ -99,11 +98,6 @@ export default function BillingModal({
       setIsLoading(false);
     }
   };
-
-  const checkTotalAmount = () => {
-    console.log(`₦${totalCost.toLocaleString()}`)
-    console.log(`₦${totalCost}`)
-  }
 
   return (
     <div id="billing-payment-modal" className="fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
