@@ -214,7 +214,6 @@ export const flightService = {
 
       return await fetchPromise;
     } catch (error) {
-      console.error("Error searching airports:", error);
       return prefixMatches || [];
     }
   },
@@ -314,15 +313,12 @@ export const flightService = {
     if (params.non_stop !== undefined) payload.non_stop = params.non_stop;
     if (params.max_stops !== undefined) payload.max_stops = params.max_stops;
 
-    console.log("✈️ [Flight Search Payload]:", payload);
-
     const response = await apiFetch<FlightSearchResponse>(`/api/flights/search/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    console.log("✈️ [Flight Search Response]:", response);
     return response;
   },
 
@@ -330,7 +326,7 @@ export const flightService = {
    * Re-validate flight offer price with Amadeus
    */
   async confirmPrice(flightOffer: any): Promise<any> {
-    const targetOffer = flightOffer?.raw_offer || flightOffer;
+    const targetOffer = flightOffer?.raw_offer;
     return apiFetch<any>(`/api/flights/price/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -100,7 +100,7 @@ async function handleRefresh(): Promise<string | null> {
 
     const data = await response.json();
     if (data.access) {
-      setTokens(data.access, refresh);
+      setTokens(data.access, data.refresh || refresh);
       return data.access;
     }
     return null;
@@ -117,16 +117,6 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
   const method = options.method || 'GET';
-  
-  console.log(`%c[API Fetch] Initiating ${method} request to: ${url}`, 'color: #FA6432; font-weight: bold; font-size: 10px;');
-  if (options.body) {
-    try {
-      console.log('[API Fetch] Request Payload:', JSON.parse(options.body as string));
-    } catch (_) {
-      console.log('[API Fetch] Request Payload:', options.body);
-    }
-  }
-
   const headers = new Headers(options.headers || {});
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -153,8 +143,6 @@ export async function apiFetch<T>(
       endpoint.includes('/api/auth/verify');
 
     if (!isAuthEndpoint) {
-      console.warn(`[API Fetch] 401 Unauthorized detected on ${method} ${url}. Attempting token refresh...`);
-
       // Queue requests while refreshing
       const retryPromise = new Promise<string | null>((resolve) => {
         refreshQueue.push((token) => resolve(token));
@@ -175,13 +163,24 @@ export async function apiFetch<T>(
 
       const refreshedToken = await retryPromise;
       if (refreshedToken) {
-        console.log(`[API Fetch] Token refreshed. Retrying ${method} request to: ${url}...`);
         headers.set("Authorization", `Bearer ${refreshedToken}`);
         response = await fetch(url, fetchOptions);
       } else {
-        console.error(`[API Fetch] Token refresh failed. Ending session.`);
-        // Redirect or reject
-        throw new ApiError(401, { detail: "Authentication session expired. Please log in again." });
+        // Public endpoints (e.g. searching flights/hotels/cars/packages) can fall back to anonymous fetch
+        const isPublicEndpoint =
+          endpoint.includes('/api/flights/search') ||
+          endpoint.includes('/api/flights/airports') ||
+          endpoint.includes('/api/hotels') ||
+          endpoint.includes('/api/cars') ||
+          endpoint.includes('/api/packages') ||
+          endpoint.includes('/api/visa/countries');
+
+        if (isPublicEndpoint) {
+          headers.delete("Authorization");
+          response = await fetch(url, { ...options, headers });
+        } else {
+          throw new ApiError(401, { detail: "Authentication session expired. Please log in again." });
+        }
       }
     }
   }
@@ -198,13 +197,11 @@ export async function apiFetch<T>(
   }
 
   if (response.status === 204) {
-    console.log(`%c[API Fetch] Success 204 No Content response from: ${method} ${url}`, 'color: #3EC193; font-weight: bold;');
     return {} as T;
   }
 
   try {
     const data = await response.json();
-    console.log(`%c[API Fetch] Success response from: ${method} ${url} - Data:`, 'color: #3EC193; font-weight: bold;', data);
     return data as T;
   } catch (err) {
     console.error(`[API Fetch] Error parsing JSON response from: ${method} ${url}`, err);
